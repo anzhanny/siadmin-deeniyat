@@ -64,40 +64,16 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ Route::is('admin.teacher.index') ? 'active' : '' }}" href="{{ route('admin.teacher.index') }}">
-            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="ni ni-badge text-dark text-sm opacity-10"></i>
-            </div>
-            <span class="nav-link-text ms-1">Data Guru</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ Route::is('admin.material.index') ? 'active' : '' }}" href="{{ route('admin.material.index') }}">
-            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="ni ni-books text-dark text-sm opacity-10"></i>
-            </div>
-            <span class="nav-link-text ms-1">Data Materi</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ Route::is('admin.report.index') ? 'active' : '' }}" href="{{ route('admin.report.index') }}">
-            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="ni ni-book-bookmark text-dark text-sm opacity-10"></i>
-            </div>
-            <span class="nav-link-text ms-1">Data Raport</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ Route::is('admin.paymentspp.index') ? 'active' : '' }}" href="{{ route('admin.paymentspp.index') }}">
+          <a class="nav-link {{ Route::is('admin.payment.index') ? 'active' : '' }}" href="{{ route('admin.payment.index') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-money-coins text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Data Pembayaran SPP</span>
+            <span class="nav-link-text ms-1">Data Pembayaran</span>
           </a>
         </li>
-
-
-
+        <li class="nav-item mt-3">
+          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account pages</h6>
+        </li>
 
         {{-- STUDENT DASHBOARD --}}
         @elseif (Route::is('student.*') )
@@ -117,45 +93,7 @@
               <span class="nav-money-coins ms-1">Pembayaran SPP</span>
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link {{ Route::is('student.reportcarddata') ? 'active' : '' }}" href="{{ route('student.reportcarddata') }}">
-              <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                <i class="ni ni-book-bookmark text-dark text-sm opacity-10"></i>
-              </div>
-              <span class="nav-link-text ms-1">Raport</span>
-            </a>
-          </li>
-
-        {{-- TEACHER DASHBOARD --}}
-        @elseif (Route::is('teacher.*') )
-          <li class="nav-item">
-            <a class="nav-link {{ Route::is('teacher.dashboard') ? 'active' : '' }}" href="{{ route('teacher.dashboard') }}">
-              <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                <i class="ni ni-tv-2 text-dark text-sm opacity-10"></i>
-              </div>
-              <span class="nav-link-text ms-1">Dashboard</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link {{ Route::is('teacher.studentdata') ? 'active' : '' }}" href="{{ route('teacher.studentdata') }}">
-              <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                <i class="ni ni-single-02 text-dark text-sm opacity-10"></i>
-              </div>
-              <span class="nav-link-text ms-1">Data Siswa</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link {{ Route::is('teacher.reportcarddata') ? 'active' : '' }}" href="{{ route('teacher.reportcarddata') }}">
-              <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                <i class="ni ni-book-bookmark text-dark text-sm opacity-10"></i>
-              </div>
-              <span class="nav-link-text ms-1">Data Pengisian Raport</span>
-            </a>
-          </li>
-        @endif
-
-        {{-- AKUN & LOGOUT (TAMPIL UNTUK SEMUA ROLE) --}}
-        <li class="nav-item mt-3">
+          <li class="nav-item mt-3">
           <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account pages</h6>
         </li>
         <li class="nav-item">
@@ -166,6 +104,11 @@
             <span class="nav-link-text ms-1">Profile</span>
           </a>
         </li>
+      
+
+        @endif
+
+        {{-- AKUN & LOGOUT (TAMPIL UNTUK SEMUA ROLE) --}}
         <li class="nav-item">
           <a href="#" class="nav-link {{ Request::routeIs('logout') ? 'active' : '' }}" onclick="event.preventDefault(); confirmLogout();">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">

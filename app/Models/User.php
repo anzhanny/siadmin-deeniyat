@@ -19,9 +19,24 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'role_id',
         'email',
         'password',
+        'class_id',
+        'is_active',
+        'email_verified_at',
+        'remember_token',
     ];
+
+     
+     public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'id');
+    }
+    public function class()
+    {
+        return $this->belongsTo(TbClass::class, 'class_id', 'id');
+    }
 
     /**
      * The attributes that should be hidden for serialization.

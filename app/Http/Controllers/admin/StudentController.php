@@ -4,6 +4,7 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -13,7 +14,7 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $data = Student::paginate(10);
+        $data = User::where('role_id', 2)->paginate(10);
         return view('admin.student.index', compact('data'));
     }
 
@@ -22,24 +23,7 @@ class StudentController extends Controller
      */
     public function create(Request $request)
     {
-        $data = new Student();
-        $data->name = $request->name;
-        $data->email = $request->email;
-        $data->password = $request->password;
-        $data->birthdate = $request->birthdate;
-        $data->gender = $request->gender;
-        $data->nis = $request->nis;
-        $data->phone = $request->phone;
-        $data->address = $request->address;
-        $data->class_id = $request->class_id;
-        $data->is_active = $request->is_active;
-        $data->father_name = $request->father_name;
-        $data->father_job = $request->father_job;
-        $data->mother_name = $request->mother_name;
-        $data->mother_job = $request->mother_job;
-        $data->photo = $request->photo;
-        $data->save();
-        return $data;
+        return view('admin.student.create');
     }
 
     /**
@@ -47,7 +31,53 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $name = $request->input('name');
+        $role_id = $request->input('role_id');
+        $email = $request->input('email');
+        $password = $request->input('password');
+        $birthdate = $request->input('birthdate');
+        $gender = $request->input('gender');
+        $nis = $request->input('nis');
+        $phone = $request->input('phone');
+        $address = $request->input('address');
+        $class_id = $request->input('class_id');
+        $is_active = $request->input('is_active');
+        $father_name = $request->input('father_name');
+        $father_job = $request->input('father_job');
+        $mother_name = $request->input('mother_name');
+        $mother_job = $request->input('mother_job');
+        $photo = $request->input('photo');
+        
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $data = new User();
+        $data->name = $name;
+        $data->role_id = $role_id;
+        $data->email = $email;
+        $data->password = $password;
+        $data->birthdate = $birthdate;
+        $data->gender = $gender;
+        $data->nis = $nis;
+        $data->phone = $phone;
+        $data->address = $address;
+        $data->class_id = $class_id;
+        $data->is_active = $is_active;
+        $data->father_name = $father_name;
+        $data->father_job = $father_job;
+        $data->mother_name = $mother_name;
+        $data->mother_job = $mother_job;
+        $data->photo = $photo;
+        
+        if ($request->hasFile('photo')) {
+        $path = $request->file('photo')->store('photos', 'public'); // disimpan di storage/app/public/photos
+        $data->photo = $path; // simpan path-nya ke database
+        }
+
+        $data->save();
+        return redirect()->route('admin.student.index');
+
     }
 
     /**
@@ -55,7 +85,7 @@ class StudentController extends Controller
      */
     public function show(string $id)
     {
-        $data = Student::find($id);
+        $data = User::find($id);
         return $data;
     }
 
@@ -72,8 +102,9 @@ class StudentController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $data = Student::find($id);
+        $data = User::find($id);
         if (isset($request->name)) $data->name = $request->name;
+        if (isset($request->role_id)) $data->role_id = $request->role_id;
         if (isset($request->email)) $data->email = $request->email;
         if (isset($request->password)) $data->password = $request->password;
         if (isset($request->birthdate)) $data->birthdate = $request->birthdate;
@@ -98,7 +129,7 @@ class StudentController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Student::find($id);
+        $data = User::find($id);
         $data->delete();
     }
 }

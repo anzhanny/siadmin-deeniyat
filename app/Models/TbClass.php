@@ -9,16 +9,13 @@ class TbClass extends Model
 {
     use HasFactory;
     protected $table = 'tb_class';
-    protected $fillable = 
-    [
+    protected $fillable = [
         'class_name',
-        'teacher_id'
+        'amount',
+        'academic_year_first',
+        'academic_year_last',
+        'status',
     ];
     protected $dates = ['created_at', 'updated_at'];
-
-    public function teacher()
-    {
-        return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
-    }
 
 }

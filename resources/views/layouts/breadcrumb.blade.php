@@ -5,27 +5,17 @@
         'admin.dashboard' => 'Dashboard',
         
         'admin.student.index' => 'Data Siswa',
+        'admin.student.create' => 'Tambah Data Siswa',
        
         'admin.class.index' => 'Data Kelas',
-
-        'admin.teacher.index' => 'Data Guru',
+        'admin.class.create' => 'Tambah data Kelas',
        
-        'admin.paymentspp.index' => 'Data Pembayaran SPP',
-        
-        'admin.report.index' => 'Data Raport',
+        'admin.payment.index' => 'Data Pembayaran',
 
-        'admin.material.index' => 'Data Materi',
-        
-        
-        // Teacher
-        'teacher.dashboard' => 'Dashboard',
-        'teacher.studentdata' => 'Data Siswa',
-        'teacher.reportcarddata' => 'Data Pengisian Raport',
 
         // Student
         'student.dashboard' => 'Dashboard',
-        'student.sppdata' => 'Pembayaran SPP',
-        'student.reportcarddata' => 'Laporan Hasil Belajar (Raport)',
+        'student.sppdata' => 'Data pembayaran',
 
 
 
