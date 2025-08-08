@@ -106,14 +106,17 @@
 
                 <!-- Pendidikan Formal -->
                 <div class="col-md-6 mb-3">
-                  <label for="formal_education" class="form-label">Pendidikan Formal <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="formal_education" name="formal_education" placeholder="Contoh: SDN 1 Contoh" required>
-                </div>
-
-                <!-- NIS -->
-                <div class="col-md-6 mb-3">
-                  <label for="nis" class="form-label">NIS <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="nis" name="nis" placeholder="Masukkan NIS" required>
+                  <label for="formal_education" class="form-label">Kelas Pendidikan Formal<span class="text-danger">*</span></label>                  
+                  <select class="form-select" id="class_id" name="class_id" required>
+                    <option value="">Pilih Kelas</option>
+                    <option value="0">Kelas TK</option>
+                    <option value="1">Kelas 1</option>
+                    <option value="2">Kelas 2</option>
+                    <option value="3">Kelas 3</option>
+                    <option value="4">Kelas 4</option>
+                    <option value="5">Kelas 5</option>
+                    <option value="6">Kelas 6</option>
+                  </select>
                 </div>
 
                 <!-- No Telp -->
@@ -127,32 +130,7 @@
                   <label for="address" class="form-label">Alamat <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="address" name="address" placeholder="Masukkan Alamat" required>
                 </div>
-
-                <!-- Kelas -->
-                <div class="col-md-6 mb-3">
-                  <label for="class_id" class="form-label">Kelas <span class="text-danger">*</span></label>
-                  <select class="form-select" id="class_id" name="class_id" required>
-                    <option value="">Pilih Kelas</option>
-                    <option value="0">Kelas 0</option>
-                    <option value="1">Kelas 1</option>
-                    <option value="2">Kelas 2</option>
-                    <option value="3">Kelas 3</option>
-                    <option value="4">Kelas 4</option>
-                    <option value="5">Kelas 5</option>
-                    <option value="6">Kelas 6</option>
-                  </select>
-                </div>
-
-                <!-- Status Aktif -->
-                <div class="col-md-6 mb-3">
-                  <label for="is_active" class="form-label">Status <span class="text-danger">*</span></label>
-                  <select class="form-select" id="is_active" name="is_active" required>
-                    <option value="">-- Pilih Status --</option>
-                    <option value="1">Aktif</option>
-                    <option value="0">Tidak Aktif</option>
-                  </select>
-                </div>
-
+                
                 <!-- Nama Ayah -->
                 <div class="col-md-6 mb-3">
                   <label for="father_name" class="form-label">Nama Ayah <span class="text-danger">*</span></label>
@@ -186,8 +164,7 @@
 
 
                 <div class="text-end mt-4">
-                  <button type="submit" class="btn btn-primary">Simpan</button>
-                  <button type="reset" class="btn btn-secondary">Reset</button>
+                    <button id="nextBtn" class="btn btn-primary" disabled>Lanjutkan ke Pembayaran</button>
                 </div>
               </form>
             </div>
@@ -233,6 +210,50 @@
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
+  <script>
+  // Ambil semua elemen form yang required
+  const form = document.querySelector('form');
+  const requiredFields = form.querySelectorAll('[required]');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function validateForm() {
+    let allValid = true;
+
+    requiredFields.forEach(field => {
+      if (field.type === 'radio') {
+        // Cek radio group
+        const radioGroup = form.querySelectorAll(`[name="${field.name}"]`);
+        const oneChecked = Array.from(radioGroup).some(r => r.checked);
+        if (!oneChecked) allValid = false;
+      } else {
+        if (!field.value.trim()) allValid = false;
+      }
+    });
+
+    nextBtn.disabled = !allValid;
+  }
+
+  // Cek setiap kali input berubah
+  requiredFields.forEach(field => {
+    field.addEventListener('input', validateForm);
+    if (field.type === 'radio') {
+      field.addEventListener('change', validateForm);
+    }
+  });
+
+  // Jika tombol ditekan, redirect ke detailpayment.blade.php
+  nextBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (!nextBtn.disabled) {
+      // Redirect via JS, sesuaikan dengan URL rute detailpayment
+      window.location.href = "{{ route('detailpayment') }}";
+    }
+  });
+
+  // Validasi awal saat halaman dimuat
+  validateForm();
+</script>
+
 </body>
 
 </html>

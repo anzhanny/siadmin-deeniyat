@@ -6,8 +6,8 @@
         @csrf
 
         <div class="mb-3">
-            <label for="student_id" class="form-label">Nama Siswa</label>
-            <input type="text" class="form-control" id="student_id" name="student_id" placeholder="Masukkan Nama Siswa" required>
+            <label for="user_id" class="form-label">Nama Siswa</label>
+            <input type="text" class="form-control" id="user_id" name="user_id" placeholder="Masukkan Nama Siswa" required>
         </div>
 
         <div class="mb-3">

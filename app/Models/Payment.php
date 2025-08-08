@@ -13,7 +13,6 @@ class Payment extends Model
         'amount',
         'method',
         'month',
-        'reference_number',
         'status',
         'description',
     ];

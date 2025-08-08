@@ -50,7 +50,7 @@
                     <tr>
                       <td class="align-middle text-center text-sm">{{ $no++ }}</td>
 
-                      <td class="align-middle text-center text-sm">{{$value->student->name}}</td>
+                      <td class="align-middle text-center text-sm">{{$value->user->name}}</td>
 
                       <td class="align-middle text-center text-sm">{{$value->payment_type}}</td>
 

@@ -105,5 +105,10 @@ Route::delete('/student/spp-data/delete{id}', [StudentSppDataController::class, 
 
 Route::get('/migrate-student', [MigrateStudentController::class, 'migrate']);
 
+Route::get('/detailpayment', function () {
+    return view('detailpayment');
+})->name('detailpayment');
+
+
 
 

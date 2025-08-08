@@ -26,7 +26,18 @@ class User extends Authenticatable
         'is_active',
         'email_verified_at',
         'remember_token',
+        'birthdate',
+        'gender',
+        'nis',
+        'phone',
+        'address',
+        'father_name',
+        'father_job',
+        'mother_name',
+        'mother_job',
+        'photo'
     ];
+    protected $dates = ['created_at', 'updated_at'];
 
      
      public function role()
