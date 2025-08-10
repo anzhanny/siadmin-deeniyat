@@ -2,23 +2,13 @@
 
 use App\Http\Controllers\admin\ClassController;
 use App\Http\Controllers\admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\admin\MaterialController;
 use App\Http\Controllers\admin\MigrateStudentController;
 use App\Http\Controllers\admin\PaymentController;
-use App\Http\Controllers\admin\PaymentSppController as AdminPaymentSppController;
-use App\Http\Controllers\admin\ReportController as AdminReportController;
 use App\Http\Controllers\admin\StudentController as AdminStudentController;
-use App\Http\Controllers\admin\TeacherController as AdminTeacherController;
-use App\Http\Controllers\payment\RegisterPaymentController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SesiController;
 use App\Http\Controllers\student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\student\ProfileController as StudentProfileController;
-use App\Http\Controllers\student\ReportCardDataController as StudentReportCardDataController;
 use App\Http\Controllers\student\SppDataController as StudentSppDataController;
-use App\Http\Controllers\teacher\DashboardController as TeacherDashboardController;
-use App\Http\Controllers\teacher\ReportCardDataController as TeacherReportCardDataController;
-use App\Http\Controllers\teacher\StudentDataController as TeacherStudentDataController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -78,14 +68,19 @@ Route::get('/finalpayment', function () {
 
 
 // admin
+
+Route::get('/admin/student-data', [AdminStudentController::class, 'index'])->name('admin.student.index');
+Route::get('/admin/student-data/create', [AdminStudentController::class, 'create'])->name('admin.student.create');
+Route::post('/admin/student-data', [AdminStudentController::class, 'store'])->name('admin.student.store');
+Route::get('/admin/student-data/{id}/edit', [AdminStudentController::class, 'edit'])->name('admin.student.edit');
+Route::put('/admin/student-data/{id}', [AdminStudentController::class, 'update'])->name('admin.student.update');
+Route::delete('/admin/student-data/{id}', [AdminStudentController::class, 'destroy'])->name('admin.student.destroy');
+
 Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 Route::get('/admin/class-data', [ClassController::class, 'index'])->name('admin.class.index');
 Route::get('/admin/class-data/create', [ClassController::class, 'create'])->name('admin.class.create');
 Route::post('admin/class-data', [ClassController::class, 'store'])->name('admin.class.store');
 
-Route::get('/admin/student-data', [AdminStudentController::class, 'index'])->name('admin.student.index');
-Route::get('/admin/student-data/create', [AdminStudentController::class, 'create'])->name('admin.student.create');
-Route::post('/admin/student-data', [AdminStudentController::class, 'store'])->name('admin.student.store');
 
 Route::get('admin/payment-data', [PaymentController::class, 'index'])->name('admin.payment.index');
 Route::get('admin/payment-data/create', [PaymentController::class, 'create'])->name('admin.payment.create');

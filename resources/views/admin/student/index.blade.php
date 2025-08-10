@@ -113,15 +113,23 @@
 
                 <td class="align-middle">
                   <button type="button" class="btn btn-primary btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Edit Siswa">
-                    <a href="javascript:;" class="text-white font-weight-bold text-xs">
+                    <a href="{{ route('admin.student.edit', $value->id) }}" class="text-white font-weight-bold text-xs">
                       <i class="fa fa-edit pt-1" aria-hidden="true"></i>
                     </a>
                   </button>
-                  <button type="button" class="btn btn-danger btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Hapus Siswa">
-                    <a href="javascript:;" class="text-white font-weight-bold text-xs">
+
+
+                  <form action="{{ route('admin.student.destroy', $value->id) }}" method="POST" style="display:inline-block;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                      class="btn btn-danger btn-icon btn-sm p-1"
+                      style="width: 30px; height: 30px;"
+                      title="Hapus Siswa"
+                      onclick="return confirm('Yakin mau hapus siswa ini?')">
                       <i class="fa fa-trash pt-1" aria-hidden="true"></i>
-                    </a>
-                  </button>
+                    </button>
+                  </form>
                 </td>
               </tr>
 

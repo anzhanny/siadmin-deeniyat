@@ -78,9 +78,6 @@ class StudentController extends Controller
         $data->name = $request->name;
         $data->role_id = 2;
         $data->email = $request->email;
-        if ($request->filled('password')) {
-            $data->password = bcrypt($request->password);
-        }
         $data->nis = $request->nis;
         $data->birthplace = $request->birthplace;
         $data->birthdate = $request->birthdate;
@@ -94,6 +91,10 @@ class StudentController extends Controller
         $data->father_job = $request->father_job;
         $data->mother_name = $request->mother_name;
         $data->mother_job = $request->mother_job;
+
+                if ($request->filled('password')) {
+            $data->password = bcrypt($request->password);
+        }
 
         if ($request->hasFile('photo')) {
             if ($data->photo && Storage::disk('public')->exists($data->photo)) {
