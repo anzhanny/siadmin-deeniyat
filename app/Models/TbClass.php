@@ -12,9 +12,9 @@ class TbClass extends Model
     protected $fillable = [
         'class_name',
         'amount',
+        'teacher_name',
         'academic_year_first',
         'academic_year_last',
-        'status',
     ];
     protected $dates = ['created_at', 'updated_at'];
 

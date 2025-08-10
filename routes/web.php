@@ -80,6 +80,9 @@ Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name
 Route::get('/admin/class-data', [ClassController::class, 'index'])->name('admin.class.index');
 Route::get('/admin/class-data/create', [ClassController::class, 'create'])->name('admin.class.create');
 Route::post('admin/class-data', [ClassController::class, 'store'])->name('admin.class.store');
+Route::get('/admin/class-data/{id}/edit', [ClassController::class, 'edit'])->name('admin.class.edit');
+Route::put('/admin/class-data/{id}', [ClassController::class, 'update'])->name('admin.class.update');
+Route::delete('/admin/class-data/{id}', [ClassController::class, 'destroy'])->name('admin.class.destroy');
 
 
 Route::get('admin/payment-data', [PaymentController::class, 'index'])->name('admin.payment.index');

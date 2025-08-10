@@ -28,67 +28,68 @@ class ClassController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $class_name = $request->input('class_name');
-        $amount = $request->input('amount');
-        $teacher_name = $request->input('teacher_name');
-        $academic_year_first = $request->input('academic_year_first');
-        $academic_year_last = $request->input('academic_year_last');
-        $status = $request->input('status');
-        
-        $data = new TbClass();
-        $data->class_name = $class_name;   
-        $data->amount = $amount;     
-        $data->teacher_name = $teacher_name;
-        $data->academic_year_first = $academic_year_first;
-        $data->academic_year_last = $academic_year_last;
-        $data->status = $status;
-        $data->save();
-        return redirect()->route('admin.class.index');
-    }
+public function store(Request $request)
+{
+    $request->validate([
+        'class_name' => 'required|string|max:100',
+        'amount' => 'required|integer|min:1',
+        'teacher_name' => 'required|string|max:100',
+        'academic_year_first' => 'required|string|max:10',
+        'academic_year_last' => 'required|string|max:10',
+    ]);
+
+    TbClass::create($request->all());
+
+    return redirect()->route('admin.class.index')
+        ->with('success', 'Data berhasil disimpan');
+}
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        $data = TbClass::find($id);
-        if (!$data) {
-            abort(404);
-        }
-        return $data;
-    }
+public function show(string $id)
+{
+    $class = TbClass::findOrFail($id);
+    return view('admin.class.show', compact('class'));
+}
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
     {
-        //
+        $class = TbClass::find($id);
+        return view('admin.class.edit', compact('class'));
     }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    {
-        $data = TbClass::find($id);
-        if (isset($request->class_name)) $data->class_name = $request->class_name;
-        if (isset($request->amount)) $data->amount = $request->amount;
-        if (isset($request->teacher_name)) $data->teacher_name = $request->teacher_name;
-        if (isset($request->academic_year_first)) $data->academic_year_first = $request->academic_year_first;
-        if (isset($request->academic_year_last)) $data->academic_year_last = $request->academic_year_last;
-        if (isset($request->status)) $data->status = $request->status;
-        $data->save();
-        return $data;
-    }
+{
+    $request->validate([
+        'class_name' => 'required|string|max:100',
+        'amount' => 'required|integer|min:1',
+        'teacher_name' => 'required|string|max:100',
+        'academic_year_first' => 'required|string|max:10',
+        'academic_year_last' => 'required|string|max:10',
+    ]);
+
+    $data = TbClass::findOrFail($id);
+    $data->update($request->all());
+
+    return redirect()->route('admin.class.index')
+        ->with('success', 'Data berhasil diperbarui');
+}
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        $data = TbClass::find($id);
-        $data->delete();
-    }
+{
+    TbClass::findOrFail($id)->delete();
+    return redirect()->route('admin.class.index')
+        ->with('success', 'Data berhasil dihapus');
+}
+
 }
