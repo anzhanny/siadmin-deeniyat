@@ -25,23 +25,23 @@
               <tr>
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">#</th>
 
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">NIS</th>
+
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Siswa</th>
 
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas Deeniyat</th>
+
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Email</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Birtdate</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Gender</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">NIS ↑↓</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">No Telp</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Alamat</th>
 
-                <th id="sortNis" onclick="sortTable(4)" style="cursor:pointer;" class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tempat, Tanggal Lahir</th>
 
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Jenis Kelamin</th>
+
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas Pendidikan Formal</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Ayah</th>
 
@@ -52,6 +52,8 @@
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Pekerjaan Ibu</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Foto</th>
+
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
 
                 <th class="text-center text-dark text-uppercase text-xs font-weight-bolder opacity-7">Aksi</th>
               </tr>
@@ -64,35 +66,23 @@
                 <td>{{ $data->firstItem() + $no - 1 }}</td>
                 <!-- <td class="align-middle text-center text-sm">{{ $no++ }}</td> -->
 
+                <td class="align-middle text-center text-sm">{{ $value->nis }}</td>
+
                 <td class="align-middle text-center text-sm">{{ $value->name }}</td>
 
-                <td class="align-middle text-center text-sm">{{ $value->nis }}</td>
+                <td class="align-middle text-center text-sm">{{ $value->class_id }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->email }}</td>
 
-                <td class="align-middle text-center text-sm">{{ $value->birthplace}}</td>
+                <td class="align-middle text-center text-sm">{{ $value->phone }}</td>
 
-                <td class="align-middle text-center text-sm">{{ $value->birthdate }}</td>
+                <td class="align-middle text-center text-sm">{{ $value->address }}</td>
+
+                <td class="align-middle text-center text-sm">{{ $value->birthplace}}, {{ $value->birthdate }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->gender }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->formal_education}}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->address }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->phone }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->class_id }}</td>
-
-                @if($value->is_active == 1)
-                <td class="align-middle text-center text-sm">
-                  <span class="badge badge-sm bg-gradient-success">aktif</span>
-                </td>
-                @else
-                <td class="align-middle text-center text-sm">
-                  <span class="badge badge-sm bg-gradient-danger">tidak aktif</span>
-                </td>
-                @endif
 
                 <td class="align-middle text-center text-sm">{{ $value->father_name }}</td>
 
@@ -107,9 +97,19 @@
                   <img src="{{ asset('storage/' . $value->photo) }}"
                     alt="photo" width="50" height="50" style="object-fit: cover; border-radius: 5px;">
                   @else
-                  <p>Gambar tidak ditemukan.</p>
+                  <p>-</p>
                   @endif
                 </td>
+
+                @if($value->is_active == 1)
+                <td class="align-middle text-center text-sm">
+                  <span class="badge badge-sm bg-gradient-success">aktif</span>
+                </td>
+                @else
+                <td class="align-middle text-center text-sm">
+                  <span class="badge badge-sm bg-gradient-danger">tidak aktif</span>
+                </td>
+                @endif
 
                 <td class="align-middle">
                   <button type="button" class="btn btn-primary btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Edit Siswa">

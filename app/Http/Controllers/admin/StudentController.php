@@ -27,7 +27,7 @@ class StudentController extends Controller
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|unique:users',
             'password'    => 'required|min:8',
-            'photo'       => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'photo'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         // Simpan foto
@@ -38,14 +38,15 @@ class StudentController extends Controller
         $data->name = $request->name;
         $data->role_id = 2;
         $data->email = $request->email;
+        $data->nis = $request->nis;
+        $data->class_id = $request->class_id;
         $data->password = bcrypt($request->password);
         $data->birthplace = $request->birthplace;
         $data->birthdate = $request->birthdate;
         $data->gender = $request->gender;
-        $data->nis = $request->nis;
+        $data->formal_education = $request->formal_education;
         $data->phone = $request->phone;
         $data->address = $request->address;
-        $data->class_id = $request->class_id;
         $data->is_active = $request->is_active;
         $data->father_name = $request->father_name;
         $data->father_job = $request->father_job;
@@ -75,14 +76,16 @@ class StudentController extends Controller
         ]);
 
         $data->name = $request->name;
+        $data->role_id = 2;
         $data->email = $request->email;
         if ($request->filled('password')) {
             $data->password = bcrypt($request->password);
         }
+        $data->nis = $request->nis;
         $data->birthplace = $request->birthplace;
         $data->birthdate = $request->birthdate;
         $data->gender = $request->gender;
-        $data->nis = $request->nis;
+        $data->formal_education = $request->formal_education;
         $data->phone = $request->phone;
         $data->address = $request->address;
         $data->class_id = $request->class_id;
