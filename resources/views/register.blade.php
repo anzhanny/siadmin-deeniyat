@@ -218,6 +218,12 @@
                 </div>
               </form>
             </div>
+            <div class="card-footer text-left pt-0 px-lg-4 px-1">
+                  <p class="mb-4 text-sm mx-auto">
+                    Sudah punya akun?
+                    <a href="{{ route('login') }}" class="text-primary text-gradient font-weight-bold">Login</a>
+                  </p>
+                </div>
           </div>
         </div>
       </div>
