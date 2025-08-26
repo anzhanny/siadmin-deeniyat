@@ -30,9 +30,18 @@
   <link href="https://demos.creative-tim.com/argon-dashboard-pro/assets/css/nucleo-svg.css" rel="stylesheet" />
   <!-- Font Awesome Icons -->
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <!-- CSS Files -->
   <link id="pagestyle" href="../assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
 </head>
+
+<style>
+  #toggleIcon {
+    font-size: 0.8rem;
+    color: #9a9fa3ff;
+    /* abu-abu biar kelihatan */
+  }
+</style>
 
 <body class="">
 
@@ -49,25 +58,36 @@
                 <div class="card-header pb-0 text-start">
                   <h4 class="font-weight-bolder">Login</h4>
                   <p class="mb-0" style="font-size: 12px;">Masukkan email dan Password Anda untuk masuk <b>Deeniyat Al Hidayah</b></p>
-                 
+
                 </div>
                 <div class="card-body">
-                @if($errors->any())
-                    <div class="alert alert-danger">
-                      <ul>
-                        @foreach($errors->all() as $item)
-                          <li>{{ $item }}</li>
-                        @endforeach
-                      </ul>
-                    </div>
+                  @if($errors->any())
+                  <div class="alert alert-danger">
+                    <ul>
+                      @foreach($errors->all() as $item)
+                      <li>{{ $item }}</li>
+                      @endforeach
+                    </ul>
+                  </div>
                   @endif
                   <form role="form" action="" method="POST">
-                      @csrf
+                    @csrf
                     <div class="mb-3">
                       <input name="email" for="email" type="email" class="form-control form-control-lg" placeholder="Email" aria-label="Email" value="{{ old('email') }}">
                     </div>
-                    <div class="mb-3">
-                      <input  name="password" for="password" type="password" class="form-control form-control-lg" placeholder="Password" aria-label="Password" value="{{ old('password') }}">
+                    <div class="mb-3 position-relative">
+                      <input id="password" name="password" type="password"
+                        class="form-control form-control-lg"
+                        placeholder="Password" aria-label="Password"
+                        value="{{ old('password') }}">
+
+                      <!-- ikon mata -->
+                      <span class="position-absolute top-50 end-0 translate-middle-y me-3"
+                        onclick="togglePassword()"
+                        style="cursor:pointer; z-index:10;">
+                        <i id="toggleIcon" class="fas fa-eye"></i>
+                      </span>
+
                     </div>
                     <div class="text-center">
                       <button name="submit" type="submit" class="btn btn-lg btn-primary btn-lg w-100 mt-4 mb-0">Masuk</button>
@@ -96,10 +116,10 @@
     </section>
   </main>
   <!--   Core JS Files   -->
-  <script src="{{ asset ('/assets/js/core/jquery.min.js') }}" ></script>
+  <script src="{{ asset ('/assets/js/core/jquery.min.js') }}"></script>
   <script src="{{ asset ('/assets/js/core/bootstrap.min.js') }}"></script>
-  <script src="{{ asset ('/assets/js/core/popper.min.js') }}" ></script>
-  <script src="{{ asset ('/assets/js/plugins/perfect-scrollbar.min.js') }}" ></script>
+  <script src="{{ asset ('/assets/js/core/popper.min.js') }}"></script>
+  <script src="{{ asset ('/assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
   <script>
     var win = navigator.platform.indexOf('Win') > -1;
     if (win && document.querySelector('#sidenav-scrollbar')) {
@@ -113,5 +133,22 @@
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="{{ asset ('/assets/js/argon-dashboard.min.js?v=2.1.0') }}" type="text/javascript"></script>
+
+  <!-- icon mata pada password -->
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('toggleIcon');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+      }
+    }
+  </script>
 
 </html>
