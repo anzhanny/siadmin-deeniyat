@@ -5,12 +5,16 @@ use App\Http\Controllers\admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\admin\MigrateStudentController;
 use App\Http\Controllers\admin\PaymentController;
 use App\Http\Controllers\admin\StudentController as AdminStudentController;
+use App\Http\Controllers\admin\InstallmentController;
+use App\Http\Controllers\admin\ReportController;
 use App\Http\Controllers\SesiController;
 use App\Http\Controllers\student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\student\PaymentController as StudentPaymentController;
 use App\Http\Controllers\student\ProfileController as StudentProfileController;
 use App\Http\Controllers\student\SppDataController as StudentSppDataController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpKernel\Profiler\Profile;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +61,11 @@ Route::get('/register', function () {
 })->name('register');
 
 Route::post('/register', [SesiController::class, 'register'])->name('register.store');
+// Rute untuk halaman Thank You setelah pembayaran
+Route::get('/thankyoupage', function () {
+    return view('thankyoupage'); // pastikan file ada di resources/views/thankyou.blade.php
+})->name('thankyoupage');
+
 
 
 //profile
@@ -68,6 +77,7 @@ Route::get('/finalpayment', function () {
 
 
 // admin
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
 Route::get('/admin/student-data', [AdminStudentController::class, 'index'])->name('admin.student.index');
 Route::get('/admin/student-data/create', [AdminStudentController::class, 'create'])->name('admin.student.create');
@@ -76,7 +86,6 @@ Route::get('/admin/student-data/{id}/edit', [AdminStudentController::class, 'edi
 Route::put('/admin/student-data/{id}', [AdminStudentController::class, 'update'])->name('admin.student.update');
 Route::delete('/admin/student-data/{id}', [AdminStudentController::class, 'destroy'])->name('admin.student.destroy');
 
-Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 Route::get('/admin/class-data', [ClassController::class, 'index'])->name('admin.class.index');
 Route::get('/admin/class-data/create', [ClassController::class, 'create'])->name('admin.class.create');
 Route::post('admin/class-data', [ClassController::class, 'store'])->name('admin.class.store');
@@ -84,13 +93,35 @@ Route::get('/admin/class-data/{id}/edit', [ClassController::class, 'edit'])->nam
 Route::put('/admin/class-data/{id}', [ClassController::class, 'update'])->name('admin.class.update');
 Route::delete('/admin/class-data/{id}', [ClassController::class, 'destroy'])->name('admin.class.destroy');
 
-
 Route::get('admin/payment-data', [PaymentController::class, 'index'])->name('admin.payment.index');
 Route::get('admin/payment-data/create', [PaymentController::class, 'create'])->name('admin.payment.create');
 Route::post('admin/payment-data', [PaymentController::class, 'store'])->name('admin.payment.store');
+Route::get('admin/payment-data/{id}/edit', [PaymentController::class, 'edit'])->name('admin.payment.edit');
+Route::put('admin/payment-data/{id}', [PaymentController::class, 'update'])->name('admin.payment.update');
+Route::delete('admin/payment-data/{id}', [PaymentController::class, 'destroy'])->name('admin.payment.destroy');
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('payment', PaymentController::class);
+});
+
+
+Route::get('/get-student-class/{id}', [PaymentController::class, 'getStudentClass']);
+
+Route::get('admin/installment-data', [InstallmentController::class, 'index'])->name('admin.installment.index');
+Route::get('admin/installment-data/create', [InstallmentController::class, 'create'])->name('admin.installment.create');
+Route::post('admin/installment-data', [InstallmentController::class, 'store'])->name('admin.installment.store');
+Route::get('admin/installment-data/{id}/edit', [InstallmentController::class, 'edit'])->name('admin.installment.edit');
+Route::put('admin/installment-data/{id}', [InstallmentController::class, 'update'])->name('admin.installment.update');
+Route::delete('admin/installment-data/{id}', [InstallmentController::class, 'destroy'])->name('admin.installment.destroy');
+
+Route::get('admin/report-data', [ReportController::class, 'index'])->name('admin.report.index');
+
+
+
 
 // student
 Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
+
+Route::get('/student/payment', [StudentPaymentController::class, 'payment'])->name('student.payment.index');
 
 Route::get('/student/spp-data', [StudentSppDataController::class, 'index'])->name('student.sppdata');
 Route::get('/student/sppdata/create', [StudentSppDataController::class, 'create']);
@@ -100,6 +131,12 @@ Route::post('/student/spp-data/create', [StudentSppDataController::class, 'creat
 Route::put('/student/spp-data/updated{id}', [StudentSppDataController::class, 'update']);
 Route::delete('/student/spp-data/delete{id}', [StudentSppDataController::class, 'destroy']);
 
+Route::get('admin/student-profile', [StudentProfileController::class, 'index'])->name('student.profile.index');
+Route::get('admin/student-profile/create', [StudentProfileController::class, 'create'])->name('student.profile.create');
+Route::post('admin/student-profile', [StudentProfileController::class, 'store'])->name('student.profile.store');
+Route::get('admin/student-profile/{id}/edit', [StudentProfileController::class, 'edit'])->name('student.profile.edit');
+Route::put('admin/student-profile/{id}', [StudentProfileController::class, 'update'])->name('student.profile.update');
+Route::delete('admin/student-profile/{id}', [StudentProfileController::class, 'destroy'])->name('student.profile.destroy');
 
 Route::get('/migrate-student', [MigrateStudentController::class, 'migrate']);
 

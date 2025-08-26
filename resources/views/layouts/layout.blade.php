@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets/img/apple-icon.png') }}" rel="apple-touch-icon" sizes="76x76">
-  <link rel="icon" type="image/png" href="{{ asset('assets/img/logos/deeniyat-logo.png') }}" rel="apple-touch-icon" sizes="76x76" >
+  <link rel="icon" type="image/png" href="{{ asset('assets/img/logos/deeniyat-logo.png') }}" rel="apple-touch-icon" sizes="76x76">
   <title>
     Deeniyat Web
   </title>
@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.x/css/all.min.css">
 
   <!-- CSS Files -->
-  <link id="pagestyle" href="{{ asset('assets/css/argon-dashboard.css') }}" rel="stylesheet" >
+  <link id="pagestyle" href="{{ asset('assets/css/argon-dashboard.css') }}" rel="stylesheet">
 </head>
 
 <body class="g-sidenav-show   bg-gray-100">
@@ -50,13 +50,13 @@
         <li class="nav-item">
           <a class="nav-link {{ Route::is('admin.student.index') ? 'active' : '' }}" href="{{ route('admin.student.index') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="ni ni-hat-3 text-dark text-sm opacity-10"></i>
+              <i class="fa fa-user-graduate text-dark text-sm opacity-10"></i>
             </div>
             <span class="nav-link-text ms-1">Data Siswa</span>
           </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ Route::is('admin.class.index') ? 'active' : '' }}" href="{{ route('admin.class.index') }}">
+          <a class="nav-link {{ Route::is('admin.class.index') ? 'active' : '' }}" href="{{ route('admin.class.index') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-building text-dark text-sm opacity-10"></i>
             </div>
@@ -64,47 +64,75 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ Route::is('admin.payment.index') ? 'active' : '' }}" href="{{ route('admin.payment.index') }}">
+          <a class="nav-link">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-money-coins text-dark text-sm opacity-10"></i>
             </div>
             <span class="nav-link-text ms-1">Data Pembayaran</span>
           </a>
+          <div>
+            <ul style="list-style-type: none; margin-left: 0;" class="mt-1">
+              <li>
+                <a class="nav-link {{ Route::is('admin.payment.index') ? 'active' : '' }}"
+                  href="{{ route('admin.payment.index') }}">
+                  <i class="fa fa-check-circle text-dark text-sm opacity-10"></i>
+                  Pembayaran Lunas
+                </a>
+              </li>
+              <li>
+                <a class="nav-link {{ Route::is('admin.installment.index') ? 'active' : '' }}"
+                  href="{{ route('admin.installment.index') }}">
+                  <i class="fa fa-hourglass-half text-dark text-sm opacity-10"></i>
+                  Pembayaran Cicilan
+                </a>
+              </li>
+            </ul>
+          </div>
         </li>
+        <li class="nav-item">
+          <a class="nav-link {{ Route::is('admin.report.index') ? 'active' : '' }}" href="{{ route('admin.report.index') }}">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="ni ni-single-copy-04 text-dark text-sm opacity-10"></i>
+            </div>
+            <span class="nav-link-text ms-1">Laporan Pembayaran</span>
+          </a>
+        </li>
+
+
         <li class="nav-item mt-3">
           <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account pages</h6>
         </li>
 
         {{-- STUDENT DASHBOARD --}}
         @elseif (Route::is('student.*') )
-          <li class="nav-item">
-            <a class="nav-link {{ Route::is('student.dashboard') ? 'active' : '' }}" href="{{ route('student.dashboard') }}">
-              <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                <i class="ni ni-tv-2 text-dark text-sm opacity-10"></i>
-              </div>
-              <span class="nav-link-text ms-1">Dashboard</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link {{ Route::is('student.sppdata') ? 'active' : '' }}" href="{{ route('student.sppdata') }}">
-              <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
-              </div>
-              <span class="nav-money-coins ms-1">Pembayaran SPP</span>
-            </a>
-          </li>
-          <li class="nav-item mt-3">
+        <li class="nav-item">
+          <a class="nav-link {{ Route::is('student.dashboard') ? 'active' : '' }}" href="{{ route('student.dashboard') }}">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="ni ni-tv-2 text-dark text-sm opacity-10"></i>
+            </div>
+            <span class="nav-link-text ms-1">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ Route::is('student.sppdata') ? 'active' : '' }}" href="{{ route('student.sppdata') }}">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
+            </div>
+            <span class="nav-money-coins ms-1">Pembayaran SPP</span>
+          </a>
+        </li>
+        <li class="nav-item mt-3">
           <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Account pages</h6>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ Request::routeIs('profile') ? 'active' : '' }}" href="{{ route('profile') }}">
+          <a class="nav-link {{ Request::routeIs('student.profile.index') ? 'active' : '' }}" href="{{ route('student.profile.index') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-single-02 text-dark text-sm opacity-10"></i>
             </div>
             <span class="nav-link-text ms-1">Profile</span>
           </a>
         </li>
-      
+
 
         @endif
 
@@ -131,7 +159,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
       <div class="container-fluid py-1 px-3">
-      @include('layouts.breadcrumb')
+        @include('layouts.breadcrumb')
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
             <div class="input-group">
@@ -346,11 +374,11 @@
 
   <script>
     function confirmLogout() {
-        if (confirm("Anda yakin ingin keluar?")) {
-            document.getElementById('logout-form').submit();
-        }
+      if (confirm("Anda yakin ingin keluar?")) {
+        document.getElementById('logout-form').submit();
+      }
     }
-</script>
+  </script>
   <script src="../assets/js/core/popper.min.js"></script>
   <script src="../assets/js/core/bootstrap.min.js"></script>
   <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>

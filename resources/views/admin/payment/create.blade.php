@@ -1,72 +1,78 @@
 @extends('layouts.layout')
 @section('content')
-<div class="row">
-  <div class="col-12">
-    <form action="{{ route('admin.payment.store') }}" method="POST" id="classForm" class="p-4 border rounded shadow-sm bg-light">
+<div class="container">
+    <h4>Tambah Pembayaran</h4>
+    <form action="{{ route('admin.payment.store') }}" method="POST">
         @csrf
 
         <div class="mb-3">
-            <label for="user_id" class="form-label">Nama Siswa</label>
-            <input type="text" class="form-control" id="user_id" name="user_id" placeholder="Masukkan Nama Siswa" required>
+            <label for="user_id">Nama Siswa</label>
+            <select name="user_id" id="user_id" class="form-control" required>
+                <option value="">-- Pilih Siswa --</option>
+                @foreach($students as $student)
+                <option value="{{ $student->id }}">{{ $student->name }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div class="mb-3">
-        <label for="payment_type" class="form-label">Jenis Pembayaran</label>
-        <select class="form-select" id="payment_type" name="payment_type" required>
-            <option value="" disabled selected>Pilih Jenis Pembayaran</option>
-            <option value="pendaftaran">Bayar Pendaftaran</option>
-            <option value="spp">Bayar SPP</option>
-]        </select>
+            <label for="class_id">Kelas</label>
+            <select name="class_id" id="class_id" class="form-control" required>
+                <option value="">-- Pilih Kelas --</option>
+                @foreach($classes as $class)
+                <option value="{{ $class->id }}">{{ $class->class_name }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div class="mb-3">
-            <label for="amount" class="form-label">Jumlah Pembayaran</label>
-            <input type="number" class="form-control" id="amount" name="amount" placeholder="Masukkan Jumlah Pembayaran" required>
+            <label for="payment_type">Tipe Pembayaran</label>
+            <input type="text" name="payment_type" class="form-control" required>
         </div>
 
         <div class="mb-3">
-        <label for="method" class="form-label">Metode Pembayaran</label>
-        <select class="form-select" id="method" name="method" required>
-            <option value="" disabled selected>Pilih Metode Pembayaran</option>
-            <option value="CASH">CASH</option>
-            <option value="QRIS">QRIS</option>
-            <option value="QRIS">Cicilan</option>
-        </select>
+            <label for="amount">Jumlah</label>
+            <input type="number" name="amount" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label for="month" class="form-label">Bulan Pembayaran</label>
-            <select class="form-select" id="month" name="month" required>
-            <option value="" disabled selected>Pilih Bulan</option>
-            <option value="Januari">Januari</option>
-            <option value="Februari">Februari</option>
-            <option value="Maret">Maret</option>
-            <option value="April">April</option>
-            <option value="Mei">Mei</option>
-            <option value="Juni">Juni</option>
-            <option value="Juli">Juli</option>
-            <option value="Agustus">Agustus</option>
-            <option value="September">September</option>
-            <option value="Oktober">Oktober</option>
-            <option value="November">November</option>
-            <option value="Desember">Desember</option>
-        </select>
+            <label for="method">Metode Pembayaran</label>
+            <select name="method" class="form-control">
+                <option value="cash">Cash</option>
+                <option value="transfer">Transfer</option>
+            </select>
+        </div>
+
+       <div class="mb-3">
+            <label for="month">Bulan</label>
+            <select name="month" id="month" class="form-control" required>
+                @php
+                    $months = [
+                        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                    ];
+                @endphp
+                @foreach($months as $month)
+                    <option value="{{ $month }}">{{ $month }}</option>
+                @endforeach
+            </select>
+        </div>
+
+         <div class="mb-3">
+            <label for="status">Status Pembayaran</label>
+            <select name="status" class="form-control" required>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="failed">Failed</option>
+            </select>
         </div>
 
         <div class="mb-3">
-            <label for="paid_at" class="form-label">Tanggal Pembayaran</label>
-            <input type="date" class="form-control" id="paid_at" name="paid_at" placeholder="Masukkan Tanggal Pembayaran" required>
+            <label for="paid_at">Tanggal Pembayaran</label>
+            <input type="date" name="paid_at" class="form-control">
         </div>
 
-        <div class="mb-3">
-            <label for="description" class="form-label">Deskripsi</label>
-            <textarea class="form-control" id="description" name="description" placeholder="Masukkan Deskripsi" required></textarea>
-        </div>
-
-        <div class="text-end">
-            <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
+        <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
-  </div>
 </div>
 @endsection

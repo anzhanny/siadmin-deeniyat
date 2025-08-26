@@ -5,6 +5,8 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Student;
+use App\Models\TbClass;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -12,96 +14,125 @@ class PaymentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $data = Payment::paginate(10);
-        return view('admin.payment.index', compact('data'));
-    }
-
+public function index()
+{
+     // Ambil data payment + data siswa (user) + data kelas (class)
+    $data = Payment::with(['user', 'class'])->paginate(10);
+    return view('admin.payment.index', compact('data'));
+}
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
-    {
-        $data = Student::all();
-        return view('admin.payment.create', compact('data'));
-    }
+
+    public function getStudentClass($id)
+{
+    $student = User::with('class') // pastikan relasi sudah ada
+                ->where('role_id', 2)
+                ->findOrFail($id);
+
+    return response()->json([
+        'class_id' => $student->class_id,
+        'class_name' => $student->class->class_name ?? '-'
+    ]);
+}
+
+public function create()
+{
+    $students = User::where('role_id', 2)->get(); // role_id=2 untuk siswa
+    $classes = TbClass::all(); // ganti SchoolClass sesuai model kelas kamu
+    return view('admin.payment.create', compact('students', 'classes'));
+}
+
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $student_id = $request->input('student_id');
-        $class_id = $request->input('class_id');
-        $payment_type = $request->input('payment_type');
-        $amount = $request->input('amount');
-        $method = $request->input('method');
-        $month = $request->input('month');
-        $paid_at = $request->input('paid_at');
-        $reference_number = $request->input('reference_number');
-        $status = $request->input('status');
-        $description = $request->input('description');
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'user_id'       => 'required|exists:users,id',
+        'class_id'      => 'required|exists:tb_class,id',
+        'payment_type'  => 'required|string|max:255',
+        'amount'        => 'required|numeric',
+        'method'        => 'required|in:cash,transfer',
+        'month'         => 'nullable|string|max:50',
+        'status'        => 'required|in:pending,paid,failed',
+        'paid_at'       => 'nullable|date', // validasi tanggal
+    ]);
 
-        $data = new Payment();
-        $data->student_id = $student_id;
-        $data->class_id = $class_id;
-        $data->payment_type = $payment_type;
-        $data->amount = $amount;
-        $data->method = $method;
-        $data->month = $month;
-        $data->paid_at = $paid_at;
-        $data->reference_number = $reference_number;
-        $data->status = $status;
-        $data->description = $description;
-        $data->save();
-        return redirect()->route('admin.payment.index');
-
+    // Format tanggal kalau diisi
+    if ($request->filled('paid_at')) {
+        $validated['paid_at'] = date('Y-m-d', strtotime($request->paid_at));
+    } else {
+        $validated['paid_at'] = null;
     }
+
+    Payment::create($validated);
+
+    return redirect()->route('admin.payment.index')->with('success', 'Data pembayaran berhasil ditambahkan.');
+}
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-       $data = Payment::find($id);
-        return $data;
-    }
+public function show(string $id)
+{
+    $payment = Payment::with(['user', 'class'])->findOrFail($id);
+    return view('admin.payment.show', compact('payment'));
+}
+
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        //
-    }
+public function edit($id)
+{
+    $payment = Payment::findOrFail($id);
+    $students = User::where('role_id', 2)->get();
+    $classes = TbClass::all();
+    return view('admin.payment.edit', compact('payment', 'students', 'classes'));
+}
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-       $data = Payment::find($id);
-       if (isset($request->student_id)) $data->student_id = $request->student_id;
-       if (isset($request->class_id)) $data->class_id = $request->class_id;
-       if (isset($request->payment_type)) $data->payment_type = $request->payment_type;
-       if (isset($request->amount)) $data->amount = $request->amount;
-       if (isset($request->method)) $data->method = $request->method;
-       if (isset($request->month)) $data->month = $request->month;
-       if (isset($request->paid_at)) $data->paid_at = $request->paid_at;
-       if (isset($request->reference_number)) $data->reference_number = $request->reference_number;
-       if (isset($request->status)) $data->status = $request->status;
-       if (isset($request->description)) $data->description = $request->description;
-       $data->save();
-       return $data;
+public function update(Request $request, $id)
+{
+    $validated = $request->validate([
+        'user_id'       => 'required|exists:users,id',
+        'class_id'      => 'required|exists:tb_class,id',
+        'payment_type'  => 'required|string|max:255',
+        'amount'        => 'required|numeric',
+        'method'        => 'required|in:cash,transfer',
+        'month'         => 'nullable|string|max:50',
+        'status'        => 'required|in:pending,paid,failed',
+        'paid_at'       => 'nullable|date', // validasi tanggal
+    ]);
+
+    // Format tanggal kalau diisi
+    if ($request->filled('paid_at')) {
+        $validated['paid_at'] = date('Y-m-d', strtotime($request->paid_at));
+    } else {
+        $validated['paid_at'] = null;
     }
+
+    $payment = Payment::findOrFail($id);
+    $payment->update($validated);
+
+    return redirect()->route('admin.payment.index')->with('success', 'Data pembayaran berhasil diperbarui.');
+}
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        $data = Payment::find($id);
-        $data->delete();
-    }
+{
+    $data = Payment::findOrFail($id);
+    $data->delete();
+
+    return redirect()->route('admin.payment.index')
+        ->with('success', 'Data pembayaran berhasil dihapus');
+}
+
 }

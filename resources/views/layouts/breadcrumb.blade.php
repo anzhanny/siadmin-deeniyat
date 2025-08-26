@@ -6,21 +6,32 @@
         
         'admin.student.index' => 'Data Siswa',
         'admin.student.create' => 'Tambah Data Siswa',
+        'admin.student.edit' => 'Edit Data Siswa',
        
         'admin.class.index' => 'Data Kelas',
         'admin.class.create' => 'Tambah data Kelas',
+        'admin.class.edit' => 'Edit Data Kelas',
        
-        'admin.payment.index' => 'Data Pembayaran',
+        'admin.payment.index' => 'Data Pembayaran Lunas',
+        'admin.payment.create' => 'Tambah Data Pembayaran Lunas',
+        'admin.payment.edit' => 'Edit Data Pembayaran Lunas',
+
+        'admin.installment.index' => 'Data Pembayaran Cicilan',
+        'admin.installment.create' => 'Tambah Data Pembayaran Cicilan',
+        'admin.installment.edit' => 'Edit Data Pembayaran Cicilan',
+
+        'admin.report.index' => 'Laporan Pembayaran',
+        'admin.report.create' => 'Tambah Laporan Pembayaran',
+        'admin.report.edit' => 'Edit Laporan Pembayaran',
+
 
 
         // Student
         'student.dashboard' => 'Dashboard',
-        'student.sppdata' => 'Data pembayaran',
-
-
+        'student.payment.index' => 'Data pembayaran',
 
         // Umum
-        'profile' => 'Profile'
+        'student.profile.index' => 'Edit Profil Siswa'
     ];
 
     // Ambil nama route saat ini

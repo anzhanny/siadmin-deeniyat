@@ -18,4 +18,15 @@ class TbClass extends Model
     ];
     protected $dates = ['created_at', 'updated_at'];
 
+    public function payments()
+{
+    return $this->hasMany(Payment::class, 'class_id');
+}
+
+public function class()
+{
+    return $this->belongsTo(TbClass::class, 'class_id');
+}
+
+
 }

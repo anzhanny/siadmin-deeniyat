@@ -3,31 +3,16 @@
 namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
-use App\Models\TbClass;
-use App\Models\User;
 use Illuminate\Http\Request;
 
-class DashboardController extends Controller
+class ReportController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-public function index()
+    public function index()
     {
-        // Hitung total siswa
-        $studentCount = User::where('role_id', 2)->count();
-
-        // Hitung total guru (unik berdasarkan nama)
-        $teacherCount = TbClass::distinct('teacher_name')->count('teacher_name');
-
-        // Hitung total kelas
-        $classCount = TbClass::count();
-
-            $totalUangMasuk = Payment::where('status', 'lunas')->sum('amount');
-
-
-        return view('admin.dashboard', compact('studentCount', 'teacherCount', 'classCount', 'totalUangMasuk'));
+        //
     }
 
     /**
