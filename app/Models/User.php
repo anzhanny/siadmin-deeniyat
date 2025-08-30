@@ -41,8 +41,22 @@ class User extends Authenticatable
     ];
     protected $dates = ['created_at', 'updated_at'];
 
-     
-     public function role()
+    public static function generateNis()
+    {
+        $year = date('Y');
+        $last = self::whereYear('created_at', $year)
+            ->whereNotNull('nis')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $number = $last ? (int)substr($last->nis, -4) + 1 : 1;
+
+        return $year . str_pad($number, 4, '0', STR_PAD_LEFT);
+    }
+
+
+
+    public function role()
     {
         return $this->belongsTo(Role::class, 'role_id', 'id');
     }

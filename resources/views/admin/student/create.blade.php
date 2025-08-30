@@ -2,12 +2,10 @@
 @section('content')
 <div class="row">
   <div class="col-12">
-    <form action="{{ route('admin.student.store') }}" enctype="multipart/form-data" method="POST" id="studentForm" class="p-4 border rounded shadow-sm bg-light">
+    <form action="{{ route('admin.student.store') }}" method="POST" enctype="multipart/form-data" id="studentForm" class="p-4 border rounded shadow-sm bg-light"> 
       @csrf
 
       <div class="row">
-
-
         <div class="col-md-6 mb-3">
           <label for="name" class="form-label">Nama Siswa </span></label>
           <input type="text" class="form-control" id="name" name="name" required>

@@ -121,7 +121,8 @@
       </div>
 
       <div class="text-end mt-4">
-        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+        <button type="reset" class="btn btn-secondary">Reset</button>
       </div>
     </form>
   </div>

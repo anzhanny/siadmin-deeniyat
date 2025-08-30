@@ -11,7 +11,6 @@ class StudentController extends Controller
 {
     public function index()
     {
-        // Pagination 5 data per halaman
         $data = User::where('role_id', 2)->paginate(10);
         return view('admin.student.index', compact('data'));
     }
@@ -30,9 +29,11 @@ class StudentController extends Controller
             'photo'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Simpan foto
-        $filename = time() . '.' . $request->photo->getClientOriginalExtension();
-        $path = $request->photo->storeAs('photos', $filename, 'public');
+        $path = null;
+        if ($request->hasFile('photo')) {
+            $filename = time() . '.' . $request->photo->getClientOriginalExtension();
+            $path = $request->photo->storeAs('photos', $filename, 'public');
+        }
 
         $data = new User();
         $data->name = $request->name;
@@ -52,7 +53,7 @@ class StudentController extends Controller
         $data->father_job = $request->father_job;
         $data->mother_name = $request->mother_name;
         $data->mother_job = $request->mother_job;
-        $data->photo = $path; // simpan path relatif
+        $data->photo = $path;
 
         $data->save();
 
@@ -92,7 +93,7 @@ class StudentController extends Controller
         $data->mother_name = $request->mother_name;
         $data->mother_job = $request->mother_job;
 
-                if ($request->filled('password')) {
+        if ($request->filled('password')) {
             $data->password = bcrypt($request->password);
         }
 
