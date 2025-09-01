@@ -11,12 +11,14 @@ class Payment extends Model
     [
         'user_id',
         'class_id',
-        'payment_type',
         'amount',
-        'method',
-        'month',
+        'total_amount',
+        'payment_method',
+        'payment_type',
+        'installment_count',
         'status',
-        'paid_at'
+        'payment_date',
+        'completed_at'
     ];
     protected $dates = ['created_at', 'updated_at'];
 
@@ -25,14 +27,19 @@ class Payment extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function class()
+        public function class()
     {
         return $this->belongsTo(TbClass::class, 'class_id', 'id');
     }
 
+    public function installments()
+    {
+        return $this->hasMany(Installment::class, 'payment_id');
+    }
+
     public function payments()
 {
-    return $this->hasMany(Payment::class, 'user_id');
+        return $this->hasMany(Payment::class, 'user_id');
 }
 
 }

@@ -15,6 +15,9 @@ class TbClass extends Model
         'teacher_name',
         'academic_year_first',
         'academic_year_last',
+        'registration_fee',
+        'infrastructure_fee',
+        'uniform_fee',
     ];
     protected $dates = ['created_at', 'updated_at'];
 

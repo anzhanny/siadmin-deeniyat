@@ -88,13 +88,13 @@
                   <!-- Nama Siswa -->
                   <div class="col-md-6 mb-3">
                     <label for="name" class="form-label">Nama Siswa <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="name" name="name" placeholder="Masukkan Nama Siswa" required>
+                    <input type="text" class="form-control" id="name" name="name" required>
                   </div>
 
                   <!-- Email -->
                   <div class="col-md-6 mb-3">
                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="Masukkan Email" required>
+                    <input type="email" class="form-control" id="email" name="email" required>
                     <div class="invalid-feedback">Email tidak valid (harus mengandung @ dan format benar).</div>
                   </div>
 
@@ -105,7 +105,7 @@
                     </label>
                     <input id="password" name="password" type="password"
                       class="form-control form-control-lg pe-5"
-                      placeholder="Password" aria-label="Password"
+                      aria-label="Password"
                       value="{{ old('password') }}">
                     <span class="password-toggle"
                       onclick="togglePassword('password', 'toggleIcon1')">
@@ -119,7 +119,7 @@
                     </label>
                     <input id="password_confirmation" name="password_confirmation" type="password"
                       class="form-control form-control-lg pe-5"
-                      placeholder="Konfirmasi Password" aria-label="Konfirmasi Password"
+                      aria-label="Konfirmasi Password"
                       value="{{ old('password_confirmation') }}">
                     <span class="password-toggle"
                       onclick="togglePassword('password_confirmation', 'toggleIcon2')">
@@ -132,7 +132,7 @@
                   <!-- Tempat Lahir -->
                   <div class="col-md-6 mb-3">
                     <label for="birthplace" class="form-label">Tempat Lahir <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="birthplace" name="birthplace" placeholder="Masukkan Tempat Lahir" required>
+                    <input type="text" class="form-control" id="birthplace" name="birthplace" required>
                   </div>
 
                   <!-- Tanggal Lahir -->
@@ -172,37 +172,37 @@
                   <!-- No Telp -->
                   <div class="col-md-6 mb-3">
                     <label for="phone" class="form-label">No Telp <span class="text-danger">*</span></label>
-                    <input type="integer" class="form-control" id="phone" name="phone" placeholder="Masukkan No Telp" required>
+                    <input type="number" class="form-control" id="phone" name="phone" required>
                   </div>
 
                   <!-- Alamat -->
                   <div class="col-md-6 mb-3">
                     <label for="address" class="form-label">Alamat <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="address" name="address" placeholder="Masukkan Alamat" required>
+                    <input type="text" class="form-control" id="address" name="address" required>
                   </div>
 
                   <!-- Nama Ayah -->
                   <div class="col-md-6 mb-3">
                     <label for="father_name" class="form-label">Nama Ayah <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="father_name" name="father_name" placeholder="Masukkan Nama Ayah" required>
+                    <input type="text" class="form-control" id="father_name" name="father_name" required>
                   </div>
 
                   <!-- Pekerjaan Ayah -->
                   <div class="col-md-6 mb-3">
                     <label for="father_job" class="form-label">Pekerjaan Ayah</label>
-                    <input type="text" class="form-control" id="father_job" name="father_job" placeholder="Masukkan Pekerjaan Ayah">
+                    <input type="text" class="form-control" id="father_job" name="father_job">
                   </div>
 
                   <!-- Nama Ibu -->
                   <div class="col-md-6 mb-3">
                     <label for="mother_name" class="form-label">Nama Ibu <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="mother_name" name="mother_name" placeholder="Masukkan Nama Ibu" required>
+                    <input type="text" class="form-control" id="mother_name" name="mother_name" required>
                   </div>
 
                   <!-- Pekerjaan Ibu -->
                   <div class="col-md-6 mb-3">
                     <label for="mother_job" class="form-label">Pekerjaan Ibu</label>
-                    <input type="text" class="form-control" id="mother_job" name="mother_job" placeholder="Masukkan Pekerjaan Ibu">
+                    <input type="text" class="form-control" id="mother_job" name="mother_job">
                   </div>
 
                   <!-- Foto -->
@@ -212,18 +212,20 @@
                   </div>
                 </div>
 
-
                 <div class="text-end mt-4">
-                  <button id="nextBtn" class="btn btn-primary" disabled>Lanjutkan ke Pembayaran</button>
+                  <a href="{{ route('login') }}" class="btn btn-outline-secondary">
+                    ⬅ Kembali
+                  </a>
+                  <button id="nextBtn" class="btn btn-primary" disabled>Lanjutkan</button>
                 </div>
               </form>
             </div>
             <div class="card-footer text-left pt-0 px-lg-4 px-1">
-                  <p class="mb-4 text-sm mx-auto">
-                    Sudah punya akun?
-                    <a href="{{ route('login') }}" class="text-primary text-gradient font-weight-bold">Login</a>
-                  </p>
-                </div>
+              <p class="mb-4 text-sm mx-auto">
+                Sudah punya akun?
+                <a href="{{ route('login') }}" class="text-primary text-gradient font-weight-bold">Login</a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -266,50 +268,6 @@
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
-  <!-- <script>
-    // Ambil semua elemen form yang required
-    const form = document.querySelector('form');
-    const requiredFields = form.querySelectorAll('[required]');
-    const nextBtn = document.getElementById('nextBtn');
-
-    function validateForm() {
-      let allValid = true;
-
-      requiredFields.forEach(field => {
-        if (field.type === 'radio') {
-          // Cek radio group
-          const radioGroup = form.querySelectorAll(`[name="${field.name}"]`);
-          const oneChecked = Array.from(radioGroup).some(r => r.checked);
-          if (!oneChecked) allValid = false;
-        } else {
-          if (!field.value.trim()) allValid = false;
-        }
-      });
-
-      nextBtn.disabled = !allValid;
-    }
-
-    // Cek setiap kali input berubah
-    requiredFields.forEach(field => {
-      field.addEventListener('input', validateForm);
-      if (field.type === 'radio') {
-        field.addEventListener('change', validateForm);
-      }
-    });
-
-    // Jika tombol ditekan, redirect ke detailpayment.blade.php
-    nextBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (!nextBtn.disabled) {
-        // Redirect via JS, sesuaikan dengan URL rute detailpayment
-        window.location.href = "{{ route('detailpayment') }}";
-      }
-    });
-
-    // Validasi awal saat halaman dimuat
-    validateForm();
-  </script> -->
-
   <script>
     function togglePassword(inputId, iconId) {
       const passwordInput = document.getElementById(inputId);
@@ -342,8 +300,54 @@
       }
     }
 
+    // Ambil semua elemen form yang required
+    const form = document.querySelector('form');
+    const requiredFields = form.querySelectorAll('[required]');
+
+    function validateForm() {
+      let allValid = true;
+
+      requiredFields.forEach(field => {
+        if (field.type === 'radio') {
+          // Cek radio group
+          const radioGroup = form.querySelectorAll(`[name="${field.name}"]`);
+          const oneChecked = Array.from(radioGroup).some(r => r.checked);
+          if (!oneChecked) allValid = false;
+        } else {
+          if (!field.value.trim()) allValid = false;
+        }
+      });
+
+      // Cek juga konfirmasi password
+      if (pass.value !== passConfirm.value) {
+        allValid = false;
+      }
+
+      nextBtn.disabled = !allValid;
+    }
+
+    // Cek setiap kali input berubah
+    requiredFields.forEach(field => {
+      field.addEventListener('input', validateForm);
+      if (field.type === 'radio') {
+        field.addEventListener('change', validateForm);
+      }
+    });
+
+    // Jika tombol ditekan, submit form
+    nextBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (!nextBtn.disabled) {
+        // Submit form untuk menyimpan data registrasi
+        form.submit();
+      }
+    });
+
     pass.addEventListener('input', validatePasswords);
     passConfirm.addEventListener('input', validatePasswords);
+
+    // Validasi awal saat halaman dimuat
+    validateForm();
   </script>
 
 

@@ -3,91 +3,135 @@
 namespace App\Http\Controllers\student;
 
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Payment;
+use App\Models\Installment;
+use App\Models\TbClass;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the payment detail page
      */
-    public function index()
+    public function detailPayment()
     {
-        $data = Payment::paginate(10);
-        return view('admin.payment.index', compact('data'));
+        // Ambil user dari Auth, kalau tidak ada ambil dari session
+        $user = Auth::user() ?? User::find(session('user_id'));
+
+        if (!$user) {
+            return redirect()->route('login')->withErrors('Anda harus login terlebih dahulu.');
+        }
+
+        $class = TbClass::find($user->class_id);
+
+        session([
+            'class_id' => $user->class_id,
+            'user_id' => $user->id
+        ]);
+
+        return view('payment.detailpayment', compact('user', 'class'));
+    }
+
+    public function processPayment(Request $request)
+    {
+        $request->validate([
+            'payment_type' => 'required|string', // tunai / non-tunai
+            'payment_category' => 'required|string', // lunas / cicilan
+        ]);
+
+        // Simpan sementara ke database (status pending jika tunai)
+        // Disesuaikan dengan tabel kamu (contoh Payment model)
+        $payment = new \App\Models\Payment();
+        $payment->user_id = Auth::id() ?? session('user_id');
+        $payment->amount = 200000 + 100000 + 150000; // total biaya
+        $payment->payment_type = $request->payment_type;
+        $payment->payment_category = $request->payment_category;
+        $payment->status = $request->payment_type === 'tunai' ? 'pending' : 'paid';
+        $payment->save();
+
+        return redirect()->route('student.dashboard')->with('success', 'Pendaftaran berhasil, proses pembayaran disimpan.');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Create installments for the payment
      */
-    public function create(Request $request)
+    private function createInstallments($payment, $totalAmount, $installmentCount)
     {
-        $data = new Payment();
-        $data->user_id = $request->user_id;
-        $data->class_id = $request->class_id;
-        $data->payment_type = $request->payment_type;
-        $data->amount = $request->amount;
-        $data->method = $request->method;
-        $data->month = $request->month;
-        $data->paid_at = $request->paid_at;
-        $data->reference_number = $request->reference_number;
-        $data->status = $request->status;
-        $data->description = $request->description;
-        $data->save();
-        return $data;
+        $installmentAmount = ceil($totalAmount / $installmentCount);
+        $remainingBalance = $totalAmount;
+        
+        for ($i = 1; $i <= $installmentCount; $i++) {
+            $currentAmount = ($i == $installmentCount) ? $remainingBalance : $installmentAmount;
+            
+            Installment::create([
+                'payment_id' => $payment->id,
+                'nominal' => $currentAmount,
+                'installments_to' => $i,
+                'paid_at' => null,
+                'remaining_balance' => $remainingBalance - $currentAmount,
+            ]);
+            
+            $remainingBalance -= $currentAmount;
+        }
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Show payment confirmation page
      */
-    public function store(Request $request)
+    public function confirmPayment($paymentId)
     {
-        //
+        $payment = Payment::with(['user', 'class', 'installments'])->findOrFail($paymentId);
+        
+        // Ensure user can only see their own payment
+        if ($payment->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return view('payment.confirmpayment', compact('payment'));
     }
 
     /**
-     * Display the specified resource.
+     * Complete payment process
      */
-    public function show(string $id)
+    public function completePayment($paymentId)
     {
-       $data = Payment::find($id);
-        return $data;
-    }
+        $payment = Payment::findOrFail($paymentId);
+        
+        // Ensure user can only complete their own payment
+        if ($payment->user_id !== Auth::id()) {
+            abort(403);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        try {
+            DB::beginTransaction();
+            
+            // Update payment status
+            $payment->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-       $data = Payment::find($id);
-       if (isset($request->user_id)) $data->user_id = $request->user_id;
-       if (isset($request->class_id)) $data->class_id = $request->class_id;
-       if (isset($request->payment_type)) $data->payment_type = $request->payment_type;
-       if (isset($request->amount)) $data->amount = $request->amount;
-       if (isset($request->method)) $data->method = $request->method;
-       if (isset($request->month)) $data->month = $request->month;
-       if (isset($request->paid_at)) $data->paid_at = $request->paid_at;
-       if (isset($request->reference_number)) $data->reference_number = $request->reference_number;
-       if (isset($request->status)) $data->status = $request->status;
-       if (isset($request->description)) $data->description = $request->description;
-       $data->save();
-       return $data;
-    }
+            // Update first installment as paid
+            if ($payment->installments->count() > 0) {
+                $firstInstallment = $payment->installments->where('installments_to', 1)->first();
+                if ($firstInstallment) {
+                    $firstInstallment->update([
+                        'paid_at' => now(),
+                    ]);
+                }
+            }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $data = Payment::find($id);
-        $data->delete();
+            DB::commit();
+
+            // Redirect to thank you page
+            return redirect()->route('thankyoupage');
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat menyelesaikan pembayaran: ' . $e->getMessage()]);
+        }
     }
 }

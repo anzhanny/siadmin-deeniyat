@@ -121,16 +121,6 @@ Route::get('admin/report-data', [ReportController::class, 'index'])->name('admin
 // student
 Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
 
-Route::get('/student/payment', [StudentPaymentController::class, 'payment'])->name('student.payment.index');
-
-Route::get('/student/spp-data', [StudentSppDataController::class, 'index'])->name('student.sppdata');
-Route::get('/student/sppdata/create', [StudentSppDataController::class, 'create']);
-Route::resource('/student/sppdata', StudentSppDataController::class)->names('sppdata');
-
-Route::post('/student/spp-data/create', [StudentSppDataController::class, 'create']);
-Route::put('/student/spp-data/updated{id}', [StudentSppDataController::class, 'update']);
-Route::delete('/student/spp-data/delete{id}', [StudentSppDataController::class, 'destroy']);
-
 Route::get('admin/student-profile', [StudentProfileController::class, 'index'])->name('student.profile.index');
 Route::get('admin/student-profile/create', [StudentProfileController::class, 'create'])->name('student.profile.create');
 Route::post('admin/student-profile', [StudentProfileController::class, 'store'])->name('student.profile.store');
@@ -140,9 +130,13 @@ Route::delete('admin/student-profile/{id}', [StudentProfileController::class, 'd
 
 Route::get('/migrate-student', [MigrateStudentController::class, 'migrate']);
 
-Route::get('/detailpayment', function () {
-    return view('detailpayment');
-})->name('detailpayment');
+// Payment routes
+Route::prefix('payment')->name('payment.')->group(function () {
+    Route::get('/detailpayment', [StudentPaymentController::class, 'detailPayment'])->name('detailpayment');
+    Route::post('/process', [StudentPaymentController::class, 'processPayment'])->name('process');
+    Route::get('/confirm/{payment_id}', [StudentPaymentController::class, 'confirmPayment'])->name('confirm');
+    Route::post('/complete/{payment_id}', [StudentPaymentController::class, 'completePayment'])->name('complete');
+});
 
 
 

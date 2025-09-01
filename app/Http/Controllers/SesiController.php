@@ -19,22 +19,20 @@ class SesiController extends Controller
     public function register(Request $request)
     {
         $name = $request->input('name');
-        $role_id = $request->input('role_id');
         $email = $request->input('email');
         $password = $request->input('password');
+        $birthplace = $request->input('birthplace');
         $birthdate = $request->input('birthdate');
         $gender = $request->input('gender');
-        $nis = $request->input('nis');
         $phone = $request->input('phone');
         $address = $request->input('address');
         $class_id = $request->input('class_id');
-        $is_active = $request->input('is_active');
         $father_name = $request->input('father_name');
         $father_job = $request->input('father_job');
         $mother_name = $request->input('mother_name');
         $mother_job = $request->input('mother_job');
         $photo = $request->input('photo');
-        
+
         $request->validate([
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -42,33 +40,47 @@ class SesiController extends Controller
         $data->name = $name;
         $data->role_id = 2;
         $data->email = $email;
-        $data->password = $password;
+        $data->password = bcrypt($password);
+        $data->birthplace = $birthplace;
         $data->birthdate = $birthdate;
         $data->gender = $gender;
-        $data->nis = $nis;
         $data->phone = $phone;
         $data->address = $address;
         $data->class_id = $class_id;
-        $data->is_active = $is_active;
+        $data->is_active = 1;
         $data->father_name = $father_name;
         $data->father_job = $father_job;
         $data->mother_name = $mother_name;
         $data->mother_job = $mother_job;
         $data->photo = $photo;
-        
+
         if ($request->hasFile('photo')) {
-        $path = $request->file('photo')->store('photos', 'public'); // disimpan di storage/app/public/photos
-        $data->photo = $path; // simpan path-nya ke database
+            $path = $request->file('photo')->store('photos', 'public'); // disimpan di storage/app/public/photos
+            $data->photo = $path; // simpan path-nya ke database
         }
+
+        // return redirect()->route('payment.detailpayment');
         $data->save();
-        return redirect()->route('finalpayment');
+
+        // Login otomatis setelah register
+        Auth::login($data);
+
+        session([
+            'user_id' => $data->id,
+            'class_id' => $data->class_id,
+            'user_name' => $data->name,
+            'user_email' => $data->email
+        ]);
+
+        return redirect()->route('payment.detailpayment');
     }
 
-    function login(Request $request){
+    function login(Request $request)
+    {
         $request->validate([
             'email' => 'required',
             'password' => 'required'
-        ],[
+        ], [
             'email.required' => 'Email wajib diisi',
             'password.required' => 'Password wajib diisi',
         ]);
@@ -80,7 +92,7 @@ class SesiController extends Controller
 
         if (Auth::attempt($infologin)) {
             $user = Auth::user();
-        
+
             if ($user->role_id == 1) {
                 return redirect('/admin/dashboard');
             } elseif ($user->role_id == 2) {
@@ -92,7 +104,6 @@ class SesiController extends Controller
         } else {
             return redirect('/')->withErrors('Username dan password yang dimasukkan tidak sesuai!')->withInput();
         };
-        
     }
 
     public function logout()

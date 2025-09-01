@@ -37,7 +37,8 @@ class User extends Authenticatable
         'father_job',
         'mother_name',
         'mother_job',
-        'photo'
+        'photo',
+
     ];
     protected $dates = ['created_at', 'updated_at'];
 
