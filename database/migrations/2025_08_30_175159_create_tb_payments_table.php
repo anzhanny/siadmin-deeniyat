@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('user_id', 100)->nullable();
             $table->string('class_id', 20)->nullable();
             $table->string('installment_id', 25)->nullable();
-            $table->enum('payment_method', ['full', 'installment']);
+            $table->enum('payment_category', ['lunas', 'cicilan']);
             $table->enum('payment_type', ['tunai', 'non-tunai']);
             $table->string('code', 50)->nullable();
             $table->decimal('amount', 12)->nullable();
-            $table->enum('method', ['cash', 'transfer'])->nullable()->default('cash');
+            $table->string('method',255)->nullable();
             $table->string('month', 20)->nullable();
             $table->string('year', 4)->nullable();
             $table->enum('status', ['pending', 'paid', 'failed'])->nullable()->default('pending');

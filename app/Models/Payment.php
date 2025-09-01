@@ -7,39 +7,30 @@ use Illuminate\Database\Eloquent\Model;
 class Payment extends Model
 {
     protected $table = 'tb_payments';
-    protected $fillable =
-    [
+
+    protected $fillable = [
         'user_id',
         'class_id',
-        'amount',
-        'total_amount',
-        'payment_method',
-        'payment_type',
-        'installment_count',
-        'status',
-        'payment_date',
-        'completed_at'
+        'payment_category', // lunas / cicilan
+        'payment_type', // tunai / non-tunai
+        'code',           // kode pembayaran unik
+        'amount',         // total bayar
+        'method',         // metode pembayaran
+        'month',          // bulan (jika SPP)
+        'year',           // tahun (jika SPP)
+        'status',         // pending / paid / canceled
+        'paid_at',        // kapan dibayar
     ];
-    protected $dates = ['created_at', 'updated_at'];
 
-    public function User()
+    protected $dates = ['created_at', 'updated_at', 'paid_at'];
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-        public function class()
+    public function class()
     {
         return $this->belongsTo(TbClass::class, 'class_id', 'id');
     }
-
-    public function installments()
-    {
-        return $this->hasMany(Installment::class, 'payment_id');
-    }
-
-    public function payments()
-{
-        return $this->hasMany(Payment::class, 'user_id');
-}
-
 }
