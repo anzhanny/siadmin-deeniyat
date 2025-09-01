@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+
+    public function index()
+    {
+        return view('student.payment.index');
+    }
+
     /**
      * Display the payment detail page
      */

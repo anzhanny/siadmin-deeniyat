@@ -114,11 +114,11 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ Route::is('student.sppdata') ? 'active' : '' }}" href="{{ route('student.sppdata') }}">
+          <a class="nav-link {{ Route::is('student.payment.index') ? 'active' : '' }}" href="{{ route('student.payment.index') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-money-coins ms-1">Pembayaran SPP</span>
+            <span class="nav-money-coins ms-1">Pembayaran</span>
           </a>
         </li>
         <li class="nav-item mt-3">

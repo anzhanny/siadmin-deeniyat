@@ -121,6 +121,8 @@ Route::get('admin/report-data', [ReportController::class, 'index'])->name('admin
 // student
 Route::get('/student/dashboard', [StudentDashboardController::class, 'index'])->name('student.dashboard');
 
+Route::get('/student/payment', [StudentPaymentController::class, 'index'])->name('student.payment.index');
+
 Route::get('admin/student-profile', [StudentProfileController::class, 'index'])->name('student.profile.index');
 Route::get('admin/student-profile/create', [StudentProfileController::class, 'create'])->name('student.profile.create');
 Route::post('admin/student-profile', [StudentProfileController::class, 'store'])->name('student.profile.store');

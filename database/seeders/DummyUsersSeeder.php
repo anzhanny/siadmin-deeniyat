@@ -3,36 +3,35 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DummyUsersSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-      $userData = [
+        $userData = [
             [
                 'name' => 'Admin Deeniyat',
                 'email' => 'admin@gmail.com',
-                'role' => 'admin',
-                'password' => bcrypt('12345678'),
+                'role_id' => 1, // Admin
+                'password' => Hash::make('deeniyat123'),
                 'is_active' => 1
             ],
             [
-                'name' => 'Student Deeniyat',
+                'name' => 'Student Dummy',
                 'email' => 'student@gmail.com',
-                'role' => 'student',
-                'password' => bcrypt('12345678'),
+                'role_id' => 2, // Student
+                'password' => Hash::make('student123'),
                 'is_active' => 1
             ],
         ];
 
-        foreach ($userData as $key => $val) {
-            User::create($val);
+        foreach ($userData as $val) {
+            User::updateOrCreate(
+                ['email' => $val['email']], // supaya tidak dobel jika seeder diulang
+                $val
+            );
         }
-
     }
 }
