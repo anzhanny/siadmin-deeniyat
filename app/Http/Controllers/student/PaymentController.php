@@ -25,20 +25,22 @@ class PaymentController extends Controller
     public function detailPayment()
     {
         // Ambil user dari Auth, kalau tidak ada ambil dari session
-        $user = Auth::user() ?? User::find(session('user_id'));
+        // $user = Auth::user() ?? User::find(session('user_id'));
 
-        if (!$user) {
-            return redirect()->route('login')->withErrors('Anda harus login terlebih dahulu.');
-        }
+        // if (!$user) {
+        //     return redirect()->route('login')->withErrors('Anda harus login terlebih dahulu.');
+        // }
 
-        $class = TbClass::find($user->class_id);
+        // $class = TbClass::find($user->class_id);
 
-        session([
-            'class_id' => $user->class_id,
-            'user_id' => $user->id
-        ]);
+        // session([
+        //     'class_id' => $user->class_id,
+        //     'user_id' => $user->id
+        // ]);
 
-        return view('payment.detailpayment', compact('user', 'class'));
+        // return view('payment.detailpayment', compact('user', 'class'));
+        return view('payment.detailpayment');
+
     }
 
     public function processPayment(Request $request)
@@ -68,10 +70,10 @@ class PaymentController extends Controller
     {
         $installmentAmount = ceil($totalAmount / $installmentCount);
         $remainingBalance = $totalAmount;
-        
+
         for ($i = 1; $i <= $installmentCount; $i++) {
             $currentAmount = ($i == $installmentCount) ? $remainingBalance : $installmentAmount;
-            
+
             Installment::create([
                 'payment_id' => $payment->id,
                 'nominal' => $currentAmount,
@@ -79,7 +81,7 @@ class PaymentController extends Controller
                 'paid_at' => null,
                 'remaining_balance' => $remainingBalance - $currentAmount,
             ]);
-            
+
             $remainingBalance -= $currentAmount;
         }
     }
@@ -87,17 +89,33 @@ class PaymentController extends Controller
     /**
      * Show payment confirmation page
      */
-    public function confirmPayment($paymentId)
+    // public function confirmPayment($paymentId)
+    public function confirmPayment()
     {
-        $payment = Payment::with(['user', 'class', 'installments'])->findOrFail($paymentId);
-        
-        // Ensure user can only see their own payment
-        if ($payment->user_id !== Auth::id()) {
-            abort(403);
-        }
+        // $payment = Payment::with(['user', 'class', 'installments'])->findOrFail($paymentId);
 
-        return view('payment.confirmpayment', compact('payment'));
+        // // Ensure user can only see their own payment
+        // if ($payment->user_id !== Auth::id()) {
+        //     abort(403);
+        // }
+
+        // return view('payment.confirmpayment', compact('payment'));
+        return view('payment.confirmpayment');
     }
+
+    public function thankyouPage()
+    {
+        // $payment = Payment::with(['user', 'class', 'installments'])->findOrFail($paymentId);
+
+        // // Ensure user can only see their own payment
+        // if ($payment->user_id !== Auth::id()) {
+        //     abort(403);
+        // }
+
+        // return view('payment.confirmpayment', compact('payment'));
+        return view('payment.thanyoupage');
+    }
+
 
     /**
      * Complete payment process
@@ -105,7 +123,7 @@ class PaymentController extends Controller
     public function completePayment($paymentId)
     {
         $payment = Payment::findOrFail($paymentId);
-        
+
         // Ensure user can only complete their own payment
         if ($payment->user_id !== Auth::id()) {
             abort(403);
@@ -113,7 +131,7 @@ class PaymentController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             // Update payment status
             $payment->update([
                 'status' => 'completed',
@@ -134,7 +152,6 @@ class PaymentController extends Controller
 
             // Redirect to thank you page
             return redirect()->route('thankyoupage');
-            
         } catch (\Exception $e) {
             DB::rollback();
             return back()->withErrors(['error' => 'Terjadi kesalahan saat menyelesaikan pembayaran: ' . $e->getMessage()]);

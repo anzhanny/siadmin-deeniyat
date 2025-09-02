@@ -33,26 +33,25 @@
 </head>
 
 <body class="">
-  <main class="main-content  mt-0">
-    <div class="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg" 
-         style="background-image: url('https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/signup-cover.jpg'); background-position: top;">
+<main class="main-content mt-0">
+    <div class="page-header align-items-start min-vh-50 pt-5 pb-10 m-3 border-radius-lg" style="background-image: url('https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/signup-cover.jpg'); background-position: top;">
       <span class="mask bg-gradient-dark opacity-6"></span>
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-12 text-center mx-auto">
-            <img src="{{ asset('assets/img/logos/deeniyat-logo.png') }}" 
-                 alt="Deeniyat Al Hidayah Logo" style="width: 80px;">
-            <h1 class="text-white mb-2 mt-2" style="font-size: 34px;"> Pembayaran Berhasil! </h1>
+            <img src="{{ asset('assets/img/logos/deeniyat-logo.png') }}"
+              alt="Deeniyat Al Hidayah Logo" style="width: 80px;">
+            <h3 class="text-white mb-2 mt-2">Jazakumullah Khairan Katsiran....</h3>
           </div>
         </div>
       </div>
     </div>
     <div class="container">
       <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
-        <div class="col-xl-8 col-lg-10 col-md-12 mx-auto">
+        <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
           <div class="card z-index-0">
             <div class="card-header text-center pt-4">
-              <h5 class="font-weight-bolder text-success">Selamat!</h5>
+              <h4 class="font-weight-bolder text-success">Selamat Pembayaran Berhasil! !</h4>
               <p class="text-lead" style="font-size: 14px;">
                 Terima kasih telah melakukan pembayaran pendaftaran.<br>
                 Data Anda telah kami terima dan status Anda sekarang adalah <strong>Siswa Aktif</strong> di 
@@ -64,7 +63,7 @@
                    class="img-fluid mb-4" style="max-width: 220px;">
               <div class="mt-4">
                 <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
-                  Lanjut ke Dashboard
+                  Login Sekarang!
                 </a>
               </div>
               <p class="text-sm mt-3 mb-0">

@@ -21,7 +21,7 @@
   <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets/img/apple-icon.png') }}" rel="apple-touch-icon" sizes="76x76">
   <link rel="icon" type="image/png" href="{{ asset('assets/img/logos/deeniyat-logo.png') }} ">
   <title>
-    Deeniyat App
+    Pendaftaran - Deeniyat Al Hidayah
   </title>
   <!--     Fonts and icons     -->
   <link href=" https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
@@ -61,28 +61,28 @@
 
 <body class="">
   <main class="main-content  mt-0">
-    <div class="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg" style="background-image: url('https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/signup-cover.jpg'); background-position: top;">
+    <div class="page-header align-items-start min-vh-50 pt-5 pb-10 m-3 border-radius-lg" style="background-image: url('https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/signup-cover.jpg'); background-position: top;">
       <span class="mask bg-gradient-dark opacity-6"></span>
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-12 text-center mx-auto">
             <img src="{{ asset('assets/img/logos/deeniyat-logo.png') }}"
               alt="Deeniyat Al Hidayah Logo" style="width: 80px;">
-            <h1 class="text-white mb-2 mt-2" style="font-size: 34px;"> Welcome to Deeniyat Al Hidayah! </h1>
+            <h3 class="text-white mb-2 mt-2">Welcome to Deeniyat Al Hidayah!</h3>
           </div>
         </div>
       </div>
     </div>
     <div class="container">
       <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
-        <div class="col-xl-10 col-lg-12 col-md-12 mx-auto">
-          <div class="card z-index-0">
-            <div class="card-header text-center pt-4">
-              <h5 class="font-weight-bolder">Register</h5>
-              <p class="text-lead" style="font-size: 12px;">Silakan isi formulir di bawah ini untuk membuat akun baru di <b>Deeniyat Al Hidayah!</b></p>
+        <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
+          <div class="card z-index-0 border shadow-sm">
+            <div class="card-header text-center pt-4 bg-transparent border-0">
+              <h4 class="font-weight-bolder">Register</h4>
+              <p class="text-lead" style="font-size: 14px;">Silakan isi formulir di bawah ini untuk membuat akun baru di <b>Deeniyat Al Hidayah!</b></p>
             </div>
             <div class="card-body">
-              <form action="{{ route('register.store') }}" method="POST" class="p-4 border rounded shadow-sm bg-light">
+              <form action="{{ route('register.store') }}" method="POST" class="p-0">
                 @csrf
                 <div class="row">
                   <!-- Nama Siswa -->
@@ -212,22 +212,28 @@
                   </div>
                 </div>
 
-                <div class="text-end mt-4">
+                <div class="text-end mt-2">
                   <a href="{{ route('login') }}" class="btn btn-outline-secondary">
-                    ⬅ Kembali
+                    Kembali
                   </a>
-                  <button id="nextBtn" class="btn btn-primary" disabled>Lanjutkan</button>
+                  <a href="{{ route('payment.detailpayment') }}" class="btn btn-primary">
+                    Lanjutkan
+                  </a>
+                  <!-- <button class="btn btn-primary" >Lanjutkan</button> -->
+                  <!-- <button id="nextBtn" class="btn btn-primary" disabled>Lanjutkan</button> -->
+
                 </div>
               </form>
             </div>
-            <div class="card-footer text-left pt-0 px-lg-4 px-1">
-              <p class="mb-4 text-sm mx-auto">
-                Sudah punya akun?
-                <a href="{{ route('login') }}" class="text-primary text-gradient font-weight-bold">Login</a>
-              </p>
-            </div>
+
           </div>
         </div>
+      </div>
+      <div class="card-footer text-left pt-0 px-lg-4 px-1 pt-4">
+        <p class="mb-4 text-sm mx-auto">
+          Sudah punya akun?
+          <a href="{{ route('login') }}" class="text-primary text-gradient font-weight-bold">Login</a>
+        </p>
       </div>
     </div>
   </main>
