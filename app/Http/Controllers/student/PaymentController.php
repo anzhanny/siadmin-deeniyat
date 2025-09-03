@@ -89,17 +89,31 @@ class PaymentController extends Controller
     /**
      * Show payment confirmation page
      */
-    // public function confirmPayment($paymentId)
-    public function confirmPayment()
+    public function confirmPayment(Request $request)
     {
-        // $payment = Payment::with(['user', 'class', 'installments'])->findOrFail($paymentId);
+        // Store payment choices in session
+        session([
+            'payment_type' => $request->input('payment_type'),
+            'payment_method' => $request->input('payment_method'),
+            'total_amount' => 450000, // Default total amount
+        ]);
 
-        // // Ensure user can only see their own payment
-        // if ($payment->user_id !== Auth::id()) {
-        //     abort(403);
-        // }
+        // Store student data in session (this should come from the registration form)
+        // For now, we'll use default values or get from session if available
+        if (!session('student_name')) {
+            session([
+                'student_name' => 'Nama Siswa',
+                'student_email' => 'email@example.com',
+                'student_phone' => '081234567890',
+                'student_address' => 'Alamat Siswa',
+                'student_birthplace' => 'Tempat Lahir',
+                'student_birthdate' => '01/01/2010',
+                'student_gender' => 'Laki-Laki',
+                'student_class' => 'Kelas 1',
+                'father_name' => 'Nama Ayah',
+            ]);
+        }
 
-        // return view('payment.confirmpayment', compact('payment'));
         return view('payment.confirmpayment');
     }
 

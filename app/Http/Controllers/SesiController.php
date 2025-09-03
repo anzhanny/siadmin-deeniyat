@@ -59,18 +59,36 @@ class SesiController extends Controller
             $data->photo = $path; // simpan path-nya ke database
         }
 
-        // return redirect()->route('payment.detailpayment');
         $data->save();
 
         // Login otomatis setelah register
         Auth::login($data);
 
+        // Store comprehensive student data in session
         session([
             'user_id' => $data->id,
             'class_id' => $data->class_id,
             'user_name' => $data->name,
-            'user_email' => $data->email
+            'user_email' => $data->email,
+            'student_name' => $data->name,
+            'student_email' => $data->email,
+            'student_phone' => $data->phone,
+            'student_address' => $data->address,
+            'student_birthplace' => $data->birthplace,
+            'student_birthdate' => $data->birthdate,
+            'student_gender' => $data->gender,
+            'student_class' => $this->getClassName($data->class_id),
+            'father_name' => $data->father_name,
         ]);
+
+        // Check if this is an AJAX request
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration successful',
+                'redirect' => route('payment.detailpayment')
+            ]);
+        }
 
         return redirect()->route('payment.detailpayment');
     }
@@ -158,5 +176,23 @@ class SesiController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Get class name based on class ID
+     */
+    private function getClassName($classId)
+    {
+        $classNames = [
+            0 => 'Kelas TK',
+            1 => 'Kelas 1',
+            2 => 'Kelas 2',
+            3 => 'Kelas 3',
+            4 => 'Kelas 4',
+            5 => 'Kelas 5',
+            6 => 'Kelas 6',
+        ];
+
+        return $classNames[$classId] ?? 'Kelas Tidak Diketahui';
     }
 }

@@ -57,6 +57,30 @@
       /* ikon agak lebih besar biar gampang diklik */
     }
   }
+
+  /* Form validation styles */
+  .form-control.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }
+
+  .form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .form-check.is-valid {
+    color: #28a745;
+  }
+
+  .form-check.is-invalid {
+    color: #dc3545;
+  }
 </style>
 
 <body class="">
@@ -82,7 +106,7 @@
               <p class="text-lead" style="font-size: 14px;">Silakan isi formulir di bawah ini untuk membuat akun baru di <b>Deeniyat Al Hidayah!</b></p>
             </div>
             <div class="card-body">
-              <form action="{{ route('register.store') }}" method="POST" class="p-0">
+              <form action="{{ route('register.store') }}" method="POST" class="p-0" id="registerForm">
                 @csrf
                 <div class="row">
                   <!-- Nama Siswa -->
@@ -216,12 +240,15 @@
                   <a href="{{ route('login') }}" class="btn btn-outline-secondary">
                     Kembali
                   </a>
-                  <a href="{{ route('payment.detailpayment') }}" class="btn btn-primary">
+                  <button type="submit" class="btn btn-secondary" id="nextBtn" disabled>
                     Lanjutkan
-                  </a>
-                  <!-- <button class="btn btn-primary" >Lanjutkan</button> -->
-                  <!-- <button id="nextBtn" class="btn btn-primary" disabled>Lanjutkan</button> -->
-
+                  </button>
+                </div>
+                <div class="text-center mt-2">
+                  <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Semua field bertanda <span class="text-danger">*</span> harus diisi untuk melanjutkan
+                  </small>
                 </div>
               </form>
             </div>
@@ -298,16 +325,21 @@
     function validatePasswords() {
       if (passConfirm.value.trim() && pass.value !== passConfirm.value) {
         passConfirm.classList.add('is-invalid');
-        nextBtn.disabled = true;
+        passConfirm.classList.remove('is-valid');
+      } else if (passConfirm.value.trim() && pass.value === passConfirm.value) {
+        passConfirm.classList.remove('is-invalid');
+        passConfirm.classList.add('is-valid');
       } else {
         passConfirm.classList.remove('is-invalid');
-        // Periksa lagi semua field required
-        validateForm();
+        passConfirm.classList.remove('is-valid');
       }
+      
+      // Periksa lagi semua field required
+      validateForm();
     }
 
     // Ambil semua elemen form yang required
-    const form = document.querySelector('form');
+    const form = document.getElementById('registerForm');
     const requiredFields = form.querySelectorAll('[required]');
 
     function validateForm() {
@@ -318,9 +350,15 @@
           // Cek radio group
           const radioGroup = form.querySelectorAll(`[name="${field.name}"]`);
           const oneChecked = Array.from(radioGroup).some(r => r.checked);
-          if (!oneChecked) allValid = false;
+          if (!oneChecked) {
+            allValid = false;
+          }
+        } else if (field.type === 'file') {
+          // File fields are optional, so skip validation
         } else {
-          if (!field.value.trim()) allValid = false;
+          if (!field.value.trim()) {
+            allValid = false;
+          }
         }
       });
 
@@ -329,23 +367,98 @@
         allValid = false;
       }
 
+      // Debug logging
+      console.log('Form validation result:', allValid);
+      console.log('Password match:', pass.value === passConfirm.value);
+      
       nextBtn.disabled = !allValid;
+      
+      // Update button appearance
+      if (allValid) {
+        nextBtn.classList.remove('btn-secondary');
+        nextBtn.classList.add('btn-primary');
+        console.log('✅ Form is valid - button enabled');
+      } else {
+        nextBtn.classList.remove('btn-primary');
+        nextBtn.classList.add('btn-secondary');
+        console.log('❌ Form is invalid - button disabled');
+      }
     }
 
     // Cek setiap kali input berubah
     requiredFields.forEach(field => {
-      field.addEventListener('input', validateForm);
+      field.addEventListener('input', function() {
+        // Add visual feedback
+        if (this.value.trim()) {
+          this.classList.add('is-valid');
+          this.classList.remove('is-invalid');
+        } else {
+          this.classList.remove('is-valid');
+          this.classList.add('is-invalid');
+        }
+        validateForm();
+      });
+      
       if (field.type === 'radio') {
-        field.addEventListener('change', validateForm);
+        field.addEventListener('change', function() {
+          // Add visual feedback for radio buttons
+          const radioGroup = form.querySelectorAll(`[name="${this.name}"]`);
+          radioGroup.forEach(radio => {
+            if (radio.checked) {
+              radio.closest('.form-check').classList.add('is-valid');
+              radio.closest('.form-check').classList.remove('is-invalid');
+            } else {
+              radio.closest('.form-check').classList.remove('is-valid');
+              radio.closest('.form-check').classList.remove('is-invalid');
+            }
+          });
+          validateForm();
+        });
       }
     });
 
-    // Jika tombol ditekan, submit form
-    nextBtn.addEventListener('click', function(e) {
+    // Handle form submission
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      
       if (!nextBtn.disabled) {
-        // Submit form untuk menyimpan data registrasi
-        form.submit();
+        // Show loading state
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = 'Memproses...';
+        
+        // Try AJAX submission first
+        fetch(this.action, {
+          method: 'POST',
+          body: new FormData(this),
+          headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            // Redirect to detailpayment page
+            window.location.href = '{{ route("payment.detailpayment") }}';
+          } else {
+            alert('Terjadi kesalahan: ' + (data.message || 'Unknown error'));
+            // Reset button state
+            nextBtn.disabled = false;
+            nextBtn.innerHTML = 'Lanjutkan';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          console.log('AJAX failed, trying traditional form submission...');
+          
+          // Fallback to traditional form submission
+          alert('Menggunakan metode alternatif untuk mendaftar...');
+          this.submit();
+        });
       }
     });
 
@@ -354,6 +467,18 @@
 
     // Validasi awal saat halaman dimuat
     validateForm();
+    
+    // Debug: Log form elements
+    console.log('Form found:', document.getElementById('registerForm'));
+    console.log('Next button found:', document.getElementById('nextBtn'));
+    console.log('Required fields found:', requiredFields.length);
+    
+    // Add click event to next button for debugging
+    nextBtn.addEventListener('click', function(e) {
+      console.log('Next button clicked');
+      console.log('Button disabled:', this.disabled);
+      console.log('Form valid:', validateForm());
+    });
   </script>
 
 

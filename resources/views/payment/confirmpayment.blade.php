@@ -87,8 +87,7 @@
         <div class="container">
             <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
-                    <form action="{{ route('payment.process') }}" method="POST" id="paymentForm" data-total-amount="{{ ($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000) }}">
-                        @csrf
+                    <form action="{{ route('payment.thankyoupage') }}" method="GET" id="paymentForm">
                         <input type="hidden" name="user_id" value="{{ session('user_id', auth()->id()) }}">
                         <input type="hidden" name="class_id" value="{{ session('class_id', 0) }}">
 
@@ -114,19 +113,19 @@
                                             <div class="col-12 col-md-6">
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Nama Calon Siswa</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">Ahmad Fauzi</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_name', 'N/A') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Alamat</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">Jl. Merdeka No.123, Jakarta</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_address', 'N/A') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Tempat, Tanggal Lahir</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">Jakarta, 01 Januari 2010</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_birthplace', 'N/A') }}, {{ session('student_birthdate', 'N/A') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Nama Ayah</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">Budi Santoso</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('father_name', 'N/A') }}</span>
                                                 </div>
                                             </div>
 
@@ -134,19 +133,19 @@
                                             <div class="col-12 col-md-6 ps-md-10">
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Email</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">ahmad.fauzi@example.com</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_email', 'N/A') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">No Telp</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">0812-3456-7890</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_phone', 'N/A') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Jenis Kelamin</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">Laki-laki</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_gender', 'N/A') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Kelas Pendidikan Formal</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">5 SD</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_class', 'N/A') }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -167,7 +166,7 @@
                                                 <strong class="d-block text-secondary">Tipe Pembayaran Anda</strong>
                                             </div>
                                             <div class="col-6 ps-md-10">
-                                                <span class="d-block text-dark">: Tunai</span>
+                                                <span class="d-block text-dark">: {{ session('payment_type', 'N/A') }}</span>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -175,7 +174,7 @@
                                                 <strong class="d-block text-secondary">Kategori Pembayaran Anda</strong>
                                             </div>
                                             <div class="col-6 ps-md-10">
-                                                <span class="d-block text-dark">: Lunas</span>
+                                                <span class="d-block text-dark">: {{ session('payment_method', 'N/A') }}</span>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -183,7 +182,7 @@
                                                 <strong class="d-block text-secondary">Total Biaya</strong>
                                             </div>
                                             <div class="col-6 ps-md-10">
-                                                <span class="d-block text-dark">: Rp450.000</span>
+                                                <span class="d-block text-dark">: Rp{{ number_format(session('total_amount', 450000), 0, ',', '.') }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -192,11 +191,8 @@
                             </div>
 
                             <div class="text-end mt-2" style="padding-right: 1.7rem;">
-                                <a href="{{route('payment.detailpayment')}}" class="btn btn-primary">Kembali</a>
-                                <a href="{{route('payment.thankyoupage')}}" class="btn btn-primary">Lanjutkan Pembayaran</a>
-                                <!-- <button type="submit" class="btn btn-primary" id="lanjutkanBtn" disabled>
-                Lanjutkan ➡
-              </button> -->
+                                <a href="{{route('payment.detailpayment')}}" class="btn btn-outline-secondary">Kembali</a>
+                                <button type="submit" class="btn btn-primary">Lanjutkan Pembayaran</button>
                             </div>
                     </form>
                 </div>

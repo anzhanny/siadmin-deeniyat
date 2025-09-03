@@ -137,7 +137,7 @@ Route::prefix('payment')->name('payment.')->group(function () {
 });
 Route::get('payment/detail', [StudentPaymentController::class, 'detailpayment'])->name('payment.detailpayment');
 
-Route::get('payment/confirm', [StudentPaymentController::class, 'confirmPayment'])->name('payment.confirmpayment');
+Route::post('payment/confirm', [StudentPaymentController::class, 'confirmPayment'])->name('payment.confirmpayment');
 // Rute untuk halaman Thank You setelah pembayaran
 Route::get('/payment/thankyoupage', function () {
     return view('payment.thankyoupage'); // pastikan file ada di resources/views/thankyou.blade.php

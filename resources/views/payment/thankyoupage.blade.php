@@ -51,9 +51,9 @@
         <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
           <div class="card z-index-0">
             <div class="card-header text-center pt-4">
-              <h4 class="font-weight-bolder text-success">Selamat Pembayaran Berhasil! !</h4>
+              <h4 class="font-weight-bolder text-success">Selamat Pendaftaran Berhasil!</h4>
               <p class="text-lead" style="font-size: 14px;">
-                Terima kasih telah melakukan pembayaran pendaftaran.<br>
+                Terima kasih telah menyelesaikan proses pendaftaran.<br>
                 Data Anda telah kami terima dan status Anda sekarang adalah <strong>Siswa Aktif</strong> di 
                 <b>Deeniyat Al Hidayah</b>.
               </p>

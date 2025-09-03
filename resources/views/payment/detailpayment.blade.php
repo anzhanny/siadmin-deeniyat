@@ -87,7 +87,7 @@
     <div class="container">
       <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
         <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
-          <form action="{{ route('payment.process') }}" method="POST" id="paymentForm" data-total-amount="{{ ($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000) }}">
+          <form action="{{ route('payment.confirmpayment') }}" method="POST" id="paymentForm" data-total-amount="{{ ($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000) }}">
             @csrf
             <input type="hidden" name="user_id" value="{{ session('user_id', auth()->id()) }}">
             <input type="hidden" name="class_id" value="{{ session('class_id', 0) }}">
@@ -156,13 +156,13 @@
                     <p class="text-lead" style="font-size: 12px; margin-bottom: -10px;">Pilih cara pembayaran yang sesuai dengan kemampuan finansial Anda</p>
                   </div>
                   <div class="p-4">
-                    <div class="payment-option" onclick="selectPaymentCategory('full')">
+                    <div class="payment-option" onclick="selectPaymentCategory('Lunas')">
                       <input type="radio" name="payment_method" value="full" id="full" required>
                       <label for="full" class="h6 mb-2">Lunas</label>
                       <p class="text-muted mb-0">Bayar seluruh total biaya Rp{{ number_format(($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000), 0, ',', '.') }}</p>
                     </div>
 
-                    <div class="payment-option" onclick="selectPaymentCategory('installment')">
+                    <div class="payment-option" onclick="selectPaymentCategory('Cicilan')">
                       <input type="radio" name="payment_method" value="installment" id="installment" required>
                       <label for="installment" class="h6 mb-2">Cicilan</label>
                       <p class="text-muted mb-0">Total biaya yang bisa dibayar dalam 3x cicilan adalah Rp150.000/Cicilan</p>
@@ -174,10 +174,9 @@
                 <a href="{{ route('register') }}" class="btn btn-outline-secondary">
                   Kembali
                 </a>
-                <a href="{{route('payment.confirmpayment')}}" class="btn btn-primary">Lanjutkan</a>
-                <!-- <button type="submit" class="btn btn-primary" id="lanjutkanBtn" disabled>
-                Lanjutkan ➡
-              </button> -->
+                <button type="submit" class="btn btn-primary" id="lanjutkanBtn" disabled>
+                  Lanjutkan ➡
+                </button>
               </div>
             </div>
           </form>
@@ -229,17 +228,7 @@
       document.getElementById(category).closest('.payment-option').classList.add('selected');
       document.getElementById(category).checked = true;
 
-      // Show/hide installment schedule
-      const installmentSchedule = document.getElementById('installmentSchedule');
-      if (category === 'installment') {
-        installmentSchedule.classList.add('show');
-        // Reset installment period selection
-        document.getElementById('installment_period').value = '';
-        document.getElementById('installmentPreview').style.display = 'none';
-      } else {
-        installmentSchedule.classList.remove('show');
-        document.getElementById('installmentPreview').style.display = 'none';
-      }
+
 
       validateForm();
     }
@@ -247,15 +236,9 @@
     function validateForm() {
       const paymentType = document.querySelector('input[name="payment_type"]:checked');
       const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-      const installmentPeriod = document.getElementById('installment_period');
       const lanjutkanBtn = document.getElementById('lanjutkanBtn');
 
       let isValid = paymentType && paymentMethod;
-
-      // If installment is selected, check if period is selected
-      if (paymentMethod && paymentMethod.value === 'installment') {
-        isValid = isValid && installmentPeriod.value !== '';
-      }
 
       if (isValid) {
         lanjutkanBtn.disabled = false;
@@ -268,38 +251,7 @@
       }
     }
 
-    // Handle installment period selection
-    document.getElementById('installment_period').addEventListener('change', function() {
-      const period = this.value;
-      const preview = document.getElementById('installmentPreview');
-      const previewContent = document.getElementById('installmentPreviewContent');
 
-      if (period) {
-        const totalAmount = parseInt(document.getElementById('paymentForm').getAttribute('data-total-amount'));
-        const installmentAmount = Math.ceil(totalAmount / period);
-        const lastInstallment = totalAmount - (installmentAmount * (period - 1));
-
-        let html = '';
-        for (let i = 1; i <= period; i++) {
-          const amount = i === period ? lastInstallment : installmentAmount;
-          const colorClass = i === 1 ? 'text-success' : i === period ? 'text-info' : 'text-warning';
-
-          html += '<div class="col-md-' + (12 / Math.min(period, 4)) + ' mb-2">' +
-            '<div class="text-center p-3 bg-white rounded border">' +
-            '<h6 class="' + colorClass + '">Cicilan ' + i + '</h6>' +
-            '<p class="mb-1">Rp' + amount.toLocaleString('id-ID') + '</p>' +
-            '<small class="text-muted">' + (i === 1 ? 'Tanggal Pendaftaran' : 'Bulan ke-' + i) + '</small>' +
-            '</div></div>';
-        }
-
-        previewContent.innerHTML = html;
-        preview.style.display = 'block';
-      } else {
-        preview.style.display = 'none';
-      }
-
-      validateForm();
-    });
 
     // Initialize form validation
     document.addEventListener('DOMContentLoaded', function() {
