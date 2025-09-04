@@ -13,6 +13,7 @@ class Payment extends Model
         'class_id',
         'payment_category', // lunas / cicilan
         'payment_type', // tunai / non-tunai
+        'payment_method', // lunas / cicilan
         'code',           // kode pembayaran unik
         'amount',         // total bayar
         'method',         // metode pembayaran

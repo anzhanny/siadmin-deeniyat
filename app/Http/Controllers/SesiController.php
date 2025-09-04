@@ -79,6 +79,9 @@ class SesiController extends Controller
             'student_gender' => $data->gender,
             'student_class' => $this->getClassName($data->class_id),
             'father_name' => $data->father_name,
+            'father_job' => $data->father_job,
+            'mother_name' => $data->mother_name,
+            'mother_job' => $data->mother_job,
         ]);
 
         // Check if this is an AJAX request

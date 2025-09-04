@@ -130,14 +130,13 @@ Route::get('/migrate-student', [MigrateStudentController::class, 'migrate']);
 
 // Payment routes
 Route::prefix('payment')->name('payment.')->group(function () {
-    // Route::get('/detailpayment', [StudentPaymentController::class, 'detailPayment'])->name('detailpayment');
     Route::post('/process', [StudentPaymentController::class, 'processPayment'])->name('process');
-    // Route::get('/confirm/{payment_id}', [StudentPaymentController::class, 'confirmPayment'])->name('confirm');
     Route::post('/complete/{payment_id}', [StudentPaymentController::class, 'completePayment'])->name('complete');
 });
 Route::get('payment/detail', [StudentPaymentController::class, 'detailpayment'])->name('payment.detailpayment');
 
 Route::post('payment/confirm', [StudentPaymentController::class, 'confirmPayment'])->name('payment.confirmpayment');
+Route::post('payment/finalize', [StudentPaymentController::class, 'finalizePayment'])->name('payment.finalize');
 // Rute untuk halaman Thank You setelah pembayaran
 Route::get('/payment/thankyoupage', function () {
     return view('payment.thankyoupage'); // pastikan file ada di resources/views/thankyou.blade.php

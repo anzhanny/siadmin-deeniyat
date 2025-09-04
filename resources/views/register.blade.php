@@ -81,6 +81,71 @@
   .form-check.is-invalid {
     color: #dc3545;
   }
+
+  /* File upload styling */
+  .form-control[type="file"] {
+    padding: 0.375rem 0.75rem;
+  }
+
+  .form-control[type="file"]::-webkit-file-upload-button {
+    padding: 0.375rem 0.75rem;
+    margin: -0.375rem -0.75rem;
+    margin-inline-end: 0.75rem;
+    color: #495057;
+    background-color: #e9ecef;
+    border: 0;
+    border-inline-end: 1px solid #ced4da;
+    border-radius: 0.375rem;
+  }
+
+  .form-control[type="file"]::file-selector-button {
+    padding: 0.375rem 0.75rem;
+    margin: -0.375rem -0.75rem;
+    margin-inline-end: 0.75rem;
+    color: #495057;
+    background-color: #e9ecef;
+    border: 0;
+    border-inline-end: 1px solid #ced4da;
+    border-radius: 0.375rem;
+  }
+
+  /* Optional field styling */
+  .form-label.optional::after {
+    content: " (Opsional)";
+    color: #6c757d;
+    font-weight: normal;
+    font-size: 0.875em;
+  }
+
+  /* Success button state */
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+  }
+
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+
+  /* Form text styling */
+  .form-text {
+    font-size: 0.875em;
+    color: #6c757d;
+    margin-top: 0.25rem;
+  }
+
+  /* Improved form validation feedback */
+  .form-control.is-valid:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }
+
+  .form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  }
 </style>
 
 <body class="">
@@ -106,7 +171,7 @@
               <p class="text-lead" style="font-size: 14px;">Silakan isi formulir di bawah ini untuk membuat akun baru di <b>Deeniyat Al Hidayah!</b></p>
             </div>
             <div class="card-body">
-              <form action="{{ route('register.store') }}" method="POST" class="p-0" id="registerForm">
+              <form action="{{ route('register.store') }}" method="POST" class="p-0" id="registerForm" enctype="multipart/form-data">
                 @csrf
                 <div class="row">
                   <!-- Nama Siswa -->
@@ -196,7 +261,14 @@
                   <!-- No Telp -->
                   <div class="col-md-6 mb-3">
                     <label for="phone" class="form-label">No Telp <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="phone" name="phone" required>
+                    <input type="tel" class="form-control" id="phone" name="phone" 
+                           pattern="[0-9]{10,13}" 
+                           placeholder="08123456789" 
+                           required>
+                    <div class="form-text">
+                      <i class="fas fa-info-circle"></i> 
+                      Format: 08xxxxxxxxxx (10-13 digit)
+                    </div>
                   </div>
 
                   <!-- Alamat -->
@@ -213,7 +285,7 @@
 
                   <!-- Pekerjaan Ayah -->
                   <div class="col-md-6 mb-3">
-                    <label for="father_job" class="form-label">Pekerjaan Ayah</label>
+                    <label for="father_job" class="form-label optional">Pekerjaan Ayah</label>
                     <input type="text" class="form-control" id="father_job" name="father_job">
                   </div>
 
@@ -225,14 +297,18 @@
 
                   <!-- Pekerjaan Ibu -->
                   <div class="col-md-6 mb-3">
-                    <label for="mother_job" class="form-label">Pekerjaan Ibu</label>
+                    <label for="mother_job" class="form-label optional">Pekerjaan Ibu</label>
                     <input type="text" class="form-control" id="mother_job" name="mother_job">
                   </div>
 
                   <!-- Foto -->
                   <div class="col-md-6 mb-3">
-                    <label for="photo" class="form-label">Foto</label>
+                    <label for="photo" class="form-label optional">Foto</label>
                     <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                    <div class="form-text">
+                      <i class="fas fa-info-circle"></i> 
+                      Format: JPG, PNG, GIF, SVG. Maksimal 2MB.
+                    </div>
                   </div>
                 </div>
 
@@ -240,6 +316,9 @@
                   <a href="{{ route('login') }}" class="btn btn-outline-secondary">
                     Kembali
                   </a>
+                  <button type="button" class="btn btn-info me-2" id="previewBtn" onclick="showFormPreview()">
+                    <i class="fas fa-eye me-2"></i>Preview Data
+                  </button>
                   <button type="submit" class="btn btn-secondary" id="nextBtn" disabled>
                     Lanjutkan
                   </button>
@@ -248,6 +327,12 @@
                   <small class="text-muted">
                     <i class="fas fa-info-circle"></i> 
                     Semua field bertanda <span class="text-danger">*</span> harus diisi untuk melanjutkan
+                  </small>
+                  <div class="progress mt-2" style="height: 8px;">
+                    <div class="progress-bar" id="formProgress" role="progressbar" style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted mt-1 d-block">
+                    <span id="progressText">0%</span> lengkap
                   </small>
                 </div>
               </form>
@@ -341,35 +426,64 @@
     // Ambil semua elemen form yang required
     const form = document.getElementById('registerForm');
     const requiredFields = form.querySelectorAll('[required]');
+    
+    // Get all form fields for validation
+    const allFields = form.querySelectorAll('input, select, textarea');
 
     function validateForm() {
       let allValid = true;
+      let missingFields = [];
 
+      // Validate required fields
       requiredFields.forEach(field => {
         if (field.type === 'radio') {
-          // Cek radio group
+          // Check radio group
           const radioGroup = form.querySelectorAll(`[name="${field.name}"]`);
           const oneChecked = Array.from(radioGroup).some(r => r.checked);
           if (!oneChecked) {
             allValid = false;
+            missingFields.push(field.name);
           }
         } else if (field.type === 'file') {
           // File fields are optional, so skip validation
+        } else if (field.type === 'select-one') {
+          // Check select fields
+          if (!field.value || field.value === '') {
+            allValid = false;
+            missingFields.push(field.name);
+          }
+        } else if (field.name === 'phone') {
+          // Special validation for phone number
+          const phoneValue = field.value.trim();
+          if (!phoneValue) {
+            allValid = false;
+            missingFields.push(field.name);
+          } else if (!/^08[0-9]{8,11}$/.test(phoneValue)) {
+            allValid = false;
+            missingFields.push(field.name);
+            field.classList.add('is-invalid');
+          } else {
+            field.classList.remove('is-invalid');
+          }
         } else {
+          // Check text, email, number, date fields
           if (!field.value.trim()) {
             allValid = false;
+            missingFields.push(field.name);
           }
         }
       });
 
-      // Cek juga konfirmasi password
+      // Check password confirmation
       if (pass.value !== passConfirm.value) {
         allValid = false;
+        missingFields.push('password_confirmation');
       }
 
       // Debug logging
       console.log('Form validation result:', allValid);
       console.log('Password match:', pass.value === passConfirm.value);
+      console.log('Missing fields:', missingFields);
       
       nextBtn.disabled = !allValid;
       
@@ -383,22 +497,116 @@
         nextBtn.classList.add('btn-secondary');
         console.log('❌ Form is invalid - button disabled');
       }
+      
+      // Update progress bar
+      updateFormProgress();
     }
 
-    // Cek setiap kali input berubah
-    requiredFields.forEach(field => {
-      field.addEventListener('input', function() {
-        // Add visual feedback
-        if (this.value.trim()) {
-          this.classList.add('is-valid');
-          this.classList.remove('is-invalid');
+    // Function to show form preview
+    function showFormPreview() {
+      const formData = new FormData(form);
+      let previewHTML = '<div class="modal fade" id="previewModal" tabindex="-1">';
+      previewHTML += '<div class="modal-dialog modal-lg">';
+      previewHTML += '<div class="modal-content">';
+      previewHTML += '<div class="modal-header">';
+      previewHTML += '<h5 class="modal-title">Preview Data Pendaftaran</h5>';
+      previewHTML += '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>';
+      previewHTML += '</div>';
+      previewHTML += '<div class="modal-body">';
+      previewHTML += '<div class="row">';
+      
+      // Student data
+      previewHTML += '<div class="col-md-6">';
+      previewHTML += '<h6 class="text-primary">Data Siswa</h6>';
+      previewHTML += '<p><strong>Nama:</strong> ' + (formData.get('name') || '-') + '</p>';
+      previewHTML += '<p><strong>Email:</strong> ' + (formData.get('email') || '-') + '</p>';
+      previewHTML += '<p><strong>Tempat Lahir:</strong> ' + (formData.get('birthplace') || '-') + '</p>';
+      previewHTML += '<p><strong>Tanggal Lahir:</strong> ' + (formData.get('birthdate') || '-') + '</p>';
+      previewHTML += '<p><strong>Jenis Kelamin:</strong> ' + (formData.get('gender') || '-') + '</p>';
+      previewHTML += '<p><strong>Kelas:</strong> ' + (document.getElementById('class_id').options[document.getElementById('class_id').selectedIndex].text || '-') + '</p>';
+      previewHTML += '<p><strong>No Telp:</strong> ' + (formData.get('phone') || '-') + '</p>';
+      previewHTML += '<p><strong>Alamat:</strong> ' + (formData.get('address') || '-') + '</p>';
+      previewHTML += '</div>';
+      
+      // Parent data
+      previewHTML += '<div class="col-md-6">';
+      previewHTML += '<h6 class="text-primary">Data Orang Tua</h6>';
+      previewHTML += '<p><strong>Nama Ayah:</strong> ' + (formData.get('father_name') || '-') + '</p>';
+      previewHTML += '<p><strong>Pekerjaan Ayah:</strong> ' + (formData.get('father_job') || '-') + '</p>';
+      previewHTML += '<p><strong>Nama Ibu:</strong> ' + (formData.get('mother_name') || '-') + '</p>';
+      previewHTML += '<p><strong>Pekerjaan Ibu:</strong> ' + (formData.get('mother_job') || '-') + '</p>';
+      previewHTML += '<p><strong>Foto:</strong> ' + (document.getElementById('photo').files[0] ? document.getElementById('photo').files[0].name : 'Tidak ada foto') + '</p>';
+      previewHTML += '</div>';
+      
+      previewHTML += '</div>';
+      previewHTML += '</div>';
+      previewHTML += '<div class="modal-footer">';
+      previewHTML += '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>';
+      previewHTML += '</div>';
+      previewHTML += '</div>';
+      previewHTML += '</div>';
+      previewHTML += '</div>';
+      
+      // Remove existing modal if any
+      const existingModal = document.getElementById('previewModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+      
+      // Add modal to body
+      document.body.insertAdjacentHTML('beforeend', previewHTML);
+      
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+      modal.show();
+    }
+
+    // Function to update form completion progress
+    function updateFormProgress() {
+      const totalRequiredFields = requiredFields.length;
+      let completedFields = 0;
+      
+      requiredFields.forEach(field => {
+        if (field.type === 'radio') {
+          const radioGroup = form.querySelectorAll(`[name="${field.name}"]`);
+          const oneChecked = Array.from(radioGroup).some(r => r.checked);
+          if (oneChecked) completedFields++;
+        } else if (field.type === 'select-one') {
+          if (field.value && field.value !== '') completedFields++;
         } else {
-          this.classList.remove('is-valid');
-          this.classList.add('is-invalid');
+          if (field.value.trim()) completedFields++;
         }
-        validateForm();
       });
       
+      // Check password confirmation
+      if (pass.value === passConfirm.value && pass.value.trim()) {
+        completedFields++;
+      }
+      
+      const progressPercentage = Math.round((completedFields / (totalRequiredFields + 1)) * 100);
+      
+      // Update progress bar
+      const progressBar = document.getElementById('formProgress');
+      const progressText = document.getElementById('progressText');
+      
+      if (progressBar && progressText) {
+        progressBar.style.width = progressPercentage + '%';
+        progressBar.setAttribute('aria-valuenow', progressPercentage);
+        progressText.textContent = progressPercentage + '%';
+        
+        // Update progress bar color based on completion
+        if (progressPercentage < 50) {
+          progressBar.className = 'progress-bar bg-danger';
+        } else if (progressPercentage < 100) {
+          progressBar.className = 'progress-bar bg-warning';
+        } else {
+          progressBar.className = 'progress-bar bg-success';
+        }
+      }
+    }
+
+    // Add validation event listeners to all fields
+    allFields.forEach(field => {
       if (field.type === 'radio') {
         field.addEventListener('change', function() {
           // Add visual feedback for radio buttons
@@ -414,6 +622,59 @@
           });
           validateForm();
         });
+      } else if (field.type === 'file') {
+        field.addEventListener('change', function() {
+          // Handle file upload validation
+          const file = this.files[0];
+          if (file) {
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+              this.classList.add('is-invalid');
+              this.classList.remove('is-valid');
+              alert('Ukuran file terlalu besar. Maksimal 2MB.');
+              this.value = '';
+            } else {
+              // Check file type
+              const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'];
+              if (allowedTypes.includes(file.type)) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+              } else {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+                alert('Tipe file tidak didukung. Gunakan JPG, PNG, GIF, atau SVG.');
+                this.value = '';
+              }
+            }
+          } else {
+            this.classList.remove('is-valid', 'is-invalid');
+          }
+        });
+      } else if (field.type === 'select-one') {
+        field.addEventListener('change', function() {
+          // Add visual feedback for select fields
+          if (this.value && this.value !== '') {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+          } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+          }
+          validateForm();
+        });
+      } else {
+        // Handle text, email, number, date fields
+        field.addEventListener('input', function() {
+          // Add visual feedback
+          if (this.value.trim()) {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+          } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+          }
+          validateForm();
+        });
       }
     });
 
@@ -424,7 +685,20 @@
       if (!nextBtn.disabled) {
         // Show loading state
         nextBtn.disabled = true;
-        nextBtn.innerHTML = 'Memproses...';
+        nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+        
+        // Validate file upload if present
+        const photoInput = document.getElementById('photo');
+        if (photoInput.files.length > 0) {
+          const file = photoInput.files[0];
+          if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar. Maksimal 2MB.');
+            photoInput.classList.add('is-invalid');
+            nextBtn.disabled = false;
+            nextBtn.innerHTML = 'Lanjutkan';
+            return;
+          }
+        }
         
         // Try AJAX submission first
         fetch(this.action, {
@@ -442,8 +716,15 @@
         })
         .then(data => {
           if (data.success) {
-            // Redirect to detailpayment page
-            window.location.href = '{{ route("payment.detailpayment") }}';
+            // Show success message before redirect
+            nextBtn.innerHTML = '<i class="fas fa-check me-2"></i>Berhasil!';
+            nextBtn.classList.remove('btn-primary');
+            nextBtn.classList.add('btn-success');
+            
+            // Redirect to detailpayment page after a short delay
+            setTimeout(() => {
+              window.location.href = '{{ route("payment.detailpayment") }}';
+            }, 1000);
           } else {
             alert('Terjadi kesalahan: ' + (data.message || 'Unknown error'));
             // Reset button state

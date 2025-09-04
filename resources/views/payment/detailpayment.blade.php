@@ -55,6 +55,17 @@
     margin-right: 10px;
   }
 
+  .payment-option.selected {
+    border-color: #5e72e4;
+    background-color: #f8f9ff;
+    box-shadow: 0 0 0 0.2rem rgba(94, 114, 228, 0.25);
+  }
+
+  .payment-option.selected label {
+    color: #5e72e4;
+    font-weight: bold;
+  }
+
   .installment-schedule {
     background-color: #f8f9fa;
     border-radius: 8px;
@@ -156,27 +167,56 @@
                     <p class="text-lead" style="font-size: 12px; margin-bottom: -10px;">Pilih cara pembayaran yang sesuai dengan kemampuan finansial Anda</p>
                   </div>
                   <div class="p-4">
-                    <div class="payment-option" onclick="selectPaymentCategory('Lunas')">
-                      <input type="radio" name="payment_method" value="full" id="full" required>
-                      <label for="full" class="h6 mb-2">Lunas</label>
+                    <div class="payment-option" onclick="selectPaymentCategory('lunas')">
+                      <input type="radio" name="payment_method" value="lunas" id="lunas" required>
+                      <label for="lunas" class="h6 mb-2">Lunas</label>
                       <p class="text-muted mb-0">Bayar seluruh total biaya Rp{{ number_format(($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000), 0, ',', '.') }}</p>
                     </div>
 
-                    <div class="payment-option" onclick="selectPaymentCategory('Cicilan')">
-                      <input type="radio" name="payment_method" value="installment" id="installment" required>
-                      <label for="installment" class="h6 mb-2">Cicilan</label>
+                    <div class="payment-option" onclick="selectPaymentCategory('cicilan')">
+                      <input type="radio" name="payment_method" value="cicilan" id="cicilan" required>
+                      <label for="cicilan" class="h6 mb-2">Cicilan</label>
                       <p class="text-muted mb-0">Total biaya yang bisa dibayar dalam 3x cicilan adalah Rp150.000/Cicilan</p>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <!-- Selection Summary -->
+              <div class="card-body" id="selectionSummary" style="display: none;">
+                <div class="p-4 bg-white rounded" style="border:1.5px solid #dee2e6;">
+                  <div class="card-header text-center pt-4 bg-transparent border-0">
+                    <h4 class="font-weight-bolder">Ringkasan Pilihan Anda</h4>
+                    <p class="text-lead" style="font-size: 12px; margin-bottom: -10px;">Konfirmasi pilihan pembayaran sebelum melanjutkan</p>
+                  </div>
+                  <div class="p-4">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <strong>Tipe Pembayaran:</strong>
+                        <span id="selectedType" class="text-primary"></span>
+                      </div>
+                      <div class="col-md-6">
+                        <strong>Kategori Pembayaran:</strong>
+                        <span id="selectedMethod" class="text-primary"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="text-end mt-2" style="padding-right: 1.7rem;">
                 <a href="{{ route('register') }}" class="btn btn-outline-secondary">
                   Kembali
                 </a>
-                <button type="submit" class="btn btn-primary" id="lanjutkanBtn" disabled>
+                <button type="submit" class="btn btn-secondary" id="lanjutkanBtn" disabled>
                   Lanjutkan ➡
                 </button>
+              </div>
+              <div class="text-center mt-2" id="formStatus">
+                <small class="text-muted">
+                  <i class="fas fa-info-circle"></i> 
+                  Pilih tipe pembayaran dan kategori pembayaran untuk melanjutkan
+                </small>
               </div>
             </div>
           </form>
@@ -215,6 +255,8 @@
       document.getElementById(type).closest('.payment-option').classList.add('selected');
       document.getElementById(type).checked = true;
 
+      // Update selection summary
+      updateSelectionSummary();
       validateForm();
     }
 
@@ -228,8 +270,8 @@
       document.getElementById(category).closest('.payment-option').classList.add('selected');
       document.getElementById(category).checked = true;
 
-
-
+      // Update selection summary
+      updateSelectionSummary();
       validateForm();
     }
 
@@ -240,22 +282,53 @@
 
       let isValid = paymentType && paymentMethod;
 
+      // Debug logging
+      console.log('Payment Type selected:', paymentType ? paymentType.value : 'None');
+      console.log('Payment Method selected:', paymentMethod ? paymentMethod.value : 'None');
+      console.log('Form valid:', isValid);
+
       if (isValid) {
         lanjutkanBtn.disabled = false;
         lanjutkanBtn.classList.remove('btn-secondary');
         lanjutkanBtn.classList.add('btn-primary');
+        console.log('✅ Form is valid - button enabled');
       } else {
         lanjutkanBtn.disabled = true;
         lanjutkanBtn.classList.remove('btn-primary');
         lanjutkanBtn.classList.add('btn-secondary');
+        console.log('❌ Form is invalid - button disabled');
       }
     }
 
+    // Function to update selection summary
+    function updateSelectionSummary() {
+      const paymentType = document.querySelector('input[name="payment_type"]:checked');
+      const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+      const summaryDiv = document.getElementById('selectionSummary');
+      const selectedTypeSpan = document.getElementById('selectedType');
+      const selectedMethodSpan = document.getElementById('selectedMethod');
 
+      if (paymentType && paymentMethod) {
+        // Show summary
+        summaryDiv.style.display = 'block';
+        
+        // Update type text
+        const typeText = paymentType.value === 'tunai' ? 'Tunai' : 'Non-Tunai';
+        selectedTypeSpan.textContent = typeText;
+        
+        // Update method text
+        const methodText = paymentMethod.value === 'full' ? 'Lunas' : 'Cicilan';
+        selectedMethodSpan.textContent = methodText;
+      } else {
+        // Hide summary if not both selected
+        summaryDiv.style.display = 'none';
+      }
+    }
 
     // Initialize form validation
     document.addEventListener('DOMContentLoaded', function() {
       validateForm();
+      updateSelectionSummary();
     });
   </script>
 </body>

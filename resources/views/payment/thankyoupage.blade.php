@@ -52,10 +52,16 @@
           <div class="card z-index-0">
             <div class="card-header text-center pt-4">
               <h4 class="font-weight-bolder text-success">Selamat Pendaftaran Berhasil!</h4>
+              @if(session('success'))
+                <div class="alert alert-success" role="alert">
+                  {{ session('success') }}
+                </div>
+              @endif
               <p class="text-lead" style="font-size: 14px;">
                 Terima kasih telah menyelesaikan proses pendaftaran.<br>
                 Data Anda telah kami terima dan status Anda sekarang adalah <strong>Siswa Aktif</strong> di 
-                <b>Deeniyat Al Hidayah</b>.
+                <b>Deeniyat Al Hidayah</b>.<br>
+                <strong>Anda dapat login sekarang menggunakan email dan password yang telah didaftarkan.</strong>
               </p>
             </div>
             <div class="card-body text-center">
@@ -63,8 +69,15 @@
                    class="img-fluid mb-4" style="max-width: 220px;">
               <div class="mt-4">
                 <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
+                  <i class="fas fa-sign-in-alt me-2"></i>
                   Login Sekarang!
                 </a>
+              </div>
+              <div class="alert alert-info mt-3" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Informasi Login:</strong><br>
+                Email: <strong>{{ session('user_email', 'Email yang didaftarkan') }}</strong><br>
+                Password: <strong>Password yang Anda buat saat registrasi</strong>
               </div>
               <p class="text-sm mt-3 mb-0">
                 Jika ada pertanyaan, silakan hubungi admin sekolah.

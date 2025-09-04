@@ -10,6 +10,8 @@ use App\Models\Payment;
 use App\Models\Installment;
 use App\Models\TbClass;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class PaymentController extends Controller
 {
@@ -24,23 +26,24 @@ class PaymentController extends Controller
      */
     public function detailPayment()
     {
-        // Ambil user dari Auth, kalau tidak ada ambil dari session
-        // $user = Auth::user() ?? User::find(session('user_id'));
+        // Get user from session or create a default class object
+        $class = null;
+        
+        // Try to get class from session
+        if (session('class_id')) {
+            $class = TbClass::find(session('class_id'));
+        }
+        
+        // If no class found, create a default class object with default fees
+        if (!$class) {
+            $class = (object) [
+                'registration_fee' => 200000,
+                'infrastructure_fee' => 100000,
+                'uniform_fee' => 150000
+            ];
+        }
 
-        // if (!$user) {
-        //     return redirect()->route('login')->withErrors('Anda harus login terlebih dahulu.');
-        // }
-
-        // $class = TbClass::find($user->class_id);
-
-        // session([
-        //     'class_id' => $user->class_id,
-        //     'user_id' => $user->id
-        // ]);
-
-        // return view('payment.detailpayment', compact('user', 'class'));
-        return view('payment.detailpayment');
-
+        return view('payment.detailpayment', compact('class'));
     }
 
     public function processPayment(Request $request)
@@ -91,16 +94,52 @@ class PaymentController extends Controller
      */
     public function confirmPayment(Request $request)
     {
+        // Validate the request
+        $request->validate([
+            'payment_type' => 'required|in:tunai,non-tunai',
+            'payment_method' => 'required|in:lunas,cicilan',
+            'user_id' => 'required',
+            'class_id' => 'required',
+        ]);
+
+        // Calculate total amount based on class
+        $totalAmount = 450000; // Default amount
+        if ($request->input('class_id')) {
+            // You can add logic here to calculate based on actual class fees
+            $totalAmount = 450000; // For now, using default
+        }
+
         // Store payment choices in session
         session([
             'payment_type' => $request->input('payment_type'),
             'payment_method' => $request->input('payment_method'),
-            'total_amount' => 450000, // Default total amount
+            'total_amount' => $totalAmount,
+            'user_id' => $request->input('user_id'),
+            'class_id' => $request->input('class_id'),
         ]);
 
-        // Store student data in session (this should come from the registration form)
-        // For now, we'll use default values or get from session if available
-        if (!session('student_name')) {
+        // Get user data from session or database
+        $userId = $request->input('user_id');
+        $user = User::find($userId);
+
+        if ($user) {
+            // Store user data in session for display
+            session([
+                'student_name' => $user->name,
+                'student_email' => $user->email,
+                'student_phone' => $user->phone,
+                'student_address' => $user->address,
+                'student_birthplace' => $user->birthplace,
+                'student_birthdate' => $user->birthdate,
+                'student_gender' => $user->gender,
+                'student_class' => $this->getClassName($user->class_id),
+                'father_name' => $user->father_name,
+                'father_job' => $user->father_job,
+                'mother_name' => $user->mother_name,
+                'mother_job' => $user->mother_job,
+            ]);
+        } else {
+            // Fallback to default values if user not found
             session([
                 'student_name' => 'Nama Siswa',
                 'student_email' => 'email@example.com',
@@ -117,6 +156,24 @@ class PaymentController extends Controller
         return view('payment.confirmpayment');
     }
 
+    /**
+     * Get class name based on class ID
+     */
+    private function getClassName($classId)
+    {
+        $classNames = [
+            0 => 'Kelas TK',
+            1 => 'Kelas 1',
+            2 => 'Kelas 2',
+            3 => 'Kelas 3',
+            4 => 'Kelas 4',
+            5 => 'Kelas 5',
+            6 => 'Kelas 6',
+        ];
+
+        return $classNames[$classId] ?? 'Kelas Tidak Diketahui';
+    }
+
     public function thankyouPage()
     {
         // $payment = Payment::with(['user', 'class', 'installments'])->findOrFail($paymentId);
@@ -128,6 +185,113 @@ class PaymentController extends Controller
 
         // return view('payment.confirmpayment', compact('payment'));
         return view('payment.thanyoupage');
+    }
+
+    /**
+     * Finalize payment and save all data to database
+     */
+    public function finalizePayment(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Get user data from session
+            $userId = session('user_id');
+            
+            if (!$userId) {
+                throw new Exception('User session not found. Please register again.');
+            }
+            
+            $user = User::find($userId);
+
+            if (!$user) {
+                throw new Exception('User not found in database');
+            }
+
+            // Validate required session data
+            $requiredFields = [
+                'student_birthplace', 'student_birthdate', 'student_gender', 
+                'student_phone', 'student_address', 'class_id', 'father_name',
+                'payment_type', 'payment_method', 'total_amount'
+            ];
+
+            foreach ($requiredFields as $field) {
+                if (!session($field)) {
+                    throw new Exception("Missing required data: {$field}");
+                }
+            }
+
+            // Update user with additional information if not already set
+            $user->update([
+                'birthplace' => session('student_birthplace'),
+                'birthdate' => session('student_birthdate'),
+                'gender' => session('student_gender'),
+                'phone' => session('student_phone'),
+                'address' => session('student_address'),
+                'class_id' => session('class_id'),
+                'father_name' => session('father_name'),
+                'father_job' => session('father_job', ''),
+                'mother_name' => session('mother_name', ''),
+                'mother_job' => session('mother_job', ''),
+                'is_active' => 1,
+                'role_id' => 2, // Student role
+            ]);
+
+            // Create payment record
+            $payment = Payment::create([
+                'user_id' => $userId,
+                'class_id' => session('class_id'),
+                'amount' => session('total_amount', 450000),
+                'payment_type' => session('payment_type'),
+                'payment_method' => session('payment_method'),
+                'payment_category' => session('payment_method'), // Also store as payment_category for compatibility
+                'status' => 'completed',
+                'paid_at' => now(),
+                'code' => 'PAY-' . time() . '-' . $userId, // Generate unique payment code
+            ]);
+
+            // If payment method is installment, create installment records
+            if (session('payment_method') === 'cicilan') {
+                $totalAmount = session('total_amount', 450000);
+                $installmentAmount = ceil($totalAmount / 3); // 3 installments
+                
+                for ($i = 1; $i <= 3; $i++) {
+                    $amount = ($i == 3) ? ($totalAmount - ($installmentAmount * 2)) : $installmentAmount;
+                    
+                    Installment::create([
+                        'payment_id' => $payment->id,
+                        'nominal' => $amount,
+                        'installments_to' => $i,
+                        'paid_at' => ($i == 1) ? now() : null, // First installment is paid
+                        'remaining_balance' => $totalAmount - ($amount * $i),
+                    ]);
+                }
+            }
+
+            // Clear session data
+            session()->forget([
+                'student_name', 'student_email', 'student_phone', 'student_address',
+                'student_birthplace', 'student_birthdate', 'student_gender', 'student_class',
+                'father_name', 'father_job', 'mother_name', 'mother_job',
+                'payment_type', 'payment_method', 'total_amount'
+            ]);
+
+            DB::commit();
+
+            // Log successful registration
+            Log::info('User registration completed successfully', [
+                'user_id' => $userId,
+                'email' => $user->email,
+                'payment_id' => $payment->id
+            ]);
+
+            // Redirect to thank you page
+            return redirect()->route('payment.thankyoupage')->with('success', 'Pendaftaran berhasil! Anda dapat login sekarang.');
+
+        } catch (Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat menyelesaikan pendaftaran: ' . $e->getMessage()]);
+        }
     }
 
 

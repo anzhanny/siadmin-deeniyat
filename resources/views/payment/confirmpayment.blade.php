@@ -245,7 +245,7 @@
 
             // Show/hide installment schedule
             const installmentSchedule = document.getElementById('installmentSchedule');
-            if (category === 'installment') {
+            if (category === 'cicilan') {
                 installmentSchedule.classList.add('show');
                 // Reset installment period selection
                 document.getElementById('installment_period').value = '';
@@ -267,7 +267,7 @@
             let isValid = paymentType && paymentMethod;
 
             // If installment is selected, check if period is selected
-            if (paymentMethod && paymentMethod.value === 'installment') {
+            if (paymentMethod && paymentMethod.value === 'cicilan') {
                 isValid = isValid && installmentPeriod.value !== '';
             }
 
