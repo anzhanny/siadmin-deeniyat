@@ -149,29 +149,6 @@ public function update(Request $request, $id)
         ->with('success', 'Data pembayaran berhasil dihapus');
 }
 
-/**
-     * Confirm payment by admin and generate NIS if not exists.
-     */
-    public function confirmPayment($id)
-    {
-        $payment = Payment::with('user')->findOrFail($id);
 
-        // Update status pembayaran
-        $payment->status = 'paid';
-        $payment->paid_at = now();
-        $payment->save();
-
-        // Generate NIS untuk user jika belum ada
-        $user = $payment->user;
-        if ($user && !$user->nis) {
-            $angkatan = $payment->class_id ?? 1;
-            $user->nis = User::generateNis($angkatan);
-            $user->is_paid = true;
-            $user->paid_at = now();
-            $user->save();
-        }
-
-        return redirect()->back()->with('success', 'Pembayaran berhasil dikonfirmasi. NIS siswa: ' . ($user->nis ?? '-'));
-    }
 
 }

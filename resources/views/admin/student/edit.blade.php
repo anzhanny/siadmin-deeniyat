@@ -4,7 +4,7 @@
   <div class="col-12">
     <form action="{{ route('admin.student.update', $student->id) }}" enctype="multipart/form-data" method="POST" id="studentForm" class="p-4 border rounded shadow-sm bg-light">
       @csrf
-    @method('PUT')
+      @method('PUT')
       <div class="row">
 
 
@@ -15,11 +15,12 @@
 
         <div class="col-md-6 mb-3">
           <label for="nis" class="form-label">NIS</label>
-          <input type="text" value="{{ old('nis', $student->nis) }}" class="form-control" id="nis" name="nis" required>
+          <input type="text" value="{{ old('nis', $student->nis) }}"
+            class="form-control" id="nis" name="nis" readonly>
         </div>
 
         <div class="col-md-6 mb-3">
-          <label for="class_id" class="form-label">Kelas Di Terima</label>
+          <label for="class_id" class="form-label">Kelas</label>
           <select class="form-select" id="class_id" name="class_id" required>
             <option value="">Pilih Kelas</option>
             @for ($i = 0; $i <= 6; $i++)
@@ -72,17 +73,6 @@
         </div>
 
         <div class="col-md-6 mb-3">
-          <label for="formal_education" class="form-label">Kelas Pendidikan Formal</label>
-          <select class="form-select" id="formal_education" name="formal_education" required>
-            <option value="">Pilih Kelas</option>
-            <option value="0" {{ old('formal_education', $student->formal_education) == 0 ? 'selected' : '' }}>Kelas TK</option>
-            @for ($i = 1; $i <= 6; $i++)
-              <option value="{{ $i }}" {{ old('formal_education', $student->formal_education) == $i ? 'selected' : '' }}>Kelas {{ $i }}</option>
-            @endfor
-          </select>
-        </div>
-
-        <div class="col-md-6 mb-3">
           <label for="father_name" class="form-label">Nama Ayah</label>
           <input type="text" value="{{ old('father_name', $student->father_name) }}" class="form-control" id="father_name" name="father_name" required>
         </div>
@@ -106,7 +96,7 @@
           <label for="photo" class="form-label">Foto</label>
           <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
           @if ($student->photo)
-            <img src="{{ asset('storage/'.$student->photo) }}" alt="Foto Siswa" class="mt-2" style="max-height: 100px;">
+          <img src="{{ asset('storage/'.$student->photo) }}" alt="Foto Siswa" class="mt-2" style="max-height: 100px;">
           @endif
         </div>
       </div>
@@ -122,7 +112,7 @@
 
       <div class="text-end mt-4">
         <button type="submit" class="btn btn-primary">Simpan</button>
-        <button type="reset" class="btn btn-secondary">Reset</button>
+        <a href="{{ route('admin.student.index') }}" class="btn btn-secondary">Kembali</a>
       </div>
     </form>
   </div>

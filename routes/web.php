@@ -80,6 +80,7 @@ Route::get('/admin/student-data', [AdminStudentController::class, 'index'])->nam
 Route::get('/admin/student-data/create', [AdminStudentController::class, 'create'])->name('admin.student.create');
 Route::post('/admin/student-data', [AdminStudentController::class, 'store'])->name('admin.student.store');
 Route::get('/admin/student-data/{id}/edit', [AdminStudentController::class, 'edit'])->name('admin.student.edit');
+Route::get('/admin/student-data/{id}/show', [AdminStudentController::class, 'show'])->name('admin.student.show');
 Route::put('/admin/student-data/{id}', [AdminStudentController::class, 'update'])->name('admin.student.update');
 Route::delete('/admin/student-data/{id}', [AdminStudentController::class, 'destroy'])->name('admin.student.destroy');
 

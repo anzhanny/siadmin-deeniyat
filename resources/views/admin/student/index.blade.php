@@ -25,11 +25,13 @@
               <tr>
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">#</th>
 
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Foto</th>
+
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">NIS</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Siswa</th>
 
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas Deeniyat</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Email</th>
 
@@ -37,11 +39,9 @@
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Alamat</th>
 
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tempat, Tanggal Lahir</th>
+                <!-- <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tempat, Tanggal Lahir</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Jenis Kelamin</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas Pendidikan Formal</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Ayah</th>
 
@@ -50,8 +50,8 @@
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Ibu</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Pekerjaan Ibu</th>
+ -->
 
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Foto</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
 
@@ -66,6 +66,15 @@
                 <td>{{ $data->firstItem() + $no - 1 }}</td>
                 <!-- <td class="align-middle text-center text-sm">{{ $no++ }}</td> -->
 
+                                <td class="align-middle text-center text-sm">
+                  @if($value->photo && Storage::disk('public')->exists($value->photo))
+                  <img src="{{ asset('storage/' . $value->photo) }}"
+                    alt="photo" width="40" height="40" style="object-fit: cover; border-radius: 5px;">
+                  @else
+                  <p>-</p>
+                  @endif
+                </td>
+
                 <td class="align-middle text-center text-sm">{{ $value->nis }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->name }}</td>
@@ -78,11 +87,9 @@
 
                 <td class="align-middle text-center text-sm">{{ $value->address }}</td>
 
-                <td class="align-middle text-center text-sm">{{ $value->birthplace}}, {{ $value->birthdate }}</td>
+                <!-- <td class="align-middle text-center text-sm">{{ $value->birthplace}}, {{ $value->birthdate }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->gender }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->formal_education}}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->father_name }}</td>
 
@@ -90,16 +97,9 @@
 
                 <td class="align-middle text-center text-sm">{{ $value->mother_name }}</td>
 
-                <td class="align-middle text-center text-sm">{{ $value->mother_job }}</td>
+                <td class="align-middle text-center text-sm">{{ $value->mother_job }}</td> -->
 
-                <td class="align-middle text-center text-sm">
-                  @if($value->photo && Storage::disk('public')->exists($value->photo))
-                  <img src="{{ asset('storage/' . $value->photo) }}"
-                    alt="photo" width="50" height="50" style="object-fit: cover; border-radius: 5px;">
-                  @else
-                  <p>-</p>
-                  @endif
-                </td>
+
 
                 @if($value->is_active == 1)
                 <td class="align-middle text-center text-sm">
@@ -111,7 +111,13 @@
                 </td>
                 @endif
 
-                <td class="align-middle">
+                <td class="align-middle text-center">
+                  <button type="button" class="btn btn-info btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Detail Siswa">
+                    <a href="{{ route('admin.student.show', $value->id) }}" class="text-white font-weight-bold text-xs">
+                      <i class="fa fa-eye pt-1" aria-hidden="true"></i>
+                    </a>
+                  </button>
+
                   <button type="button" class="btn btn-primary btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Edit Siswa">
                     <a href="{{ route('admin.student.edit', $value->id) }}" class="text-white font-weight-bold text-xs">
                       <i class="fa fa-edit pt-1" aria-hidden="true"></i>
