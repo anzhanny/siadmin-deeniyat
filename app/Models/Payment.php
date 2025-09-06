@@ -34,4 +34,10 @@ class Payment extends Model
     {
         return $this->belongsTo(TbClass::class, 'class_id', 'id');
     }
+
+    // Relasi ke Installment
+    public function installments()
+    {
+        return $this->hasMany(Installment::class, 'payment_id');
+    }
 }

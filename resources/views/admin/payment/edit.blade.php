@@ -1,9 +1,10 @@
 @extends('layouts.layout')
 @section('content')
-<div class="container">
-    <h4>Edit Pembayaran</h4>
-    <form action="{{ route('admin.payment.update', $payment->id) }}" method="POST">
-        @csrf
+@section('content')
+<div class="row">
+  <div class="col-12">
+    <form action="{{ route('admin.payment.update', $payment->id) }}" enctype="multipart/form-data" method="POST" id="paymentForm" class="p-4 border rounded shadow-sm bg-light">
+      @csrf
         @method('PUT')
 
         {{-- Pilih Siswa --}}
@@ -93,5 +94,6 @@
         <button type="submit" class="btn btn-primary">Update</button>
         <a href="{{ route('admin.payment.index') }}" class="btn btn-secondary">Batal</a>
     </form>
+  </div>
 </div>
 @endsection

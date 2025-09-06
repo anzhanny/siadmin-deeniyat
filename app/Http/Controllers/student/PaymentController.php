@@ -268,6 +268,14 @@ class PaymentController extends Controller
                 }
             }
 
+            if (!$user->nis) {
+            $angkatan = $user->class_id ?? 1; // bisa ambil dari class_id
+            $user->nis = User::generateNis($angkatan);
+            $user->is_paid = true;
+            $user->paid_at = now();
+            $user->save();
+        }
+
             // Clear session data
             session()->forget([
                 'student_name', 'student_email', 'student_phone', 'student_address',
@@ -282,11 +290,14 @@ class PaymentController extends Controller
             Log::info('User registration completed successfully', [
                 'user_id' => $userId,
                 'email' => $user->email,
-                'payment_id' => $payment->id
+                'payment_id' => $payment->id,
+                'nis' => $user->nis
             ]);
 
             // Redirect to thank you page
-            return redirect()->route('payment.thankyoupage')->with('success', 'Pendaftaran berhasil! Anda dapat login sekarang.');
+            return redirect()->route('payment.thankyoupage')
+                        ->with('success', 'Pendaftaran berhasil! NIS Anda: ' . $user->nis);
+
 
         } catch (Exception $e) {
             DB::rollback();

@@ -12,6 +12,7 @@ use App\Http\Controllers\student\DashboardController as StudentDashboardControll
 use App\Http\Controllers\student\PaymentController as StudentPaymentController;
 use App\Http\Controllers\student\ProfileController as StudentProfileController;
 use App\Http\Controllers\student\SppDataController as StudentSppDataController;
+use App\Models\Role;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpKernel\Profiler\Profile;
@@ -93,11 +94,11 @@ Route::get('admin/payment-data', [PaymentController::class, 'index'])->name('adm
 Route::get('admin/payment-data/create', [PaymentController::class, 'create'])->name('admin.payment.create');
 Route::post('admin/payment-data', [PaymentController::class, 'store'])->name('admin.payment.store');
 Route::get('admin/payment-data/{id}/edit', [PaymentController::class, 'edit'])->name('admin.payment.edit');
+Route::get('admin/payment-data/{id}/show', [PaymentController::class, 'show'])->name('admin.payment.show');
 Route::put('admin/payment-data/{id}', [PaymentController::class, 'update'])->name('admin.payment.update');
 Route::delete('admin/payment-data/{id}', [PaymentController::class, 'destroy'])->name('admin.payment.destroy');
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('payment', PaymentController::class);
-});
+Route::put('admin/payment-data/{id}/status', [PaymentController::class, 'updateStatus'])->name('admin.payment.updateStatus');
+
 
 
 Route::get('/get-student-class/{id}', [PaymentController::class, 'getStudentClass']);
@@ -106,6 +107,7 @@ Route::get('admin/installment-data', [InstallmentController::class, 'index'])->n
 Route::get('admin/installment-data/create', [InstallmentController::class, 'create'])->name('admin.installment.create');
 Route::post('admin/installment-data', [InstallmentController::class, 'store'])->name('admin.installment.store');
 Route::get('admin/installment-data/{id}/edit', [InstallmentController::class, 'edit'])->name('admin.installment.edit');
+Route::get('admin/installment-data/{id}/show', [InstallmentController::class, 'show'])->name('admin.installment.show');
 Route::put('admin/installment-data/{id}', [InstallmentController::class, 'update'])->name('admin.installment.update');
 Route::delete('admin/installment-data/{id}', [InstallmentController::class, 'destroy'])->name('admin.installment.destroy');
 

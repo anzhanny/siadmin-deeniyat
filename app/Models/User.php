@@ -42,18 +42,43 @@ class User extends Authenticatable
     ];
     protected $dates = ['created_at', 'updated_at'];
 
-    public static function generateNis()
-    {
-        $year = date('Y');
-        $last = self::whereYear('created_at', $year)
-            ->whereNotNull('nis')
-            ->orderBy('id', 'desc')
-            ->first();
+public static function generateNis($angkatan)
+{
+    // Ambil tahun ajaran (misal 2024/2025 jadi "2425")
+    $academic_year_first = date('y'); // 24
+    $academic_year_last = date('y', strtotime('+1 year')); // 25
+    $academicYear = $academic_year_first . $academic_year_last; // 2425
 
-        $number = $last ? (int)substr($last->nis, -4) + 1 : 1;
+    // Ambil NIS terakhir untuk tahun ajaran + angkatan ini
+    $last = self::where('nis', 'LIKE', $academicYear . $angkatan . '%')
+        ->orderBy('id', 'desc')
+        ->first();
 
-        return $year . str_pad($number, 4, '0', STR_PAD_LEFT);
+    // Nomor urut
+    if ($last) {
+        $lastNumber = (int)substr($last->nis, -6); 
+        $number = $lastNumber + 1;
+    } else {
+        $number = 1;
     }
+
+    // Format: tahun ajaran + angkatan + no urut (6 digit)
+    return $academicYear . str_pad($angkatan, 2, '0', STR_PAD_LEFT) . str_pad($number, 6, '0', STR_PAD_LEFT);
+}
+
+protected static function booted()
+{
+    static::saving(function ($user) {
+        if ($user->is_paid && !$user->nis) {
+            // contoh ambil angkatan dari class_id atau inputan
+            $angkatan = $user->class_id ?? 1;
+
+            $user->nis = self::generateNis($angkatan);
+            $user->paid_at = now();
+        }
+    });
+}
+
 
 
 

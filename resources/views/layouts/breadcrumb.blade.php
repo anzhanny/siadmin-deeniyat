@@ -15,6 +15,7 @@
         'admin.payment.index' => 'Data Pembayaran Lunas',
         'admin.payment.create' => 'Tambah Data Pembayaran Lunas',
         'admin.payment.edit' => 'Edit Data Pembayaran Lunas',
+        'admin.payment.show' => 'Detail Pembayaran',
 
         'admin.installment.index' => 'Data Pembayaran Cicilan',
         'admin.installment.create' => 'Tambah Data Pembayaran Cicilan',

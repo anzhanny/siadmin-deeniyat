@@ -47,30 +47,29 @@ public function create()
     /**
      * Store a newly created resource in storage.
      */
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'user_id'       => 'required|exists:users,id',
-        'class_id'      => 'required|exists:tb_class,id',
-        'payment_type'  => 'required|string|max:255',
-        'amount'        => 'required|numeric',
-        'method'        => 'required|in:cash,transfer',
-        'month'         => 'nullable|string|max:50',
-        'status'        => 'required|in:pending,paid,failed',
-        'paid_at'       => 'nullable|date', // validasi tanggal
-    ]);
+ public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id'       => 'required|exists:users,id',
+            'class_id'      => 'required|exists:tb_class,id',
+            'payment_type'  => 'required|string|max:255', // tunai / non-tunai
+            'payment_category' => 'required|string|max:255', // lunas / cicilan
+            'amount'        => 'required|numeric',
+            'method'        => 'required|string|max:50',
+            'month'         => 'nullable|string|max:50',
+            'status'        => 'required|in:pending,paid,failed',
+            'paid_at'       => 'nullable|date',
+        ]);
 
-    // Format tanggal kalau diisi
-    if ($request->filled('paid_at')) {
-        $validated['paid_at'] = date('Y-m-d', strtotime($request->paid_at));
-    } else {
-        $validated['paid_at'] = null;
+        if ($request->filled('paid_at')) {
+            $validated['paid_at'] = date('Y-m-d H:i:s', strtotime($request->paid_at));
+        }
+
+        Payment::create($validated);
+
+        return redirect()->route('admin.payment.index')
+            ->with('success', 'Data pembayaran berhasil ditambahkan.');
     }
-
-    Payment::create($validated);
-
-    return redirect()->route('admin.payment.index')->with('success', 'Data pembayaran berhasil ditambahkan.');
-}
 
     /**
      * Display the specified resource.
@@ -80,6 +79,21 @@ public function show(string $id)
     $payment = Payment::with(['user', 'class'])->findOrFail($id);
     return view('admin.payment.show', compact('payment'));
 }
+
+public function updateStatus(Request $request, $id)
+{
+    $payment = Payment::findOrFail($id);
+
+    $request->validate([
+        'status' => 'required|in:pending,paid,failed',
+    ]);
+
+    $payment->status = $request->status;
+    $payment->save();
+
+    return redirect()->route('admin.payment.index')->with('success', 'Status pembayaran berhasil diperbarui.');
+}
+
 
 
     /**
@@ -97,31 +111,31 @@ public function edit($id)
      * Update the specified resource in storage.
      */
 public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'user_id'       => 'required|exists:users,id',
-        'class_id'      => 'required|exists:tb_class,id',
-        'payment_type'  => 'required|string|max:255',
-        'amount'        => 'required|numeric',
-        'method'        => 'required|in:cash,transfer',
-        'month'         => 'nullable|string|max:50',
-        'status'        => 'required|in:pending,paid,failed',
-        'paid_at'       => 'nullable|date', // validasi tanggal
-    ]);
+    {
+        $validated = $request->validate([
+            'user_id'       => 'required|exists:users,id',
+            'class_id'      => 'required|exists:tb_class,id',
+            'payment_type'  => 'required|string|max:255',
+            'payment_category' => 'required|string|max:255',
+            'amount'        => 'required|numeric',
+            'method'        => 'required|string|max:50',
+            'month'         => 'nullable|string|max:50',
+            'status'        => 'required|in:pending,paid,failed',
+            'paid_at'       => 'nullable|date',
+        ]);
 
-    // Format tanggal kalau diisi
-    if ($request->filled('paid_at')) {
-        $validated['paid_at'] = date('Y-m-d', strtotime($request->paid_at));
-    } else {
-        $validated['paid_at'] = null;
+        if ($request->filled('paid_at')) {
+            $validated['paid_at'] = date('Y-m-d H:i:s', strtotime($request->paid_at));
+        }
+
+        $payment = Payment::findOrFail($id);
+        $payment->update($validated);
+
+        return redirect()->route('admin.payment.index')
+            ->with('success', 'Data pembayaran berhasil diperbarui.');
     }
 
-    $payment = Payment::findOrFail($id);
-    $payment->update($validated);
-
-    return redirect()->route('admin.payment.index')->with('success', 'Data pembayaran berhasil diperbarui.');
-}
-
+    
 
     /**
      * Remove the specified resource from storage.
@@ -134,5 +148,30 @@ public function update(Request $request, $id)
     return redirect()->route('admin.payment.index')
         ->with('success', 'Data pembayaran berhasil dihapus');
 }
+
+/**
+     * Confirm payment by admin and generate NIS if not exists.
+     */
+    public function confirmPayment($id)
+    {
+        $payment = Payment::with('user')->findOrFail($id);
+
+        // Update status pembayaran
+        $payment->status = 'paid';
+        $payment->paid_at = now();
+        $payment->save();
+
+        // Generate NIS untuk user jika belum ada
+        $user = $payment->user;
+        if ($user && !$user->nis) {
+            $angkatan = $payment->class_id ?? 1;
+            $user->nis = User::generateNis($angkatan);
+            $user->is_paid = true;
+            $user->paid_at = now();
+            $user->save();
+        }
+
+        return redirect()->back()->with('success', 'Pembayaran berhasil dikonfirmasi. NIS siswa: ' . ($user->nis ?? '-'));
+    }
 
 }
