@@ -21,15 +21,15 @@
 
         <!-- Kelas -->
         <div class="col-md-6 mb-3">
+          <label for="class_id" class="form-label">Kelas Pendidikan Formal</label>
           <select class="form-select" id="class_id" name="class_id" required>
             <option value="">Pilih Kelas</option>
-            @foreach ($classes as $class)
+            @foreach ($data as $class)
             <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
               Kelas {{ $class->class_name }}
             </option>
             @endforeach
           </select>
-
         </div>
 
 

@@ -22,7 +22,7 @@
         <div class="col-md-6 mb-3">
           <select class="form-select" id="class_id" name="class_id" required>
             <option value="">Pilih Kelas</option>
-            @foreach ($classes as $class)
+            @foreach ($data as $value)
             <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
               Kelas {{ $class->class_name }}
             </option>

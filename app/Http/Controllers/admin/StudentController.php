@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\TbClass;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,8 @@ class StudentController extends Controller
 
     public function create()
     {
-        return view('admin.student.create');
+        $data = TbClass::all(); // ambil semua kelas
+        return view('admin.student.create', compact('data'));
     }
 
     public function store(Request $request)
@@ -72,40 +74,40 @@ class StudentController extends Controller
         return view('admin.student.edit', compact('student'));
     }
 
-public function update(Request $request, $id)
-{
-    $data = User::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        $data = User::findOrFail($id);
 
-    $request->validate([
-        'name'   => 'required|string|max:255',
-        'email'  => 'required|email|unique:users,email,' . $id,
-        'batch'  => 'nullable|numeric',
-        'photo'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
+        $request->validate([
+            'name'   => 'required|string|max:255',
+            'email'  => 'required|email|unique:users,email,' . $id,
+            'batch'  => 'nullable|numeric',
+            'photo'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
-    $data->fill($request->except(['password', 'photo']));
+        $data->fill($request->except(['password', 'photo']));
 
-    if ($request->filled('password')) {
-        $data->password = bcrypt($request->password);
-    }
-
-    if ($request->hasFile('photo')) {
-        if ($data->photo && Storage::disk('public')->exists($data->photo)) {
-            Storage::disk('public')->delete($data->photo);
+        if ($request->filled('password')) {
+            $data->password = bcrypt($request->password);
         }
-        $data->photo = $request->photo->storeAs(
-            'photos',
-            time() . '.' . $request->photo->getClientOriginalExtension(),
-            'public'
-        );
+
+        if ($request->hasFile('photo')) {
+            if ($data->photo && Storage::disk('public')->exists($data->photo)) {
+                Storage::disk('public')->delete($data->photo);
+            }
+            $data->photo = $request->photo->storeAs(
+                'photos',
+                time() . '.' . $request->photo->getClientOriginalExtension(),
+                'public'
+            );
+        }
+
+        $data->save();
+
+        // Balik ke index, bawa flash message sukses
+        return redirect()->route('admin.student.index')
+            ->with('success', 'Data siswa berhasil diperbarui');
     }
-
-    $data->save();
-
-    // Balik ke index, bawa flash message sukses
-    return redirect()->route('admin.student.index')
-        ->with('success', 'Data siswa berhasil diperbarui');
-}
 
 
     public function destroy($id)
