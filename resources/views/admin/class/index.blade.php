@@ -40,7 +40,7 @@
               <tr>
                  <td>{{ $data->firstItem() + $loop->index }}</td>
                 <td class="align-middle text-center text-sm">{{$value->class_name}}</td>
-                <td class="align-middle text-center text-sm">{{$value->amount}}</td>
+                <td class="align-middle text-center text-sm">{{$value->user_count}}</td>
                 <td class="align-middle text-center text-sm">{{$value->teacher_name}}</td>
                 <td class="align-middle text-center text-sm">{{$value->academic_year_first}}/{{$value->academic_year_last}}</td>
                 <td class="align-middle">
