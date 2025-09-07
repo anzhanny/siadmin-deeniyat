@@ -183,7 +183,7 @@
               </div>
 
               <!-- Selection Summary -->
-              <div class="card-body" id="selectionSummary" style="display: none;">
+              <!-- <div class="card-body" id="selectionSummary" style="display: none;">
                 <div class="p-4 bg-white rounded" style="border:1.5px solid #dee2e6;">
                   <div class="card-header text-center pt-4 bg-transparent border-0">
                     <h4 class="font-weight-bolder">Ringkasan Pilihan Anda</h4>
@@ -202,7 +202,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> -->
 
               <div class="text-end mt-2" style="padding-right: 1.7rem;">
                 <a href="{{ route('register') }}" class="btn btn-outline-secondary">
@@ -214,7 +214,7 @@
               </div>
               <div class="text-center mt-2" id="formStatus">
                 <small class="text-muted">
-                  <i class="fas fa-info-circle"></i> 
+                  <i class="fas fa-info-circle"></i>
                   Pilih tipe pembayaran dan kategori pembayaran untuk melanjutkan
                 </small>
               </div>
@@ -302,27 +302,7 @@
 
     // Function to update selection summary
     function updateSelectionSummary() {
-      const paymentType = document.querySelector('input[name="payment_type"]:checked');
-      const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-      const summaryDiv = document.getElementById('selectionSummary');
-      const selectedTypeSpan = document.getElementById('selectedType');
-      const selectedMethodSpan = document.getElementById('selectedMethod');
-
-      if (paymentType && paymentMethod) {
-        // Show summary
-        summaryDiv.style.display = 'block';
-        
-        // Update type text
-        const typeText = paymentType.value === 'tunai' ? 'Tunai' : 'Non-Tunai';
-        selectedTypeSpan.textContent = typeText;
-        
-        // Update method text
-        const methodText = paymentMethod.value === 'full' ? 'Lunas' : 'Cicilan';
-        selectedMethodSpan.textContent = methodText;
-      } else {
-        // Hide summary if not both selected
-        summaryDiv.style.display = 'none';
-      }
+      validateForm();
     }
 
     // Initialize form validation

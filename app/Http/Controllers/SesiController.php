@@ -96,36 +96,49 @@ class SesiController extends Controller
         return redirect()->route('payment.detailpayment');
     }
 
-    function login(Request $request)
+    public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required',
+            'email' => 'required|email',
             'password' => 'required'
         ], [
             'email.required' => 'Email wajib diisi',
+            'email.email' => 'Format email tidak valid',
             'password.required' => 'Password wajib diisi',
         ]);
 
-        $infologin = [
+        // cari user berdasarkan email
+        $user = \App\Models\User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'Email tidak terdaftar!'])->withInput();
+        }
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Password salah!'])->withInput();
+        }
+
+        // kalau email & password cocok, login pakai Auth
+        if (\Illuminate\Support\Facades\Auth::attempt([
             'email' => $request->email,
             'password' => $request->password,
-        ];
-
-        if (Auth::attempt($infologin)) {
-            $user = Auth::user();
+        ])) {
+            $user = \Illuminate\Support\Facades\Auth::user();
 
             if ($user->role_id == 1) {
                 return redirect('/admin/dashboard');
             } elseif ($user->role_id == 2) {
                 return redirect('/student/dashboard');
-            } else {
-                Auth::logout(); // kalau role-nya tidak dikenali
-                return redirect('/')->withErrors('Role pengguna tidak dikenali.')->withInput();
             }
-        } else {
-            return redirect('/')->withErrors('Username dan password yang dimasukkan tidak sesuai!')->withInput();
-        };
+
+            // kalau tidak 1 atau 2 → arahkan ke halaman default saja
+            return redirect('/student/dashboard');
+        }
+
+        return back()->withErrors(['login' => 'Terjadi kesalahan, silakan coba lagi.'])->withInput();
     }
+
+
 
     public function logout()
     {

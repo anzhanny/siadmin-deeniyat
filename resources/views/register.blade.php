@@ -316,9 +316,6 @@
                   <a href="{{ route('login') }}" class="btn btn-outline-secondary">
                     Kembali
                   </a>
-                  <button type="button" class="btn btn-info me-2" id="previewBtn" onclick="showFormPreview()">
-                    <i class="fas fa-eye me-2"></i>Preview Data
-                  </button>
                   <button type="submit" class="btn btn-secondary" id="nextBtn" disabled>
                     Lanjutkan
                   </button>
@@ -678,70 +675,7 @@
       }
     });
 
-    // Handle form submission
-    document.getElementById('registerForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      if (!nextBtn.disabled) {
-        // Show loading state
-        nextBtn.disabled = true;
-        nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
-        
-        // Validate file upload if present
-        const photoInput = document.getElementById('photo');
-        if (photoInput.files.length > 0) {
-          const file = photoInput.files[0];
-          if (file.size > 2 * 1024 * 1024) {
-            alert('Ukuran file terlalu besar. Maksimal 2MB.');
-            photoInput.classList.add('is-invalid');
-            nextBtn.disabled = false;
-            nextBtn.innerHTML = 'Lanjutkan';
-            return;
-          }
-        }
-        
-        // Try AJAX submission first
-        fetch(this.action, {
-          method: 'POST',
-          body: new FormData(this),
-          headers: {
-            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-          }
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success) {
-            // Show success message before redirect
-            nextBtn.innerHTML = '<i class="fas fa-check me-2"></i>Berhasil!';
-            nextBtn.classList.remove('btn-primary');
-            nextBtn.classList.add('btn-success');
-            
-            // Redirect to detailpayment page after a short delay
-            setTimeout(() => {
-              window.location.href = '{{ route("payment.detailpayment") }}';
-            }, 1000);
-          } else {
-            alert('Terjadi kesalahan: ' + (data.message || 'Unknown error'));
-            // Reset button state
-            nextBtn.disabled = false;
-            nextBtn.innerHTML = 'Lanjutkan';
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          console.log('AJAX failed, trying traditional form submission...');
-          
-          // Fallback to traditional form submission
-          alert('Menggunakan metode alternatif untuk mendaftar...');
-          this.submit();
-        });
-      }
-    });
+    
 
     pass.addEventListener('input', validatePasswords);
     passConfirm.addEventListener('input', validatePasswords);

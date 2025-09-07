@@ -33,7 +33,7 @@
 </head>
 
 <body class="">
-<main class="main-content mt-0">
+  <main class="main-content mt-0">
     <div class="page-header align-items-start min-vh-50 pt-5 pb-10 m-3 border-radius-lg" style="background-image: url('https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/signup-cover.jpg'); background-position: top;">
       <span class="mask bg-gradient-dark opacity-6"></span>
       <div class="container">
@@ -53,20 +53,20 @@
             <div class="card-header text-center pt-4">
               <h4 class="font-weight-bolder text-success">Selamat Pendaftaran Berhasil!</h4>
               @if(session('success'))
-                <div class="alert alert-success" role="alert">
-                  {{ session('success') }}
-                </div>
+              <div class="alert alert-success" role="alert">
+                {{ session('success') }}
+              </div>
               @endif
               <p class="text-lead" style="font-size: 14px;">
                 Terima kasih telah menyelesaikan proses pendaftaran.<br>
-                Data Anda telah kami terima dan status Anda sekarang adalah <strong>Siswa Aktif</strong> di 
+                Data Anda telah kami terima dan status Anda sekarang adalah <strong>Siswa Aktif</strong> di
                 <b>Deeniyat Al Hidayah</b>.<br>
-                <strong>Anda dapat login sekarang menggunakan email dan password yang telah didaftarkan.</strong>
+                <strong>Anda dapat login menggunakan email dan password yang telah didaftarkan.</strong>
               </p>
             </div>
             <div class="card-body text-center">
-              <img src="{{ asset('assets/img/thankyou.png') }}" alt="Thank You" 
-                   class="img-fluid mb-4" style="max-width: 220px;">
+              <img src="{{ asset('assets/img/thankyou.png') }}" alt="Thank You"
+                class="img-fluid mb-4" style="max-width: 220px;">
               <div class="mt-4">
                 <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
                   <i class="fas fa-sign-in-alt me-2"></i>
@@ -93,13 +93,15 @@
     <div class="container">
       <div class="row">
         <div class="col-8 mx-auto text-center mt-1">
-          © <script>document.write(new Date().getFullYear())</script>,
+          © <script>
+            document.write(new Date().getFullYear())
+          </script>,
           Deeniyat Al Hidayah. <i class="fa fa-heart"></i> All Rights Reserved.
         </div>
       </div>
     </div>
   </footer>
-  
+
   <!--   Core JS Files   -->
   <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
   <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
@@ -108,10 +110,13 @@
   <script>
     var win = navigator.platform.indexOf('Win') > -1;
     if (win && document.querySelector('#sidenav-scrollbar')) {
-      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), { damping: '0.5' });
+      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), {
+        damping: '0.5'
+      });
     }
   </script>
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <script src="../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
 </body>
+
 </html>
