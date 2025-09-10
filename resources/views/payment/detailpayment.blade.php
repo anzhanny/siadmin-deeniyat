@@ -100,8 +100,13 @@
         <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
           <form action="{{ route('payment.confirmpayment') }}" method="POST" id="paymentForm" data-total-amount="{{ ($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000) }}">
             @csrf
-            <input type="hidden" name="user_id" value="{{ session('user_id', auth()->id()) }}">
-            <input type="hidden" name="class_id" value="{{ session('class_id', 0) }}">
+            <!-- hidden class_id -->
+            <input type="hidden" name="class_id"
+              value="{{ session('class_id') ?? (auth()->user()->class_id ?? 0) }}">
+
+            <!-- hidden user_id -->
+            <input type="hidden" name="user_id"
+              value="{{ session('user_id') ?? auth()->id() }}">
 
             <div class="card z-index-0 border shadow-sm" style="background-color: #F5F7F8;">
 
@@ -209,7 +214,7 @@
                   Kembali
                 </a>
                 <button type="submit" class="btn btn-secondary" id="lanjutkanBtn" disabled>
-                  Lanjutkan ➡
+                  Lanjutkan
                 </button>
               </div>
               <div class="text-center mt-2" id="formStatus">

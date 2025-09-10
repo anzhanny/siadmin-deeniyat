@@ -28,12 +28,12 @@ class PaymentController extends Controller
     {
         // Get user from session or create a default class object
         $class = null;
-        
+
         // Try to get class from session
         if (session('class_id')) {
             $class = TbClass::find(session('class_id'));
         }
-        
+
         // If no class found, create a default class object with default fees
         if (!$class) {
             $class = (object) [
@@ -49,9 +49,12 @@ class PaymentController extends Controller
     public function processPayment(Request $request)
     {
         $request->validate([
-            'payment_type' => 'required|string', // tunai / non-tunai
-            'payment_category' => 'required|string', // lunas / cicilan
+            'payment_type'   => 'required|in:tunai,non-tunai',
+            'payment_method' => 'required|in:lunas,cicilan',
+            'user_id'        => 'required|integer',
+            'class_id'       => 'required|integer|min:0',
         ]);
+
 
         // Simpan sementara ke database (status pending jika tunai)
         // Disesuaikan dengan tabel kamu (contoh Payment model)
@@ -98,9 +101,12 @@ class PaymentController extends Controller
         $request->validate([
             'payment_type' => 'required|in:tunai,non-tunai',
             'payment_method' => 'required|in:lunas,cicilan',
-            'user_id' => 'required',
-            'class_id' => 'required',
+            'user_id' => 'nullable|integer',
+            'class_id'       => 'required|integer|exists:tb_class,id', // pakai class_id dari tabel
         ]);
+
+        // Ambil kelas dari tabel tb_class
+        $class = TbClass::find($request->class_id);
 
         // Calculate total amount based on class
         $totalAmount = 450000; // Default amount
@@ -111,11 +117,12 @@ class PaymentController extends Controller
 
         // Store payment choices in session
         session([
-            'payment_type' => $request->input('payment_type'),
+            'payment_type'   => $request->input('payment_type'),
             'payment_method' => $request->input('payment_method'),
-            'total_amount' => $totalAmount,
-            'user_id' => $request->input('user_id'),
-            'class_id' => $request->input('class_id'),
+            'total_amount'   => $totalAmount,
+            'user_id'        => $request->input('user_id'),
+            'class_id'       => $class->id,
+            'student_class'  => $class->class_name, // nama kelas dari tabel
         ]);
 
         // Get user data from session or database
@@ -161,18 +168,10 @@ class PaymentController extends Controller
      */
     private function getClassName($classId)
     {
-        $classNames = [
-            0 => 'Kelas TK',
-            1 => 'Kelas 1',
-            2 => 'Kelas 2',
-            3 => 'Kelas 3',
-            4 => 'Kelas 4',
-            5 => 'Kelas 5',
-            6 => 'Kelas 6',
-        ];
-
-        return $classNames[$classId] ?? 'Kelas Tidak Diketahui';
+        $class = TbClass::find($classId);
+        return $class ? $class->class_name : 'Kelas Tidak Diketahui';
     }
+
 
     public function thankyouPage()
     {
@@ -197,11 +196,11 @@ class PaymentController extends Controller
 
             // Get user data from session
             $userId = session('user_id');
-            
+
             if (!$userId) {
                 throw new Exception('User session not found. Please register again.');
             }
-            
+
             $user = User::find($userId);
 
             if (!$user) {
@@ -210,9 +209,16 @@ class PaymentController extends Controller
 
             // Validate required session data
             $requiredFields = [
-                'student_birthplace', 'student_birthdate', 'student_gender', 
-                'student_phone', 'student_address', 'class_id', 'father_name',
-                'payment_type', 'payment_method', 'total_amount'
+                'student_birthplace',
+                'student_birthdate',
+                'student_gender',
+                'student_phone',
+                'student_address',
+                'class_id',
+                'father_name',
+                'payment_type',
+                'payment_method',
+                'total_amount'
             ];
 
             foreach ($requiredFields as $field) {
@@ -254,10 +260,10 @@ class PaymentController extends Controller
             if (session('payment_method') === 'cicilan') {
                 $totalAmount = session('total_amount', 450000);
                 $installmentAmount = ceil($totalAmount / 3); // 3 installments
-                
+
                 for ($i = 1; $i <= 3; $i++) {
                     $amount = ($i == 3) ? ($totalAmount - ($installmentAmount * 2)) : $installmentAmount;
-                    
+
                     Installment::create([
                         'payment_id' => $payment->id,
                         'nominal' => $amount,
@@ -268,20 +274,23 @@ class PaymentController extends Controller
                 }
             }
 
-            if (!$user->nis) {
-            $angkatan = $user->class_id ?? 1; // bisa ambil dari class_id
-            $user->nis = User::generateNis($angkatan);
-            $user->is_paid = true;
-            $user->paid_at = now();
-            $user->save();
-        }
-
             // Clear session data
             session()->forget([
-                'student_name', 'student_email', 'student_phone', 'student_address',
-                'student_birthplace', 'student_birthdate', 'student_gender', 'student_class',
-                'father_name', 'father_job', 'mother_name', 'mother_job',
-                'payment_type', 'payment_method', 'total_amount'
+                'student_name',
+                'student_email',
+                'student_phone',
+                'student_address',
+                'student_birthplace',
+                'student_birthdate',
+                'student_gender',
+                'student_class',
+                'father_name',
+                'father_job',
+                'mother_name',
+                'mother_job',
+                'payment_type',
+                'payment_method',
+                'total_amount'
             ]);
 
             DB::commit();
@@ -296,9 +305,7 @@ class PaymentController extends Controller
 
             // Redirect to thank you page
             return redirect()->route('payment.thankyoupage')
-                        ->with('success', 'Pendaftaran berhasil! NIS Anda: ' . $user->nis);
-
-
+                ->with('success', 'Pendaftaran berhasil! NIS Anda: ' . $user->nis);
         } catch (Exception $e) {
             DB::rollback();
             return back()->withErrors(['error' => 'Terjadi kesalahan saat menyelesaikan pendaftaran: ' . $e->getMessage()]);

@@ -245,28 +245,28 @@
 
                   <!-- Pendidikan Formal -->
                   <div class="col-md-6 mb-3">
-                    <label for="formal_education" class="form-label">Kelas Pendidikan Formal<span class="text-danger">*</span></label>
-                    <select class="form-select" id="class_id" name="class_id" required>
-                      <option value="">Pilih Kelas</option>
-                      <option value="0">Kelas TK</option>
-                      <option value="1">Kelas 1</option>
-                      <option value="2">Kelas 2</option>
-                      <option value="3">Kelas 3</option>
-                      <option value="4">Kelas 4</option>
-                      <option value="5">Kelas 5</option>
-                      <option value="6">Kelas 6</option>
+                    <label for="grade" class="form-label">Kelas Pendidikan Formal Sebelumnya<span class="text-danger">*</span></label>
+                    <select class="form-select" id="grade" name="grade" required>
+                      <option value="">Pilih Tingkat</option>
+                      <option value="0">TK</option>
+                      <option value="1">1 SD</option>
+                      <option value="2">2 SD</option>
+                      <option value="3">3 SD</option>
+                      <option value="4">4 SD</option>
+                      <option value="5">5 SD</option>
+                      <option value="6">6 SD</option>
                     </select>
                   </div>
 
                   <!-- No Telp -->
                   <div class="col-md-6 mb-3">
                     <label for="phone" class="form-label">No Telp <span class="text-danger">*</span></label>
-                    <input type="tel" class="form-control" id="phone" name="phone" 
-                           pattern="[0-9]{10,13}" 
-                           placeholder="08123456789" 
-                           required>
+                    <input type="tel" class="form-control" id="phone" name="phone"
+                      pattern="[0-9]{10,13}"
+                      placeholder="08123456789"
+                      required>
                     <div class="form-text">
-                      <i class="fas fa-info-circle"></i> 
+                      <i class="fas fa-info-circle"></i>
                       Format: 08xxxxxxxxxx (10-13 digit)
                     </div>
                   </div>
@@ -306,7 +306,7 @@
                     <label for="photo" class="form-label optional">Foto</label>
                     <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
                     <div class="form-text">
-                      <i class="fas fa-info-circle"></i> 
+                      <i class="fas fa-info-circle"></i>
                       Format: JPG, PNG, GIF, SVG. Maksimal 2MB.
                     </div>
                   </div>
@@ -322,7 +322,7 @@
                 </div>
                 <div class="text-center mt-2">
                   <small class="text-muted">
-                    <i class="fas fa-info-circle"></i> 
+                    <i class="fas fa-info-circle"></i>
                     Semua field bertanda <span class="text-danger">*</span> harus diisi untuk melanjutkan
                   </small>
                   <div class="progress mt-2" style="height: 8px;">
@@ -415,7 +415,7 @@
         passConfirm.classList.remove('is-invalid');
         passConfirm.classList.remove('is-valid');
       }
-      
+
       // Periksa lagi semua field required
       validateForm();
     }
@@ -423,7 +423,7 @@
     // Ambil semua elemen form yang required
     const form = document.getElementById('registerForm');
     const requiredFields = form.querySelectorAll('[required]');
-    
+
     // Get all form fields for validation
     const allFields = form.querySelectorAll('input, select, textarea');
 
@@ -481,9 +481,9 @@
       console.log('Form validation result:', allValid);
       console.log('Password match:', pass.value === passConfirm.value);
       console.log('Missing fields:', missingFields);
-      
+
       nextBtn.disabled = !allValid;
-      
+
       // Update button appearance
       if (allValid) {
         nextBtn.classList.remove('btn-secondary');
@@ -494,7 +494,7 @@
         nextBtn.classList.add('btn-secondary');
         console.log('❌ Form is invalid - button disabled');
       }
-      
+
       // Update progress bar
       updateFormProgress();
     }
@@ -511,7 +511,7 @@
       previewHTML += '</div>';
       previewHTML += '<div class="modal-body">';
       previewHTML += '<div class="row">';
-      
+
       // Student data
       previewHTML += '<div class="col-md-6">';
       previewHTML += '<h6 class="text-primary">Data Siswa</h6>';
@@ -520,11 +520,12 @@
       previewHTML += '<p><strong>Tempat Lahir:</strong> ' + (formData.get('birthplace') || '-') + '</p>';
       previewHTML += '<p><strong>Tanggal Lahir:</strong> ' + (formData.get('birthdate') || '-') + '</p>';
       previewHTML += '<p><strong>Jenis Kelamin:</strong> ' + (formData.get('gender') || '-') + '</p>';
-      previewHTML += '<p><strong>Kelas:</strong> ' + (document.getElementById('class_id').options[document.getElementById('class_id').selectedIndex].text || '-') + '</p>';
+      previewHTML += '<p><strong>Kelas Pendidikan Formal Sebelumnya:</strong> ' + (document.getElementById('grade').options[document.getElementById('grade').selectedIndex].text || '-') + '</p>';
+      // previewHTML += '<p><strong>Kelas:</strong> ' + (document.getElementById('class_id').options[document.getElementById('class_id').selectedIndex].text || '-') + '</p>';
       previewHTML += '<p><strong>No Telp:</strong> ' + (formData.get('phone') || '-') + '</p>';
       previewHTML += '<p><strong>Alamat:</strong> ' + (formData.get('address') || '-') + '</p>';
       previewHTML += '</div>';
-      
+
       // Parent data
       previewHTML += '<div class="col-md-6">';
       previewHTML += '<h6 class="text-primary">Data Orang Tua</h6>';
@@ -534,7 +535,7 @@
       previewHTML += '<p><strong>Pekerjaan Ibu:</strong> ' + (formData.get('mother_job') || '-') + '</p>';
       previewHTML += '<p><strong>Foto:</strong> ' + (document.getElementById('photo').files[0] ? document.getElementById('photo').files[0].name : 'Tidak ada foto') + '</p>';
       previewHTML += '</div>';
-      
+
       previewHTML += '</div>';
       previewHTML += '</div>';
       previewHTML += '<div class="modal-footer">';
@@ -543,16 +544,16 @@
       previewHTML += '</div>';
       previewHTML += '</div>';
       previewHTML += '</div>';
-      
+
       // Remove existing modal if any
       const existingModal = document.getElementById('previewModal');
       if (existingModal) {
         existingModal.remove();
       }
-      
+
       // Add modal to body
       document.body.insertAdjacentHTML('beforeend', previewHTML);
-      
+
       // Show modal
       const modal = new bootstrap.Modal(document.getElementById('previewModal'));
       modal.show();
@@ -562,7 +563,7 @@
     function updateFormProgress() {
       const totalRequiredFields = requiredFields.length;
       let completedFields = 0;
-      
+
       requiredFields.forEach(field => {
         if (field.type === 'radio') {
           const radioGroup = form.querySelectorAll(`[name="${field.name}"]`);
@@ -574,23 +575,23 @@
           if (field.value.trim()) completedFields++;
         }
       });
-      
+
       // Check password confirmation
       if (pass.value === passConfirm.value && pass.value.trim()) {
         completedFields++;
       }
-      
+
       const progressPercentage = Math.round((completedFields / (totalRequiredFields + 1)) * 100);
-      
+
       // Update progress bar
       const progressBar = document.getElementById('formProgress');
       const progressText = document.getElementById('progressText');
-      
+
       if (progressBar && progressText) {
         progressBar.style.width = progressPercentage + '%';
         progressBar.setAttribute('aria-valuenow', progressPercentage);
         progressText.textContent = progressPercentage + '%';
-        
+
         // Update progress bar color based on completion
         if (progressPercentage < 50) {
           progressBar.className = 'progress-bar bg-danger';
@@ -675,19 +676,19 @@
       }
     });
 
-    
+
 
     pass.addEventListener('input', validatePasswords);
     passConfirm.addEventListener('input', validatePasswords);
 
     // Validasi awal saat halaman dimuat
     validateForm();
-    
+
     // Debug: Log form elements
     console.log('Form found:', document.getElementById('registerForm'));
     console.log('Next button found:', document.getElementById('nextBtn'));
     console.log('Required fields found:', requiredFields.length);
-    
+
     // Add click event to next button for debugging
     nextBtn.addEventListener('click', function(e) {
       console.log('Next button clicked');

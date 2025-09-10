@@ -12,7 +12,7 @@ class StudentController extends Controller
 {
     public function index()
     {
-        $data = User::where('role_id', 2)->paginate(10);
+        $data = User::with('class')->where('role_id', 2)->paginate(10);
         return view('admin.student.index', compact('data'));
     }
 
@@ -38,26 +38,30 @@ class StudentController extends Controller
             $path = $request->photo->storeAs('photos', $filename, 'public');
         }
 
-        $user = new User();
-        $user->role_id = 2; // student
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
-        $user->class_id = $request->class_id;
-        $user->birthplace = $request->birthplace;
-        $user->birthdate = $request->birthdate;
-        $user->gender = $request->gender;
-        $user->phone = $request->phone;
-        $user->address = $request->address;
-        $user->father_name = $request->father_name;
-        $user->father_job = $request->father_job;
-        $user->mother_name = $request->mother_name;
-        $user->mother_job = $request->mother_job;
-        $user->photo = $path;
-        $user->is_active = $request->is_active ?? 1;
+        $data = new User();
+        $data->role_id = 2; // student
+        $data->name = $request->name;
+        $data->email = $request->email;
+        $data->password = bcrypt($request->password);
+        $data->class_id = $request->class_id;
+        $data->birthplace = $request->birthplace;
+        $data->birthdate = $request->birthdate;
+        $data->gender = $request->gender;
+        $data->phone = $request->phone;
+        $data->address = $request->address;
+        $data->father_name = $request->father_name;
+        $data->father_job = $request->father_job;
+        $data->mother_name = $request->mother_name;
+        $data->mother_job = $request->mother_job;
+        $data->photo = $path;
+        $data->is_active = $request->is_active ?? 1;
 
         // Simpan user, NIS, academic_year, batch akan otomatis dari model
-        $user->save();
+        $data->save();
+
+        // Auto-assign kelas (cek kuota, bikin kelas baru jika penuh)
+        $assignedClass = TbClass::assignStudentToClass($request->grade, $data->id);
+
 
         return redirect()->route('admin.student.index')->with('success', 'Data berhasil disimpan');
     }
@@ -71,6 +75,8 @@ class StudentController extends Controller
     public function edit($id)
     {
         $student = User::findOrFail($id);
+        $student->grade = (int) filter_var($student->class->class_name, FILTER_SANITIZE_NUMBER_INT);
+
         return view('admin.student.edit', compact('student'));
     }
 
@@ -118,5 +124,20 @@ class StudentController extends Controller
         }
         $student->delete();
         return redirect()->route('admin.student.index')->with('success', 'Data berhasil dihapus');
+    }
+
+    private function getClassName($classId)
+    {
+        $classNames = [
+            0 => 'Kelas TK',
+            1 => 'Kelas 1',
+            2 => 'Kelas 2',
+            3 => 'Kelas 3',
+            4 => 'Kelas 4',
+            5 => 'Kelas 5',
+            6 => 'Kelas 6',
+        ];
+
+        return $classNames[$classId] ?? 'Kelas Tidak Diketahui';
     }
 }

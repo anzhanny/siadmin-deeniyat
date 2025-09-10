@@ -4,21 +4,17 @@
   <div class="col-12">
 
     <div class="card mb-4">
-
       <div class="card-header pb-0">
         <div class="d-flex justify-content-between mb-0">
           <!-- tambah data -->
-          <a href="{{ route('admin.class.create') }}">
+          <!-- <a href="{{ route('admin.class.create') }}">
             <button class="btn btn-primary">
               <i class="ni ni-fat-add"></i> Tambah Data
             </button>
-          </a>
-
-          <button class="btn btn-success">
-            <i class="ni ni-cloud-download-95"></i> Download File
-          </button>
+          </a> -->
         </div>
       </div>
+
       <div class="card-body px-0 pt-0 pb-2">
         <div class="table-responsive p-0">
           <table class="table text-center align-items-center mb-0">
@@ -31,37 +27,48 @@
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tahun Ajaran</th>
                 <th class="text-center text-dark text-uppercase text-xs font-weight-bolder opacity-7">Aksi</th>
               </tr>
-
-              <?php $no = 1; ?>
             </thead>
 
             <tbody>
-              @foreach ($data as $value)
-              <tr>
-                 <td>{{ $data->firstItem() + $loop->index }}</td>
-                <td class="align-middle text-center text-sm">{{$value->class_name}}</td>
-                <td class="align-middle text-center text-sm">{{$value->user_count}}</td>
-                <td class="align-middle text-center text-sm">{{$value->teacher_name}}</td>
-                <td class="align-middle text-center text-sm">{{$value->academic_year_first}}/{{$value->academic_year_last}}</td>
-                <td class="align-middle">
-                  <button type="button" class="btn btn-primary btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Edit Siswa">
-                    <a href="{{ route('admin.class.edit', $value->id) }}" class="text-white font-weight-bold text-xs">
+              @foreach($data as $class)
+              <tr @if($class->user->count() >= $class->amount) class="bg-danger text-white" @endif>
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ $class->class_name }}</td>
+                <td>
+                  <a href="#" data-class-id="{{ $class->id }}" class="toggle-students">
+                    {{ $class->user->count() }} / {{ $class->amount }}
+                  </a>
+                </td>
+                <td>{{ $class->teacher_name ?? '-' }}</td>
+                <td>{{ $class->academic_year_first }}/{{ $class->academic_year_last }}</td>
+                <td>
+                   <button type="button" class="btn btn-primary btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Edit Class">
+                    <a href="{{ route('admin.class.edit', $class->id) }}" class="text-white font-weight-bold text-xs">
                       <i class="fa fa-edit pt-1" aria-hidden="true"></i>
                     </a>
                   </button>
 
 
-                  <form action="{{ route('admin.class.destroy', $value->id) }}" method="POST" style="display:inline-block;">
+                  <form action="{{ route('admin.class.destroy', $class->id) }}" method="POST" style="display:inline-block;">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
                       class="btn btn-danger btn-icon btn-sm p-1"
                       style="width: 30px; height: 30px;"
-                      title="Hapus Siswa"
-                      onclick="return confirm('Yakin mau hapus siswa ini?')">
+                      title="Hapus Kelas"
+                      onclick="return confirm('Yakin mau hapus Kelas ini?')">
                       <i class="fa fa-trash pt-1" aria-hidden="true"></i>
                     </button>
                   </form>
+                </td>
+              </tr>
+              <tr id="students-{{ $class->id }}" style="display:none;">
+                <td colspan="6">
+                  <ul class="list-group">
+                    @foreach($class->user as $student)
+                    <li class="list-group-item text-start">{{ $student->name }}</li>
+                    @endforeach
+                  </ul>
                 </td>
               </tr>
               @endforeach
@@ -69,7 +76,6 @@
           </table>
         </div>
       </div>
-
     </div>
 
     <nav aria-label="Page navigation example">
@@ -81,6 +87,7 @@
   </div>
 </div>
 
+{{-- Script Sortir Table --}}
 <script>
   let sortDirection = {};
 
@@ -99,10 +106,20 @@
       return cellA.localeCompare(cellB) * direction;
     });
 
-    // Hapus dan masukkan ulang baris yang sudah diurut
     const tbody = table.querySelector("tbody");
     tbody.innerHTML = "";
     rows.forEach(row => tbody.appendChild(row));
   }
+</script>
+
+<script>
+document.querySelectorAll('.toggle-students').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const classId = this.dataset.classId;
+        const row = document.getElementById('students-' + classId);
+        if(row) row.style.display = (row.style.display === 'none') ? '' : 'none';
+    });
+});
 </script>
 @endsection

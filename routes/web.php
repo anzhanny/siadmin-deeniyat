@@ -63,8 +63,6 @@ Route::get('/register', function () {
 
 Route::post('/register', [SesiController::class, 'register'])->name('register.store');
 
-
-
 //profile
 Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile');
 

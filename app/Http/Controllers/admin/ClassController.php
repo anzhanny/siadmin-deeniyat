@@ -32,16 +32,29 @@ class ClassController extends Controller
     {
         $request->validate([
             'class_name' => 'required|string|max:100',
-            'amount' => 'required|integer|min:1',
-            'teacher_name' => 'required|string|max:100',
+            'rombel' => 'required|integer|min:1|max:10',
             'academic_year_first' => 'required|string|max:10',
             'academic_year_last' => 'required|string|max:10',
         ]);
 
-        TbClass::create($request->all());
+        $base = $request->class_base;
+        $rombel = $request->rombel;
+
+        for ($i = 0; $i < $rombel; $i++) {
+            $suffix = chr(65 + $i); // "A", "B", "C"
+            $className = "Kelas {$base}{$suffix}";
+
+            TbClass::create([
+                'class_name' => $className,
+                'amount' => 15, // kuota fix
+                'teacher_name' => null,
+                'academic_year_first' => $request->academic_year_first,
+                'academic_year_last' => $request->academic_year_last,
+            ]);
+        }
 
         return redirect()->route('admin.class.index')
-            ->with('success', 'Data berhasil disimpan');
+            ->with('success', 'Kelas baru berhasil dibuat otomatis');
     }
 
     /**
@@ -68,8 +81,8 @@ class ClassController extends Controller
     {
         $request->validate([
             'class_name' => 'required|string|max:100',
-            'amount' => 'required|integer|min:1',
-            'teacher_name' => 'required|string|max:100',
+            'amount' => 'nullable|integer|min:2',
+            'teacher_name' => 'nullable|string|max:100',
             'academic_year_first' => 'required|string|max:10',
             'academic_year_last' => 'required|string|max:10',
         ]);

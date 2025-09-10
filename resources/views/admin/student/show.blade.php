@@ -7,6 +7,7 @@
             <div class="card-header pb-0">
                 <h6>Detail Data Siswa</h6>
             </div>
+
             <div class="card-body px-4 py-3">
 
                 <div class="table-responsive">
@@ -26,11 +27,7 @@
                         <tr>
                             <th>Kelas</th>
                             <td>
-                                @if(!is_null($student->class_id))
-                                Kelas {{ $student->class_id }}
-                                @else
-                                -
-                                @endif
+                                {{ $student->class ? $student->class->class_name : '-' }}
                             </td>
                         </tr>
                         <tr>
@@ -89,9 +86,9 @@
                 </div>
 
                 <!-- Tombol aksi kanan bawah -->
-                <div class="d-flex justify-content-end mt-3">
+                <div class="text-end mt-4">
+                    <a href="{{ route('admin.student.index') }}" class="btn btn-secondary">Kembali</a>
                     <a href="{{ route('admin.student.edit', $student->id) }}" class="btn btn-primary">Edit</a>
-                    <a href="{{ route('admin.student.index') }}" class="btn btn-secondary me-2">Kembali</a>
                 </div>
 
             </div>

@@ -13,9 +13,6 @@
               <i class="ni ni-fat-add"></i> Tambah Data
             </button>
           </a>
-          <button class="btn btn-success">
-            <i class="ni ni-cloud-download-95"></i> Download File
-          </button>
         </div>
       </div>
       <div class="card-body px-0 pt-0 pb-2">
@@ -31,27 +28,13 @@
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Siswa</th>
 
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas Deeniyat</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Email</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">No Telp</th>
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Alamat</th>
-
-                <!-- <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tempat, Tanggal Lahir</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Jenis Kelamin</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Ayah</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Pekerjaan Ayah</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nama Ibu</th>
-
-                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Pekerjaan Ibu</th>
- -->
-
 
                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
 
@@ -66,7 +49,7 @@
                 <td>{{ $data->firstItem() + $no - 1 }}</td>
                 <!-- <td class="align-middle text-center text-sm">{{ $no++ }}</td> -->
 
-                                <td class="align-middle text-center text-sm">
+                <td class="align-middle text-center text-sm">
                   @if($value->photo && Storage::disk('public')->exists($value->photo))
                   <img src="{{ asset('storage/' . $value->photo) }}"
                     alt="photo" width="40" height="40" style="object-fit: cover; border-radius: 5px;">
@@ -79,27 +62,13 @@
 
                 <td class="align-middle text-center text-sm">{{ $value->name }}</td>
 
-                <td class="align-middle text-center text-sm">{{ $value->class_id }}</td>
+                <td class="align-middle text-center text-sm">{{ $value->class?->class_name ?? '-' }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->email }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->phone }}</td>
 
                 <td class="align-middle text-center text-sm">{{ $value->address }}</td>
-
-                <!-- <td class="align-middle text-center text-sm">{{ $value->birthplace}}, {{ $value->birthdate }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->gender }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->father_name }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->father_job }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->mother_name }}</td>
-
-                <td class="align-middle text-center text-sm">{{ $value->mother_job }}</td> -->
-
-
 
                 @if($value->is_active == 1)
                 <td class="align-middle text-center text-sm">

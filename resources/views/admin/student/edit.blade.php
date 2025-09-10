@@ -20,13 +20,15 @@
         </div>
 
         <div class="col-md-6 mb-3">
-          <select class="form-select" id="class_id" name="class_id" required>
-            <option value="">Pilih Kelas</option>
-            @foreach ($data as $value)
-            <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
-              Kelas {{ $class->class_name }}
-            </option>
-            @endforeach
+          <label for="grade" class="form-label">Kelas Deeniyat
+            <span class="text-danger">*</span>
+          </label>
+          <select class="form-select" id="grade" name="grade" required>
+            @for ($i = 0; $i <= 6; $i++)
+              <option value="{{ $i }}" {{ old('grade', $student->grade) == $i ? 'selected' : '' }}>
+              {{ $i }}
+              </option>
+              @endfor
           </select>
 
         </div>
@@ -113,8 +115,8 @@
       </div>
 
       <div class="text-end mt-4">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-        <a href="{{ route('admin.student.index') }}" class="btn btn-secondary">Kembali</a>
+        <a href="{{ route('admin.student.index') }}" class="btn btn-secondary">Batal</a>
+        <button type="submit" class="btn btn-primary">Update</button>
       </div>
     </form>
   </div>

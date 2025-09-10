@@ -14,40 +14,40 @@ class PaymentController extends Controller
     /**
      * Display a listing of the resource.
      */
-public function index()
-{
-     // Ambil data payment + data siswa (user) + data kelas (class)
-    $data = Payment::with(['user', 'class'])->paginate(10);
-    return view('admin.payment.index', compact('data'));
-}
+    public function index()
+    {
+        // Ambil data payment + data siswa (user) + data kelas (class)
+        $data = Payment::with(['user', 'class'])->paginate(10);
+        return view('admin.payment.index', compact('data'));
+    }
     /**
      * Show the form for creating a new resource.
      */
 
     public function getStudentClass($id)
-{
-    $student = User::with('class') // pastikan relasi sudah ada
-                ->where('role_id', 2)
-                ->findOrFail($id);
+    {
+        $student = User::with('class') // pastikan relasi sudah ada
+            ->where('role_id', 2)
+            ->findOrFail($id);
 
-    return response()->json([
-        'class_id' => $student->class_id,
-        'class_name' => $student->class->class_name ?? '-'
-    ]);
-}
+        return response()->json([
+            'class_id' => $student->class_id,
+            'class_name' => $student->class->class_name ?? '-'
+        ]);
+    }
 
-public function create()
-{
-    $students = User::where('role_id', 2)->get(); // role_id=2 untuk siswa
-    $classes = TbClass::all(); // ganti SchoolClass sesuai model kelas kamu
-    return view('admin.payment.create', compact('students', 'classes'));
-}
+    public function create()
+    {
+        $students = User::where('role_id', 2)->get(); // role_id=2 untuk siswa
+        $classes = TbClass::all(); // ganti SchoolClass sesuai model kelas kamu
+        return view('admin.payment.create', compact('students', 'classes'));
+    }
 
 
     /**
      * Store a newly created resource in storage.
      */
- public function store(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'user_id'       => 'required|exists:users,id',
@@ -74,43 +74,43 @@ public function create()
     /**
      * Display the specified resource.
      */
-public function show(string $id)
-{
-    $payment = Payment::with(['user', 'class'])->findOrFail($id);
-    return view('admin.payment.show', compact('payment'));
-}
+    public function show(string $id)
+    {
+        $payment = Payment::with(['user', 'class'])->findOrFail($id);
+        return view('admin.payment.show', compact('payment'));
+    }
 
-public function updateStatus(Request $request, $id)
-{
-    $payment = Payment::findOrFail($id);
+    public function updateStatus(Request $request, $id)
+    {
+        $payment = Payment::findOrFail($id);
 
-    $request->validate([
-        'status' => 'required|in:pending,paid,failed',
-    ]);
+        $request->validate([
+            'status' => 'required|in:pending,paid,failed',
+        ]);
 
-    $payment->status = $request->status;
-    $payment->save();
+        $payment->status = $request->status;
+        $payment->save();
 
-    return redirect()->route('admin.payment.index')->with('success', 'Status pembayaran berhasil diperbarui.');
-}
+        return redirect()->route('admin.payment.index')->with('success', 'Status pembayaran berhasil diperbarui.');
+    }
 
 
 
     /**
      * Show the form for editing the specified resource.
      */
-public function edit($id)
-{
-    $payment = Payment::findOrFail($id);
-    $students = User::where('role_id', 2)->get();
-    $classes = TbClass::all();
-    return view('admin.payment.edit', compact('payment', 'students', 'classes'));
-}
+    public function edit($id)
+    {
+        $payment = Payment::findOrFail($id);
+        $students = User::where('role_id', 2)->get();
+        $classes = TbClass::all();
+        return view('admin.payment.edit', compact('payment', 'students', 'classes'));
+    }
 
     /**
      * Update the specified resource in storage.
      */
-public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'user_id'       => 'required|exists:users,id',
@@ -135,20 +135,17 @@ public function update(Request $request, $id)
             ->with('success', 'Data pembayaran berhasil diperbarui.');
     }
 
-    
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-{
-    $data = Payment::findOrFail($id);
-    $data->delete();
+    {
+        $data = Payment::findOrFail($id);
+        $data->delete();
 
-    return redirect()->route('admin.payment.index')
-        ->with('success', 'Data pembayaran berhasil dihapus');
-}
-
-
-
+        return redirect()->route('admin.payment.index')
+            ->with('success', 'Data pembayaran berhasil dihapus');
+    }
 }

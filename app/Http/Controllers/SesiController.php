@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TbClass;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,6 +61,9 @@ class SesiController extends Controller
         }
 
         $data->save();
+
+        // Auto-assign kelas (cek kuota, bikin kelas baru jika penuh)
+        $assignedClass = TbClass::assignStudentToClass($request->grade, $data->id);
 
         // Login otomatis setelah register
         Auth::login($data);
@@ -147,58 +151,11 @@ class SesiController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    /**
      * Get class name based on class ID
      */
     private function getClassName($classId)
     {
+        
         $classNames = [
             0 => 'Kelas TK',
             1 => 'Kelas 1',
