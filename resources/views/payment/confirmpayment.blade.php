@@ -87,11 +87,18 @@
         <div class="container">
             <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
-                    <form action="{{ route('payment.thankyoupage') }}" method="GET" id="paymentForm">
-                        <input type="hidden" name="user_id" value="{{ session('user_id', auth()->id()) }}">
-                        <input type="hidden" name="class_id" value="{{ session('class_id', 0) }}">
+                    @if(config('payment.mode') === 'demo')
+                    <form action="{{ route('payment.process', $payment->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="payment_type" id="payment_type" value="{{ session('payment_type') }}">
+                        <input type="hidden" name="payment_category" id="payment_category" value="{{ session('payment_category') }}">
+                        <input type="hidden" name="total_amount" id="total_amount" value="{{ session('total_amount', 450000) }}">
+                        <input type="hidden" name="user_id" id="user_id" value="{{ session('user_id', auth()->id()) }}">
+                        <input type="hidden" name="class_id" id="class_id" value="{{ session('class_id', 0) }}">
+                        <input type="hidden" name="payment_for" value="{{ session('payment_for', 'register') }}">
 
-                        <!-- Card 1: Detail Pembayaran -->
+
+
                         <div class="card z-index-0 border shadow-sm" style="background-color: #F5F7F8;">
 
                             <div class="card-header text-center pt-4">
@@ -113,19 +120,23 @@
                                             <div class="col-12 col-md-6">
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Nama Calon Siswa</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_name', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_name') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Alamat</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_address', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_address') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Tempat, Tanggal Lahir</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_birthplace', 'N/A') }}, {{ session('student_birthdate', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_birthplace') }}, {{ session('student_birthdate') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Nama Ayah</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('father_name', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('father_name') }}</span>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <strong class="d-block text-secondary small opacity-50">Nama Ibu</strong>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('mother_name') }}</span>
                                                 </div>
                                             </div>
 
@@ -133,19 +144,19 @@
                                             <div class="col-12 col-md-6 ps-md-10">
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Email</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_email', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_email') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">No Telp</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_phone', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_phone') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Jenis Kelamin</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_gender', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_gender') }}</span>
                                                 </div>
                                                 <div class="mb-3">
                                                     <strong class="d-block text-secondary small opacity-50">Kelas Pendidikan Formal</strong>
-                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_class', 'N/A') }}</span>
+                                                    <span class="d-block fs-5 fw-semibold text-dark">{{ session('student_class') }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -166,7 +177,7 @@
                                                 <strong class="d-block text-secondary">Tipe Pembayaran Anda</strong>
                                             </div>
                                             <div class="col-6 ps-md-10">
-                                                <span class="d-block text-dark">: {{ session('payment_type', 'N/A') }}</span>
+                                                <span class="d-block text-dark">: {{ session('payment_type') }}</span>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -174,7 +185,7 @@
                                                 <strong class="d-block text-secondary">Kategori Pembayaran Anda</strong>
                                             </div>
                                             <div class="col-6 ps-md-10">
-                                                <span class="d-block text-dark">: {{ session('payment_method', 'N/A') }}</span>
+                                                <span class="d-block text-dark">: {{ session('payment_category') }}</span>
                                             </div>
                                         </div>
                                         <div class="row mb-3">
@@ -186,15 +197,17 @@
                                             </div>
                                         </div>
                                     </div>
-
+                                    <div class="text-end " style="padding-right: 1.7rem;">
+                                        <button type="submit" class="btn btn-primary">Lanjutkan Pembayaran</button>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="text-end mt-2" style="padding-right: 1.7rem;">
-                                <a href="{{route('payment.detailpayment')}}" class="btn btn-outline-secondary">Kembali</a>
-                                <button type="submit" class="btn btn-primary">Lanjutkan Pembayaran</button>
-                            </div>
+                        </div>
+
+
                     </form>
+                    @endif
                 </div>
             </div>
         </div>
@@ -235,7 +248,7 @@
 
         function selectPaymentCategory(category) {
             // Remove selected class from all payment category options
-            document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            document.querySelectorAll('input[name="payment_category"]').forEach(radio => {
                 radio.closest('.payment-option').classList.remove('selected');
             });
 
@@ -260,7 +273,7 @@
 
         function validateForm() {
             const paymentType = document.querySelector('input[name="payment_type"]:checked');
-            const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+            const paymentMethod = document.querySelector('input[name="payment_category"]:checked');
             const installmentPeriod = document.getElementById('installment_period');
             const lanjutkanBtn = document.getElementById('lanjutkanBtn');
 
@@ -320,6 +333,18 @@
             validateForm();
         });
     </script>
+    <!-- <script>
+        document.getElementById('lanjutkanBtn').addEventListener('click', function() {
+            let paymentType = document.getElementById('payment_type').value;
+
+            if (paymentType === 'tunai') {
+                window.location.href = "{{ route('payment.waredirect', ['id' => session('user_id')]) }}";
+            } else {
+                window.location.href = "{{ route('payment.midtransFake', ['id' => session('user_id')]) }}";
+            }
+        });
+    </script> -->
+
 </body>
 
 </html>

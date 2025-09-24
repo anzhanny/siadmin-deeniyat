@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class User extends Authenticatable
 {
@@ -49,14 +51,31 @@ class User extends Authenticatable
         ];
     }
 
+    // 🔹 Relasi Role
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id', 'id');
     }
 
+    // 🔹 Relasi Kelas
     public function class()
     {
         return $this->belongsTo(TbClass::class, 'class_id', 'id');
+    }
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'user_id');
+    }
+    public function installments(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Installment::class,
+            Payment::class,
+            'user_id',   // Foreign key di Payment
+            'payment_id',// Foreign key di Installment
+            'id',        // Local key di User
+            'id'         // Local key di Payment
+        );
     }
 
     /**
@@ -65,15 +84,13 @@ class User extends Authenticatable
      */
     public static function generateNis($academicYear, $batch)
     {
-        // Ambil siswa terakhir sesuai academicYear & batch
         $lastStudent = self::where('academic_year', $academicYear)
             ->where('batch', $batch)
             ->orderBy('nis', 'desc')
             ->first();
 
-        $nextNumber = 1; // default
+        $nextNumber = 1;
         if ($lastStudent) {
-            // Ambil 5 digit terakhir NIS sebagai nomor urut
             $lastNumber = intval(substr($lastStudent->nis, -5));
             $nextNumber = $lastNumber + 1;
         }
@@ -82,23 +99,29 @@ class User extends Authenticatable
     }
 
     /**
-     * Booted: otomatis generate NIS saat creating
+     * Boot: generate NIS saat creating + hapus relasi saat deleting
      */
-    protected static function booted()
+    protected static function boot()
     {
+        parent::boot();
+
         static::creating(function ($user) {
-            // Academic year 2 digit + 2 digit
-            $yearStart = date('y'); // contoh 25
-            $yearEnd = date('y', strtotime('+1 year')); // contoh 26
+            $yearStart = date('y'); 
+            $yearEnd = date('y', strtotime('+1 year')); 
             $user->academic_year = $yearStart . $yearEnd;
 
-            // Batch otomatis: tahun masuk dikurangi tahun pertama angkatan (misal 2012)
             $baseYear = 2012;
             $currentYear = date('Y');
             $user->batch = str_pad(($currentYear - $baseYear + 1), 2, '0', STR_PAD_LEFT);
 
-            // Generate NIS sesuai academic_year & batch
             $user->nis = self::generateNis($user->academic_year, $user->batch);
+        });
+
+        static::deleting(function ($user) {
+            foreach ($user->payments as $payment) {
+                $payment->installments()->delete();
+                $payment->delete();
+            }
         });
     }
 }

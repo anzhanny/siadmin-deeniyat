@@ -1,65 +1,165 @@
-@extends('layouts.layout')
-@section('content')
-<div class="row">
-  <div class="col-12">
-    <div class="card mb-4">
-      <div class="card-header pb-0 d-flex justify-content-between">
-        <h6>Riwayat Pembayaran SPP</h6>
-        <span class="badge bg-gradient-info p-2">
-          Total Pembayaran Tahun Ini: Rp {{ number_format($total_pembayaran, 0, ',', '.') }}
-        </span>
-      </div>
-      <div class="card-body">
-      <div class="table-responsive">
-      <table class="table text-center align-items-center mb-0"> 
-        <thead>
-          <tr>
-            <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Bulan</th>
-            <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Jumlah</th>
-            <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Metode Bayar</th>
-            <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Status</th>
-            <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Tanggal Bayar</th>
-            <th class="text-center text-uppercase text-dark text-xs font-weight-bolder">Aksi</th>
-          </tr>
-        </thead>
+@extends('layouts.app')
 
+@section('content')
+<div class="container">
+    <h4>Bayar SPP</h4>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Bulan</th>
+                <th>Jumlah</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
         <tbody>
-          @foreach($pembayaran as $item)
-          <tr>
-            <td class="align-middle text-center text-sm">{{ $item->month }}</td>
-            <td class="align-middle text-center text-sm">Rp {{ number_format($item->amount, 0, ',', '.') }}</td>
-            <td class="align-middle text-center text-sm">
-              {{ $item->payment_type == 'full' ? 'Lunas' : 'Cicilan ' . $item->installment_no . '/' . $item->installment_total }}
-            </td>
-            <td class="align-middle text-center text-sm">
-              @if($item->status == 'paid')
-                <span class="badge badge-sm bg-gradient-success">Lunas</span>
-              @elseif($item->status == 'pending')
-                <span class="badge badge-sm bg-gradient-warning">Menunggu Pembayaran</span>
-              @else
-                <span class="badge badge-sm bg-gradient-danger">Gagal</span>
-              @endif
-            </td>
-            <td class="align-middle text-center text-sm">
-              {{ $item->paid_at ? $item->paid_at->format('d-m-Y') : '-' }}
-            </td>
-            <td class="align-middle text-center text-sm">
-              @if($item->status != 'paid')
-                <form action="{{ route('pembayaran.bayar', $item->id) }}" method="POST">
-                  @csrf
-                  <button type="submit" class="btn btn-primary btn-sm">Bayar Sekarang</button>
-                </form>
-              @else
-                <a href="{{ asset('bukti_pembayaran/'.$item->bukti) }}" target="_blank" class="btn btn-success btn-sm">Lihat Bukti</a>
-              @endif
-            </td>
-          </tr>
-          @endforeach
+            <tr>
+                <td>1</td>
+                <td>Juli 2025</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Juli-2025') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Agustus 2025</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Agustus-2025') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>September 2025</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'September-2025') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Oktober 2025</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Oktober-2025') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>November 2025</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'November-2025') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Desember 2025</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Desember-2025') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>Januari 2026</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Januari-2026') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td>Februari 2026</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Februari-2026') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td>Maret 2026</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Maret-2026') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td>April 2026</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'April-2026') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>11</td>
+                <td>Mei 2026</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Mei-2026') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>12</td>
+                <td>Juni 2026</td>
+                <td>Rp50.000</td>
+                <td><span class="badge bg-warning">Belum ada transaksi</span></td>
+                <td>
+                    <form action="{{ route('student.payment.spp.pay', 'Juni-2026') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">Bayar</button>
+                    </form>
+                </td>
+            </tr>
         </tbody>
-      </table>
-        </div>
-      </div>
-    </div>
-  </div>
+    </table>
 </div>
 @endsection

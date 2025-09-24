@@ -4,6 +4,7 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\Installment;
 use App\Models\TbClass;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -13,68 +14,50 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-public function index()
+    public function index()
     {
-        // Hitung total siswa
         $studentCount = User::where('role_id', 2)->count();
-
-        // Hitung total guru (unik berdasarkan nama)
         $teacherCount = TbClass::distinct('teacher_name')->count('teacher_name');
+        $classCount   = TbClass::count();
 
-        // Hitung total kelas
-        $classCount = TbClass::count();
+        // Total pembayaran lunas (langsung, bukan cicilan)
+        $uangLunas = Payment::where('status', 'lunas')
+            ->where('payment_category', 'lunas') // pastikan ambil yang full payment
+            ->sum('amount');
 
-            $totalUangMasuk = Payment::where('status', 'lunas')->sum('amount');
+        // Total cicilan yang sudah dibayar
+        $uangCicilan = Installment::where('status', 'paid')->sum('nominal');
 
+        // Total uang masuk
+        $totalUangMasuk = $uangLunas + $uangCicilan;
 
-        return view('admin.dashboard', compact('studentCount', 'teacherCount', 'classCount', 'totalUangMasuk'));
-    }
+        // ---- tambahan statistik ----
+        $latestPayments = Payment::with('user')
+            ->where('status', 'lunas')
+            ->latest('updated_at')
+            ->take(5)
+            ->get();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        $sppBelumLunas = User::where('role_id', 2)
+            ->whereDoesntHave('payments', function ($q) {
+                $q->where('payment_for', 'spp')->where('status', 'lunas');
+            })
+            ->count();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $registerBelumLunas = User::where('role_id', 2)
+            ->whereDoesntHave('payments', function ($q) {
+                $q->where('payment_for', 'register')->where('status', 'lunas');
+            })
+            ->count();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return view('admin.dashboard', compact(
+            'studentCount',
+            'teacherCount',
+            'classCount',
+            'totalUangMasuk',
+            'latestPayments',
+            'sppBelumLunas',
+            'registerBelumLunas'
+        ));
     }
 }

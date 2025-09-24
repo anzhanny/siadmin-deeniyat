@@ -4,10 +4,14 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
-use App\Models\Student;
 use App\Models\TbClass;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SppInvoiceMail;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -16,10 +20,110 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        // Ambil data payment + data siswa (user) + data kelas (class)
-        $data = Payment::with(['user', 'class'])->paginate(10);
+        $data = Payment::with(['user', 'class', 'installments'])
+            ->orderBy('created_at', 'asc')
+            ->paginate(20);
+
         return view('admin.payment.index', compact('data'));
     }
+
+    // optional: form page (modal also possible) -> kita sediakan showGenerateSppForm to render modal form if needed
+    public function showGenerateSppForm()
+    {
+        // jika butuh data kelas, kirim juga
+        $classes = \App\Models\TbClass::all();
+        return view('admin.payment.generateSPP', compact('classes'));
+    }
+
+    // Generate SPP payments for selected students and send email
+    public function generateSPP(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|string',
+            'year' => 'required|digits:4',
+            'class_id' => 'nullable|integer',
+            'amount' => 'nullable|numeric',
+        ]);
+
+        $month = $request->month;
+        $year = $request->year;
+        $classId = $request->class_id;
+        $amount = $request->amount ?? 50000; // default 50k
+
+        // choose students (role_id = 2 as your convention)
+        $studentsQuery = User::where('role_id', 2);
+        if ($classId) $studentsQuery->where('class_id', $classId);
+        $students = $studentsQuery->get();
+
+        $created = 0;
+        foreach ($students as $student) {
+            // avoid duplicate for same month/year
+            $exists = Payment::where('user_id', $student->id)
+                ->where('payment_for', 'spp')
+                ->where('month', $month)
+                ->where('year', $year)
+                ->exists();
+
+            if ($exists) continue;
+
+            DB::beginTransaction();
+            try {
+                $payment = Payment::create([
+                    'user_id' => $student->id,
+                    'class_id' => $student->class_id,
+                    'payment_for' => 'spp',
+                    'payment_category' => 'lunas',
+                    'payment_type' => 'non-tunai',
+                    'method' => 'qris',
+                    'code' => 'SPP-' . strtoupper(uniqid()),
+                    'amount' => $amount,
+                    'month' => $month,
+                    'year' => $year,
+                    'status' => 'pending',
+                ]);
+
+                // send email (Mailable)
+                Mail::to($student->email)->send(new SppInvoiceMail($payment));
+
+                DB::commit();
+                $created++;
+            } catch (Exception $e) {
+                DB::rollBack();
+                // log and continue
+                Log::error("Generate SPP failed for user {$student->id}: " . $e->getMessage());
+                continue;
+            }
+        }
+
+        return back()->with('success', "Generate selesai. Tagihan dibuat dan email dikirim ke {$created} siswa.");
+    }
+
+    public function sendSppInvoices($month, $year)
+    {
+        // Ambil semua siswa yang sudah daftar
+        $payments = Payment::where('payment_for', 'SPP')
+            ->where('month', $month)
+            ->where('year', $year)
+            ->get();
+
+        foreach ($payments as $payment) {
+            try {
+                // Pakai queue supaya dikirim di background
+                // Mail::to($payment->user->email)
+                //     ->queue(new SppInvoiceMail($payment));
+
+                Mail::to($payment->user->email)
+                    ->send(new SppInvoiceMail($payment));
+
+                Log::info("Email tagihan SPP terkirim ke {$payment->user->email}");
+            } catch (\Exception $e) {
+                Log::error("Gagal kirim email ke {$payment->user->email}: " . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', 'Email tagihan SPP berhasil dikirim.');
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -50,16 +154,18 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id'       => 'required|exists:users,id',
-            'class_id'      => 'required|exists:tb_class,id',
-            'payment_type'  => 'required|string|max:255', // tunai / non-tunai
-            'payment_category' => 'required|string|max:255', // lunas / cicilan
-            'amount'        => 'required|numeric',
-            'method'        => 'required|string|max:50',
-            'month'         => 'nullable|string|max:50',
-            'status'        => 'required|in:pending,paid,failed',
-            'paid_at'       => 'nullable|date',
+            'payment_for'       => 'required|in:register,spp',
+            'payment_type'      => 'required|string|max:255',
+            'payment_category'  => 'required|string|max:255',
+            'amount'            => 'required|numeric',
+            'method'            => 'required|string|max:50',
+            'month'             => 'nullable|string|max:50',
+            'status'            => 'required|in:pending,paid,failed',
+            'paid_at'           => 'nullable|date',
         ]);
+
+        $user = User::findOrFail($request->user_id);
+        $validated['class_id'] = $user->class_id;
 
         if ($request->filled('paid_at')) {
             $validated['paid_at'] = date('Y-m-d H:i:s', strtotime($request->paid_at));
@@ -68,33 +174,65 @@ class PaymentController extends Controller
         Payment::create($validated);
 
         return redirect()->route('admin.payment.index')
-            ->with('success', 'Data pembayaran berhasil ditambahkan.');
+            ->with('success', 'Pembayaran berhasil ditambahkan.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        $payment = Payment::with(['user', 'class'])->findOrFail($id);
-        return view('admin.payment.show', compact('payment'));
-    }
+
+
+    // public function updateStatus(Request $request, $id)
+    // {
+    //     $payment = Payment::findOrFail($id);
+
+    //     // toggle status
+    //     if ($payment->status === 'paid') {
+    //         $payment->status = 'failed';
+    //         $payment->paid_at = null; // reset kalau dibatalkan
+    //     } else {
+    //         $payment->status = 'paid';
+    //         $payment->paid_at = now(); // set tanggal bayar
+    //     }
+
+    //     $payment->save();
+
+    //     return redirect()->back()->with('success', 'Status pembayaran berhasil diubah.');
+    // }
+
+
 
     public function updateStatus(Request $request, $id)
-    {
-        $payment = Payment::findOrFail($id);
+{
+    $payment = Payment::with('installments')->findOrFail($id);
 
-        $request->validate([
-            'status' => 'required|in:pending,paid,failed',
-        ]);
+    if ($payment->payment_category === 'cicilan') {
+        // Misalnya admin pilih cicilan mana yang dibayar (kirim installment_id via request)
+        $installment = $payment->installments()->find($request->installment_id);
 
-        $payment->status = $request->status;
+        if ($installment) {
+            $installment->status = $installment->status === 'paid' ? 'pending' : 'paid';
+            $installment->paid_at = $installment->status === 'paid' ? now() : null;
+            $installment->save();
+        }
+    } else {
+        // Kalau pembayaran sekali lunas (register/SPP)
+        $payment->status = $payment->status === 'paid' ? 'pending' : 'paid';
+        $payment->paid_at = $payment->status === 'paid' ? now() : null;
         $payment->save();
-
-        return redirect()->route('admin.payment.index')->with('success', 'Status pembayaran berhasil diperbarui.');
     }
 
+    return redirect()->back()->with('success', 'Status pembayaran berhasil diperbarui.');
+}
 
+
+
+    // show detail payment
+    public function show(string $id)
+    {
+        $payment = Payment::with('user', 'class', 'installments')->findOrFail($id);
+        return view('admin.payment.show', compact('payment'));
+    }
 
     /**
      * Show the form for editing the specified resource.

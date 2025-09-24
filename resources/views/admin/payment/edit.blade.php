@@ -1,99 +1,77 @@
 @extends('layouts.layout')
-@section('content')
+
 @section('content')
 <div class="row">
   <div class="col-12">
-    <form action="{{ route('admin.payment.update', $payment->id) }}" enctype="multipart/form-data" method="POST" id="paymentForm" class="p-4 border rounded shadow-sm bg-light">
-      @csrf
-        @method('PUT')
 
-        {{-- Pilih Siswa --}}
-        <div class="mb-3">
-            <label for="user_id">Nama Siswa</label>
-            <select name="user_id" id="user_id" class="form-control" required>
-                <option value="">-- Pilih Siswa --</option>
-                @foreach($students as $student)
-                <option value="{{ $student->id }}" {{ $student->id == $payment->user_id ? 'selected' : '' }}>
-                    {{ $student->name }}
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">Edit Data Pembayaran</h6>
+      </div>
+
+      <div class="card-body">
+        <form action="{{ route('admin.payment.update', $payment->id) }}" method="POST">
+          @csrf
+          @method('PUT')
+
+          <div class="mb-3">
+            <label for="user_id" class="form-label">Nama Siswa</label>
+            <select name="user_id" id="user_id" class="form-select" required>
+              @foreach(\App\Models\User::where('role_id',2)->get() as $u)
+                <option value="{{ $u->id }}" {{ $payment->user_id == $u->id ? 'selected' : '' }}>
+                  {{ $u->name }} ({{ $u->class->class_name ?? '-' }})
                 </option>
-                @endforeach
+              @endforeach
             </select>
-        </div>
+          </div>
 
-        {{-- Pilih Kelas --}}
-        <div class="mb-3">
-            <label for="class_id">Kelas</label>
-            <select name="class_id" id="class_id" class="form-control" required>
-                <option value="">-- Pilih Kelas --</option>
-                @foreach($classes as $class)
-                <option value="{{ $class->id }}" {{ $class->id == $payment->class_id ? 'selected' : '' }}>
-                    {{ $class->class_name }}
-                </option>
-                @endforeach
+          <div class="mb-3">
+            <label for="payment_for" class="form-label">Jenis Pembayaran</label>
+            <input type="text" name="payment_for" id="payment_for" class="form-control"
+                   value="{{ old('payment_for',$payment->payment_for) }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="payment_type" class="form-label">Tipe</label>
+            <select name="payment_type" id="payment_type" class="form-select" required>
+              <option value="spp" {{ $payment->payment_type == 'spp' ? 'selected' : '' }}>SPP</option>
+              <option value="uang gedung" {{ $payment->payment_type == 'uang gedung' ? 'selected' : '' }}>Uang Gedung</option>
+              <option value="lainnya" {{ $payment->payment_type == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
             </select>
-        </div>
+          </div>
 
-        {{-- Tipe Pembayaran --}}
-        <div class="mb-3">
-            <label for="payment_type">Tipe Pembayaran</label>
-            <input type="text" name="payment_type" class="form-control" value="{{ $payment->payment_type }}" required>
-        </div>
-
-        {{-- Jumlah --}}
-        <div class="mb-3">
-            <label for="amount">Jumlah</label>
-            <input type="number" name="amount" class="form-control" value="{{ $payment->amount }}" required>
-        </div>
-
-        {{-- Metode Pembayaran --}}
-        <div class="mb-3">
-            <label for="method">Metode Pembayaran</label>
-            <select name="method" class="form-control">
-                <option value="cash" {{ $payment->method == 'cash' ? 'selected' : '' }}>Cash</option>
-                <option value="transfer" {{ $payment->method == 'transfer' ? 'selected' : '' }}>Transfer</option>
+          <div class="mb-3">
+            <label for="payment_category" class="form-label">Kategori</label>
+            <select name="payment_category" id="payment_category" class="form-select" required>
+              <option value="lunas" {{ $payment->payment_category == 'lunas' ? 'selected' : '' }}>Lunas</option>
+              <option value="cicilan" {{ $payment->payment_category == 'cicilan' ? 'selected' : '' }}>Cicilan</option>
             </select>
-        </div>
+          </div>
 
-        {{-- Bulan --}}
-        <div class="mb-3">
-            <label for="month">Bulan</label>
-            <select name="month" id="month" class="form-control" required>
-                @php
-                    $months = [
-                        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-                    ];
-                @endphp
-                @foreach($months as $month)
-                    <option value="{{ $month }}" {{ $payment->month == $month ? 'selected' : '' }}>
-                        {{ $month }}
-                    </option>
-                @endforeach
+          <div class="mb-3">
+            <label for="amount" class="form-label">Jumlah (Rp)</label>
+            <input type="number" name="amount" id="amount" class="form-control"
+                   value="{{ old('amount',$payment->amount) }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" id="status" class="form-select" required>
+              <option value="pending" {{ $payment->status == 'pending' ? 'selected' : '' }}>Pending</option>
+              <option value="paid" {{ $payment->status == 'paid' ? 'selected' : '' }}>Lunas</option>
+              <option value="unpaid" {{ $payment->status == 'unpaid' ? 'selected' : '' }}>Belum Bayar</option>
             </select>
-        </div>
+          </div>
 
-        {{-- Status --}}
-        <div class="mb-3">
-            <label for="status">Status Pembayaran</label>
-            <select name="status" class="form-control">
-                <option value="pending" {{ $payment->status == 'pending' ? 'selected' : '' }}>Menunggu</option>
-                <option value="paid" {{ $payment->status == 'paid' ? 'selected' : '' }}>Lunas</option>
-                <option value="failed" {{ $payment->status == 'failed' ? 'selected' : '' }}>Dibatalkan</option>
+          <div class="d-flex justify-content-end">
+            <a href="{{ route('admin.payment.index') }}" class="btn btn-secondary me-2">Batal</a>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
 
-            </select>
-        </div>
+        </form>
+      </div>
+    </div>
 
-        {{-- Tanggal Pembayaran --}}
-        <div class="mb-3">
-            <label for="paid_at">Tanggal Pembayaran</label>
-            <input type="date" name="paid_at" class="form-control"
-                value="{{ $payment->paid_at && strtotime($payment->paid_at) ? \Carbon\Carbon::parse($payment->paid_at)->format('Y-m-d') : '' }}">
-        </div>
-
-        {{-- Tombol Simpan --}}
-        <button type="submit" class="btn btn-primary">Update</button>
-        <a href="{{ route('admin.payment.index') }}" class="btn btn-secondary">Batal</a>
-    </form>
   </div>
 </div>
 @endsection

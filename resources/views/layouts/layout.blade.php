@@ -64,30 +64,24 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link">
+          <a class="nav-link {{ Route::is('admin.payment.index') ? 'active' : '' }}" href="{{ route('admin.payment.index') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-money-coins text-dark text-sm opacity-10"></i>
             </div>
             <span class="nav-link-text ms-1">Data Pembayaran</span>
           </a>
-          <div>
-            <ul style="list-style-type: none; margin-left: 0;" class="mt-1">
+          <!-- <div>
+            <ul style="list-style-type: none; margin-left: 0; font-size: 13px;" class="mt-1">
               <li>
                 <a class="nav-link {{ Route::is('admin.payment.index') ? 'active' : '' }}"
-                  href="{{ route('admin.payment.index') }}">
-                  <i class="fa fa-check-circle text-dark text-sm opacity-10"></i>
-                  Pembayaran Lunas
-                </a>
-              </li>
-              <li>
-                <a class="nav-link {{ Route::is('admin.installment.index') ? 'active' : '' }}"
-                  href="{{ route('admin.installment.index') }}">
+                  href="{{ route('admin.installment.index') }}" style="font-size: 13px;">
                   <i class="fa fa-hourglass-half text-dark text-sm opacity-10"></i>
-                  Pembayaran Cicilan
+                  Data Cicilan
                 </a>
               </li>
             </ul>
-          </div>
+
+          </div> -->
         </li>
         <li class="nav-item">
           <a class="nav-link {{ Route::is('admin.report.index') ? 'active' : '' }}" href="{{ route('admin.report.index') }}">
@@ -113,12 +107,28 @@
             <span class="nav-link-text ms-1">Dashboard</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link {{ Route::is('student.payment.index') ? 'active' : '' }}" href="{{ route('student.payment.index') }}">
+         <li class="nav-item">
+          <a class="nav-link {{ Route::is('student.payment.spp') ? 'active' : '' }}" href="{{ route('student.payment.spp') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
+              <i class="ni ni-money-coins text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-money-coins ms-1">Pembayaran</span>
+            <span class="nav-money-coins ms-1">Bayar Spp</span>
+          </a>
+        </li>
+          <li class="nav-item">
+          <a class="nav-link {{ Route::is('student.payment.installment') ? 'active' : '' }}" href="{{ route('student.payment.installment') }}">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="fa fa-hourglass-half text-dark text-sm opacity-10"></i>
+            </div>
+            <span class="nav-money-coins ms-1">Bayar Cicilan</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ Route::is('student.payment.history') ? 'active' : '' }}" href="{{ route('student.payment.history') }}">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="fa fa-clock text-dark text-sm opacity-10"></i>
+            </div>
+            <span class="nav-money-coins ms-1">Riwayat Pembayaran</span>
           </a>
         </li>
         <li class="nav-item mt-3">

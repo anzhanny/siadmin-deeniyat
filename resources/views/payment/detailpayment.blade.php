@@ -108,6 +108,13 @@
             <input type="hidden" name="user_id"
               value="{{ session('user_id') ?? auth()->id() }}">
 
+            <!-- hidden method (biarkan kosong, nanti Midtrans yang isi) -->
+            <input type="hidden" name="method" value="">
+
+            <!-- hidden payment_for -->
+            <input type="hidden" name="payment_for" value="register">
+
+
             <div class="card z-index-0 border shadow-sm" style="background-color: #F5F7F8;">
 
               <div class="card-body">
@@ -122,10 +129,6 @@
                   <div class="d-flex justify-content-between mb-3" style="margin-left:1.5rem; margin-right:1.5rem; margin-top:-2rem;">
                     <strong>Biaya Pendaftaran</strong>
                     <span class="col-6 ps-md-10">: Rp{{ number_format($class->registration_fee ?? 200000, 0, ',', '.') }}</span>
-                  </div>
-                  <div class="d-flex justify-content-between mb-3" style="margin:1.5rem">
-                    <strong>Biaya Prasarana</strong>
-                    <span class="col-6 ps-md-10">: Rp{{ number_format($class->infrastructure_fee ?? 100000, 0, ',', '.') }}</span>
                   </div>
                   <div class="d-flex justify-content-between mb-3" style="margin:1.5rem">
                     <strong>Biaya Prasarana</strong>
@@ -173,56 +176,35 @@
                   </div>
                   <div class="p-4">
                     <div class="payment-option" onclick="selectPaymentCategory('lunas')">
-                      <input type="radio" name="payment_method" value="lunas" id="lunas" required>
+                      <input type="radio" name="payment_category" value="lunas" id="lunas" required>
                       <label for="lunas" class="h6 mb-2">Lunas</label>
                       <p class="text-muted mb-0">Bayar seluruh total biaya Rp{{ number_format(($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000), 0, ',', '.') }}</p>
                     </div>
 
                     <div class="payment-option" onclick="selectPaymentCategory('cicilan')">
-                      <input type="radio" name="payment_method" value="cicilan" id="cicilan" required>
+                      <input type="radio" name="payment_category" value="cicilan" id="cicilan" required>
                       <label for="cicilan" class="h6 mb-2">Cicilan</label>
                       <p class="text-muted mb-0">Total biaya yang bisa dibayar dalam 3x cicilan adalah Rp150.000/Cicilan</p>
                     </div>
                   </div>
-                </div>
-              </div>
+                  <div class="text-end">
+                    <button type="submit" class="btn btn-secondary" id="lanjutkanBtn" disabled>
+                      Lanjutkan
+                    </button>
 
-              <!-- Selection Summary -->
-              <!-- <div class="card-body" id="selectionSummary" style="display: none;">
-                <div class="p-4 bg-white rounded" style="border:1.5px solid #dee2e6;">
-                  <div class="card-header text-center pt-4 bg-transparent border-0">
-                    <h4 class="font-weight-bolder">Ringkasan Pilihan Anda</h4>
-                    <p class="text-lead" style="font-size: 12px; margin-bottom: -10px;">Konfirmasi pilihan pembayaran sebelum melanjutkan</p>
-                  </div>
-                  <div class="p-4">
-                    <div class="row">
-                      <div class="col-md-6">
-                        <strong>Tipe Pembayaran:</strong>
-                        <span id="selectedType" class="text-primary"></span>
-                      </div>
-                      <div class="col-md-6">
-                        <strong>Kategori Pembayaran:</strong>
-                        <span id="selectedMethod" class="text-primary"></span>
-                      </div>
+                    <div class="text-start mt-2" id="formStatus">
+                      <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Pilih tipe pembayaran dan kategori pembayaran uang sesuai dengan kemampuan Anda untuk melanjutkan
+                      </small>
                     </div>
                   </div>
                 </div>
-              </div> -->
 
-              <div class="text-end mt-2" style="padding-right: 1.7rem;">
-                <a href="{{ route('register') }}" class="btn btn-outline-secondary">
-                  Kembali
-                </a>
-                <button type="submit" class="btn btn-secondary" id="lanjutkanBtn" disabled>
-                  Lanjutkan
-                </button>
               </div>
-              <div class="text-center mt-2" id="formStatus">
-                <small class="text-muted">
-                  <i class="fas fa-info-circle"></i>
-                  Pilih tipe pembayaran dan kategori pembayaran untuk melanjutkan
-                </small>
-              </div>
+
+
+
             </div>
           </form>
         </div>
@@ -267,7 +249,7 @@
 
     function selectPaymentCategory(category) {
       // Remove selected class from all payment category options
-      document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+      document.querySelectorAll('input[name="payment_category"]').forEach(radio => {
         radio.closest('.payment-option').classList.remove('selected');
       });
 
@@ -282,14 +264,14 @@
 
     function validateForm() {
       const paymentType = document.querySelector('input[name="payment_type"]:checked');
-      const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+      const paymentCategory = document.querySelector('input[name="payment_category"]:checked');
       const lanjutkanBtn = document.getElementById('lanjutkanBtn');
 
-      let isValid = paymentType && paymentMethod;
+      let isValid = paymentType && paymentCategory;
 
       // Debug logging
       console.log('Payment Type selected:', paymentType ? paymentType.value : 'None');
-      console.log('Payment Method selected:', paymentMethod ? paymentMethod.value : 'None');
+      console.log('Payment Category selected:', paymentCategory ? paymentCategory.value : 'None');
       console.log('Form valid:', isValid);
 
       if (isValid) {

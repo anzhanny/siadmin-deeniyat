@@ -13,9 +13,15 @@ return new class extends Migration
     {
         Schema::create('tb_payments', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('user_id', 100)->nullable();
-            $table->string('class_id', 20)->nullable();
-            $table->string('installment_id', 25)->nullable();
+            // Relasi ke users
+    $table->unsignedBigInteger('user_id');
+    $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+    // Relasi ke kelas (optional, kalau kamu pakai foreign key)
+    $table->unsignedBigInteger('class_id')->nullable();
+    $table->foreign('class_id')->references('id')->on('tb_class')->onDelete('set null');
+    
+            $table->enum('payment_for', ['register', 'spp']);
             $table->enum('payment_category', ['lunas', 'cicilan']);
             $table->enum('payment_type', ['tunai', 'non-tunai']);
             $table->string('code', 50)->nullable();

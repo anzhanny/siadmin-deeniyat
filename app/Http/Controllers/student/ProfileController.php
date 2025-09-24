@@ -1,72 +1,26 @@
 <?php
 
-namespace App\Http\Controllers\student;
+namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return view('student.profile.index');
+        // ambil user yang login
+        $data = User::findOrFail(Auth::id());
+        return view('student.profile.index', compact('data'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function edit(string $id)
     {
-        return view('student.profile.create');
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users',
-            'password'    => 'required|min:8',
-            'photo'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        // Simpan foto
-        $filename = time() . '.' . $request->photo->getClientOriginalExtension();
-        $path = $request->photo->storeAs('photos', $filename, 'public');
-
-        $data = new User();
-        $data->name = $request->name;
-        $data->role_id = 2;
-        $data->email = $request->email;
-        $data->nis = $request->nis;
-        $data->class_id = $request->class_id;
-        $data->password = bcrypt($request->password);
-        $data->birthplace = $request->birthplace;
-        $data->birthdate = $request->birthdate;
-        $data->gender = $request->gender;
-        $data->formal_education = $request->formal_education;
-        $data->phone = $request->phone;
-        $data->address = $request->address;
-        $data->is_active = $request->is_active;
-        $data->father_name = $request->father_name;
-        $data->father_job = $request->father_job;
-        $data->mother_name = $request->mother_name;
-        $data->mother_job = $request->mother_job;
-        $data->photo = $path; // simpan path relatif
-
-        $data->save();
-
-        return redirect()->route('student.profile.index')->with('success', 'Data berhasil disimpan');
-    }
-
-    public function edit($id)
-    {
-        $student = User::findOrFail($id);
-        return view('student.profile.edit', compact('profile'));
+        $data = User::findOrFail(Auth::id());
+        return view('student.profile.edit', compact('data'));
     }
 
     public function update(Request $request, $id)
@@ -76,27 +30,18 @@ class ProfileController extends Controller
         $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|unique:users,email,' . $id,
-            'photo'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'phone'       => 'nullable|string|max:20',
+            'address'     => 'nullable|string|max:255',
+            'father_name' => 'nullable|string|max:255',
+            'father_job'  => 'nullable|string|max:255',
+            'mother_name' => 'nullable|string|max:255',
+            'mother_job'  => 'nullable|string|max:255',
+            'photo'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $data->name = $request->name;
-        $data->role_id = 2;
-        $data->email = $request->email;
-        $data->nis = $request->nis;
-        $data->birthplace = $request->birthplace;
-        $data->birthdate = $request->birthdate;
-        $data->gender = $request->gender;
-        $data->formal_education = $request->formal_education;
-        $data->phone = $request->phone;
-        $data->address = $request->address;
-        $data->class_id = $request->class_id;
-        $data->is_active = $request->is_active;
-        $data->father_name = $request->father_name;
-        $data->father_job = $request->father_job;
-        $data->mother_name = $request->mother_name;
-        $data->mother_job = $request->mother_job;
+        $data->fill($request->except(['password', 'photo']));
 
-                if ($request->filled('password')) {
+        if ($request->filled('password')) {
             $data->password = bcrypt($request->password);
         }
 
@@ -104,30 +49,15 @@ class ProfileController extends Controller
             if ($data->photo && Storage::disk('public')->exists($data->photo)) {
                 Storage::disk('public')->delete($data->photo);
             }
-            $filename = time() . '.' . $request->photo->getClientOriginalExtension();
-            $path = $request->photo->storeAs('photos', $filename, 'public');
-            $data->photo = $path;
+            $data->photo = $request->photo->storeAs(
+                'photos',
+                time() . '.' . $request->photo->getClientOriginalExtension(),
+                'public'
+            );
         }
 
         $data->save();
 
-        return redirect()->route('admin.student.index')->with('success', 'Data berhasil diperbarui');
-    }
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('student.profile.index')->with('success', 'Profil berhasil diperbarui.');
     }
 }

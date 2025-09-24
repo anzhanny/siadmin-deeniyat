@@ -11,12 +11,12 @@ class Payment extends Model
     protected $fillable = [
         'user_id',
         'class_id',
+        'payment_for',    // register / spp
         'payment_category', // lunas / cicilan
         'payment_type', // tunai / non-tunai
-        'payment_method', // lunas / cicilan
+        'method', // midtrans
         'code',           // kode pembayaran unik
         'amount',         // total bayar
-        'method',         // metode pembayaran
         'month',          // bulan (jika SPP)
         'year',           // tahun (jika SPP)
         'status',         // pending / paid / canceled
@@ -24,6 +24,10 @@ class Payment extends Model
     ];
 
     protected $dates = ['created_at', 'updated_at', 'paid_at'];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
+    ];
 
     public function user()
     {

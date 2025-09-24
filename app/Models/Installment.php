@@ -16,7 +16,22 @@ class Installment extends Model
         'installments_to',
         'paid_at',
         'remaining_balance',
+        'due_date',
+        'status',
     ];
+
+    protected $dates = [
+        'paid_at',
+        'due_date',
+        'created_at',
+        'updated_at'
+    ];
+
+    protected $casts = [
+    'due_date' => 'date',
+    'paid_at'  => 'datetime',
+];
+
 
     // Relasi ke Payment (jika ada tabel payments)
     public function payment()

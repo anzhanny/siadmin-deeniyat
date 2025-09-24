@@ -6,6 +6,11 @@
             @csrf
 
             <div class="mb-3">
+                <label for="paid_at">Tanggal Pembayaran</label>
+                <input type="date" name="paid_at" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
                 <label for="user_id">Nama Siswa</label>
                 <select name="user_id" id="user_id" class="form-control" required>
                     <option value="">-- Pilih Siswa --</option>

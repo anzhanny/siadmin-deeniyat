@@ -3,7 +3,7 @@
 <!-- ROW: Statistik Atas -->
 <div class="row">
 
-<!-- Total Siswa -->
+  <!-- Total Siswa -->
   <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
     <div class="card">
       <div class="card-body p-3">
@@ -45,7 +45,7 @@
     </div>
   </div>
 
-  
+
 
   <!-- Jumlah Kelas -->
   <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
@@ -75,7 +75,9 @@
           <div class="col-8">
             <div class="numbers">
               <p class="text-sm mb-0 text-uppercase font-weight-bold">Uang Masuk</p>
-              <h5 class="font-weight-bolder mt-2">Rp {{ number_format($totalUangMasuk, 0, ',', '.') }}</h5>
+              <h5 class="font-weight-bolder mt-2">
+                Rp {{ number_format($totalUangMasuk, 0, ',', '.') }}
+              </h5>
             </div>
           </div>
           <div class="col-4 text-end">
@@ -106,57 +108,25 @@
       </div>
       <div class="card-body p-3 pb-0">
         <ul class="list-group">
+          @forelse($latestPayments as $pay)
           <li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg">
             <div class="d-flex flex-column">
-              <h6 class="mb-1 text-dark font-weight-bold text-sm">March, 01, 2020</h6>
-              <span class="text-xs">SPP - Khansa Aulia</span>
+              <h6 class="mb-1 text-dark font-weight-bold text-sm">
+                {{ $pay->paid_at?->format('d M, Y') ?? $pay->created_at->format('d M, Y') }}
+              </h6>
+              <span class="text-xs">
+                {{ ucfirst($pay->payment_for) }} - {{ $pay->user->name }}
+              </span>
             </div>
             <div class="d-flex align-items-center text-sm">
-              Rp50.000
-
+              Rp {{ number_format($pay->amount, 0, ',', '.') }}
             </div>
           </li>
-          <li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg">
-            <div class="d-flex flex-column">
-              <h6 class="text-dark mb-1 font-weight-bold text-sm">February, 10, 2021</h6>
-              <span class="text-xs">SPP - Asma Nailul</span>
-            </div>
-            <div class="d-flex align-items-center text-sm">
-              Rp50.000
-
-            </div>
-          </li>
-          <li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg">
-            <div class="d-flex flex-column">
-              <h6 class="text-dark mb-1 font-weight-bold text-sm">April, 05, 2020</h6>
-              <span class="text-xs">SPP - Uwais Alqorni</span>
-            </div>
-            <div class="d-flex align-items-center text-sm">
-              Rp50.000
-
-            </div>
-          </li>
-          <li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg">
-            <div class="d-flex flex-column">
-              <h6 class="text-dark mb-1 font-weight-bold text-sm">June, 25, 2019</h6>
-              <span class="text-xs">Pendaftaran - Fazar</span>
-            </div>
-            <div class="d-flex align-items-center text-sm">
-              Rp250.000
-
-            </div>
-          </li>
-          <li class="list-group-item border-0 d-flex justify-content-between ps-0 border-radius-lg">
-            <div class="d-flex flex-column">
-              <h6 class="text-dark mb-1 font-weight-bold text-sm">March, 01, 2019</h6>
-              <span class="text-xs">Pendaftaran - Adam</span>
-            </div>
-            <div class="d-flex align-items-center text-sm">
-              Rp250.000
-
-            </div>
-          </li>
+          @empty
+          <li class="list-group-item border-0 text-center text-muted">Belum ada pembayaran</li>
+          @endforelse
         </ul>
+
       </div>
     </div>
   </div>
@@ -169,9 +139,8 @@
       <div class="card-body p-3">
         <div class="row">
           <div class="col-8">
-            <p class="text-sm text-uppercase font-weight-bold mb-1">Siswa Belum Lunas SPP</p>
-            <span class="text-xs text-secondary">Semester Ganjil 2024/2025</span>
-            <h5 class="font-weight-bolder">57 /350 Siswa</h5>
+            <p class="text-sm text-uppercase font-weight-bold mb-1">Siswa Belum Lunas Pendaftaran</p>
+            <h5 class="font-weight-bolder">{{ $registerBelumLunas }} / {{ $studentCount }} Siswa</h5>
           </div>
           <div class="col-4 text-end">
             <div class="icon icon-shape bg-gradient-danger shadow-danger text-center rounded-circle">
@@ -187,8 +156,9 @@
       <div class="card-body p-3">
         <div class="row">
           <div class="col-8">
-            <p class="text-sm text-uppercase font-weight-bold mb-1">Siswa Belum Lunas Pendaftaran</p>
-            <h5 class="font-weight-bolder">57 /350 Siswa</h5>
+            <p class="text-sm text-uppercase font-weight-bold mb-1">Siswa Belum Lunas SPP</p>
+            <span class="text-xs text-secondary">Tahun Ajaran {{ date('Y') }}/{{ date('Y')+1 }}</span>
+            <h5 class="font-weight-bolder">{{ $sppBelumLunas }} / {{ $studentCount }} Siswa</h5>
           </div>
           <div class="col-4 text-end">
             <div class="icon icon-shape bg-gradient-info shadow-info text-center rounded-circle">
@@ -199,7 +169,7 @@
       </div>
     </div>
 
-    
+
   </div>
 </div>
 

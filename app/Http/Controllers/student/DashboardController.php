@@ -3,63 +3,57 @@
 namespace App\Http\Controllers\student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Installment;
+use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return view('student.dashboard');
-    }
+        $userId = Auth::id();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        // Status tunggakan cicilan
+        $overdueCount = Installment::where('status', 'overdue')
+            ->whereHas('payment', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->count();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // Last payment (SPP)
+        $lastSpp = Payment::where('user_id', $userId)
+            ->where('payment_for', 'spp')
+            ->latest('created_at')
+            ->first();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // Last installment
+        $lastInstallment = Installment::whereHas('payment', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        })
+            ->where('status', 'paid')
+            ->latest('paid_at')
+            ->first();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        // Gabungkan untuk riwayat terakhir
+        $lastPayment = Payment::where('user_id', $userId)
+            ->where('status', 'paid')
+            ->latest('updated_at')
+            ->first();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        if ($lastPayment && $lastInstallment) {
+            $lastHistory = $lastPayment->updated_at > $lastInstallment->paid_at
+                ? $lastPayment
+                : $lastInstallment;
+        } else {
+            $lastHistory = $lastPayment ?? $lastInstallment;
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return view('student.dashboard', compact(
+            'lastPayment',
+            'lastSpp',
+            'overdueCount',
+            'lastHistory'
+        ));
     }
 }

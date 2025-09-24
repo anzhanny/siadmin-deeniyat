@@ -125,6 +125,28 @@
         </div>
       </div>
 
+      <div class="mb-3">
+        <label for="payment_category" class="form-label">Kategori Pembayaran</label>
+        <select name="payment_category" id="payment_category" class="form-select" required>
+          <option value="lunas">Lunas</option>
+          <option value="cicilan">Cicilan</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="payment_type" class="form-label">Tipe Pembayaran</label>
+        <select name="payment_type" id="payment_type" class="form-select" required>
+          <option value="tunai">Tunai</option>
+          <option value="non-tunai">Non-Tunai</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="amount" class="form-label">Nominal Pembayaran</label>
+        <input type="number" name="amount" id="amount" class="form-control" value="450000" required>
+      </div>
+
+
       <!-- Button Simpan & Kembali -->
       <div class="text-end mt-4">
         <a href="{{ route('admin.student.index') }}" class="btn btn-secondary">Kembali</a>
