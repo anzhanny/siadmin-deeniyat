@@ -5,10 +5,13 @@ namespace App\Http\Services;
 use App\Http\Repositories\TransactionRepositoryInterface as RepositoriesTransactionRepositoryInterface;
 use App\Models\Installment;
 use App\Models\Payment;
+use App\Models\User;
 use App\Repositories\TransactionRepositoryInterface;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 
 class PaymentService
@@ -58,46 +61,113 @@ class PaymentService
         ];
     }
 
-     public function createRegisterPayment($student, $paymentCategory, $paymentType, $amount = 450000)
+    public function createRegisterPayment(User $user, string $category, string $type, float $totalAmount)
     {
-        // 1. Buat payment utama
-        $payment = Payment::create([
-            'user_id'          => $student->id,
-            'class_id'         => $student->class_id,
-            'payment_for'      => 'register',
-            'payment_category' => $paymentCategory,
-            'payment_type'     => $paymentType,
-            'amount'           => $amount,
-            'status'           => 'pending',
-            'code'             => 'REG-' . strtoupper(Str::random(10)),
-        ]);
+        return DB::transaction(function () use ($user, $category, $type, $totalAmount) {
+            return Payment::create([
+                'user_id' => $user->id,
+                'class_id' => $user->class_id,
+                'payment_for' => 'register',
+                'payment_category' => $category, // lunas
+                'payment_type' => $type,
+                'method' => $type === 'tunai' ? 'cash' : 'qris', // Atau midtrans
+                'code' => 'REG-' . strtoupper(uniqid()),
+                'amount' => $totalAmount,
+                'status' => 'pending',
+                'installment_id' => null, // Lunas gak butuh parent
+            ]);
+        });
+    }
 
-        // 2. Kalau cicilan, generate installments
-        if ($paymentCategory === 'cicilan') {
-            $perInstall = $amount / 3;
+    /**
+     * Create register installment untuk cicilan (parent + multiple child payments).
+     */
+    public function createRegisterInstallment(User $user, string $type, float $totalAmount, int $installmentCount = 3)
+    {
+        $perInstallment = ceil($totalAmount / $installmentCount);
 
-            for ($i = 1; $i <= 3; $i++) {
-                $dueDate = match ($i) {
-                    1 => now(),
-                    2 => now()->addMonthNoOverflow()->startOfMonth(),
-                    3 => now()->addMonthsNoOverflow(2)->startOfMonth(),
-                };
+        return DB::transaction(function () use ($user, $type, $totalAmount, $installmentCount, $perInstallment) {
+            // Buat parent Installment
+            $installment = Installment::create([
+                'user_id'           => $user->id,
+                'nominal'           => $totalAmount, // total_amount
+                'remaining_balance' => $totalAmount,
+                'due_date'          => Carbon::now()->addMonth(),
+                'status'            => 'pending',
+            ]);
 
-                Installment::create([
-                    'payment_id'      => $payment->id,
-                    'installments_to' => $i,
-                    'nominal'         => $perInstall,
-                    'status'          => 'pending',
-                    'paid_at'         => null,
-                    'due_date'        => $dueDate,
+            // Buat cicilan di Payment
+            for ($i = 1; $i <= $installmentCount; $i++) {
+                $dueDate = Carbon::now()->addMonths($i - 1);
+
+                Payment::create([
+                    'installment_id'   => $installment->id,
+                    'user_id'          => $user->id,
+                    'class_id'         => $user->class_id,
+                    'payment_for'      => 'register',
+                    'payment_category' => 'cicilan',
+                    'payment_type'     => $type,
+                    'method'           => $type === 'tunai' ? 'cash' : 'qris',
+                    'code'             => 'REG-INST-' . $i . '-' . strtoupper(uniqid()),
+                    'due_date'         => $dueDate,
+                    'amount'           => $i === $installmentCount
+                        ? ($totalAmount - ($perInstallment * ($installmentCount - 1)))
+                        : $perInstallment,
+                    'installment_to'   => $i, // posisi cicilan
+                    'description'      => 'Cicilan ke-' . $i,
+                    'month'            => $dueDate->month,
+                    'year'             => $dueDate->year,
+                    'status'           => 'pending',
+                    'paid_at'          => null,
                 ]);
             }
 
-            $payment->update([
-                'remaining_balance' => $amount,
-            ]);
-        }
-
-        return $payment;
+            return $installment;
+        });
     }
+
+public function updatePaymentStatus(Payment $payment, string $status): void
+{
+    // Update status payment
+    $payment->status = $status;
+
+    if ($status === 'paid' && !$payment->paid_at) {
+        $payment->paid_at = now();
+    } elseif ($status !== 'paid') {
+        $payment->paid_at = null;
+    }
+
+    $payment->save();
+
+    // Kalau ada parent installment → update juga
+    if ($payment->installment_id) {
+        $this->updateInstallmentStatus($payment->installment_id);
+    }
+}
+
+public function updateInstallmentStatus(int $installmentId): void
+{
+    $installment = Installment::with('payments')->find($installmentId);
+
+    if (!$installment) return;
+
+    $totalPayments = $installment->payments->count();
+    $paidPayments  = $installment->payments->where('status', 'paid')->count();
+    $remaining     = $installment->payments->where('status', '!=', 'paid')->sum('amount');
+
+    if ($paidPayments === 0) {
+        $installment->status = 'pending';
+        $installment->paid_at = null;
+    } elseif ($paidPayments < $totalPayments) {
+        $installment->status = 'partial';
+        $installment->paid_at = null;
+    } else {
+        $installment->status  = 'paid';
+        $installment->paid_at = now();
+    }
+
+    $installment->remaining_balance = $remaining;
+    $installment->save();
+}
+
 }

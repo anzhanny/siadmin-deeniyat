@@ -7,7 +7,10 @@ use App\Models\Installment;
 use App\Models\Payment;
 use App\Models\TbClass;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Psy\VersionUpdater\Installer;
@@ -16,7 +19,7 @@ class StudentController extends Controller
 {
     public function index()
     {
-        $data = User::with('class')->where('role_id', 2)->paginate(10);
+        $data = User::with('class')->where('role_id', 2)->paginate(20);
         return view('admin.student.index', compact('data'));
     }
 
@@ -30,41 +33,26 @@ class StudentController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'nullable|email|unique:users',
+            'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:8',
             'class_id' => 'nullable|integer',
             'photo'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'payment_category' => 'required|in:lunas,cicilan',
             'payment_type'     => 'required|in:tunai,non-tunai',
+            'birthplace'       => 'required|string|max:255',
+            'birthdate'        => 'required|date',
+            'gender'           => 'required|in:Laki-laki,Perempuan',
+            'phone'            => 'required|string|max:15',
         ]);
 
+        // Upload foto
         $path = null;
         if ($request->hasFile('photo')) {
             $filename = time() . '.' . $request->photo->getClientOriginalExtension();
             $path = $request->photo->storeAs('photos', $filename, 'public');
         }
 
-        // $data = new User();
-        // $data->role_id = 2; // student
-        // $data->name = $request->name;
-        // $data->email = $request->email;
-        // $data->password = bcrypt($request->password);
-        // $data->class_id = $request->class_id;
-        // $data->birthplace = $request->birthplace;
-        // $data->birthdate = $request->birthdate;
-        // $data->gender = $request->gender;
-        // $data->phone = $request->phone;
-        // $data->address = $request->address;
-        // $data->father_name = $request->father_name;
-        // $data->father_job = $request->father_job;
-        // $data->mother_name = $request->mother_name;
-        // $data->mother_job = $request->mother_job;
-        // $data->photo = $path;
-        // $data->is_active = $request->is_active ?? 1;
-
-        // Simpan user, NIS, academic_year, batch akan otomatis dari model
-        // $data->save();
-
+        // Simpan data siswa
         $student = User::create([
             'role_id'     => 2,
             'name'        => $request->name,
@@ -84,57 +72,63 @@ class StudentController extends Controller
             'is_active'   => $request->is_active ?? 1,
         ]);
 
-
-
-        // Auto-assign kelas (cek kuota, bikin kelas baru jika penuh)
+        // Auto-assign kelas
         $assignedClass = TbClass::assignStudentToClass($request->grade, $student->id);
         if ($assignedClass) {
-    $student->class_id = $assignedClass->id;
-    $student->save();
-}
-
-        // --- Buat Payment register ---
-        $payment = Payment::create([
-            'user_id'          => $student->id,
-            'class_id'         => $student->class_id,
-            'payment_for'      => 'register',
-            'payment_category' => $request->payment_category, // lunas / cicilan
-            'payment_type'     => $request->payment_type,     // tunai / non-tunai
-            'amount'           => 450000, // bisa diambil dari tabel kelas kalau variatif
-            'status'           => 'pending',
-            'code'             => 'REG-' . strtoupper(Str::random(10)),
-        ]);
-
-        // --- Kalau cicilan, generate installments ---
-        if ($request->payment_category === 'cicilan') {
-            $total      = 450000;
-            $perInstall = 150000;
-
-            for ($i = 1; $i <= 3; $i++) {
-                $dueDate = match ($i) {
-                    1 => now(),
-                    2 => now()->addMonthNoOverflow()->startOfMonth(),
-                    3 => now()->addMonthsNoOverflow(2)->startOfMonth(),
-                };
-
-                Installment::create([
-                    'payment_id'      => $payment->id,
-                    'installments_to' => $i,
-                    'nominal'         => $perInstall,
-                    'status'          => 'pending',
-                    'paid_at'         => null,
-                    'due_date'        => $dueDate,
-                ]);
-            }
-
-            $payment->update([
-                'remaining_balance' => $total,
-            ]);
+            $student->class_id = $assignedClass->id;
+            $student->save();
         }
 
-        return redirect()->route('admin.student.index')
-            ->with('success', 'Siswa berhasil ditambahkan beserta pembayaran.');
+        // --- Buat Installment sebagai parent ---
+        $total = 450000; // bisa disesuaikan dengan kelas
+        $installment = Installment::create([
+            'user_id'           => $student->id,
+            'class_id'          => $student->class_id,
+            'nominal'           => $total,
+            'remaining_balance' => $total,
+            'status'            => $request->payment_category === 'lunas' ? 'paid' : 'pending',
+            'due_date'          => now()->addMonth(), // contoh
+        ]);
+
+        // --- Buat Payment sebagai child ---
+        if ($request->payment_category === 'lunas') {
+            Payment::create([
+                'installment_id'   => $installment->id,
+                'user_id'          => $student->id,
+                'class_id'         => $student->class_id,
+                'payment_for'      => 'register',              // ✅ fixed "register"
+                'payment_type'     => $request->payment_type,  // ✅ dari request
+                'payment_category' => 'lunas',
+                'amount'           => $total,
+                'status'           => 'paid',
+                'paid_at'          => now(),
+                'code'             => 'REG-' . strtoupper(Str::random(10)),
+            ]);
+
+            $installment->update(['remaining_balance' => 0]);
+        } else {
+            // cicilan (misal 3x angsuran)
+            $perInstall = $total / 3;
+            for ($i = 1; $i <= 3; $i++) {
+                Payment::create([
+                    'installment_id'   => $installment->id,
+                    'user_id'          => $student->id,
+                    'class_id'         => $student->class_id,
+                    'payment_for'      => 'register',              // ✅ fixed "register"
+                    'payment_type'     => $request->payment_type,  // ✅ dari request
+                    'payment_category' => 'cicilan',
+                    'amount'           => $perInstall,
+                    'status'           => 'pending',
+                    'paid_at'          => null,
+                    'code'             => 'REG-' . strtoupper(Str::random(10)),
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.student.index')->with('success', 'Data siswa berhasil disimpan.');
     }
+
+
 
     public function show(string $id)
     {
@@ -163,6 +157,22 @@ class StudentController extends Controller
             'photo'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        $data->fill([
+            'name'        => $request->name,
+            'email'       => $request->email,
+            'phone'       => $request->phone,
+            'address'     => $request->address,
+            'birthplace'  => $request->birthplace,
+            'birthdate'   => $request->birthdate,
+            'gender'      => $request->gender,
+            'father_name' => $request->father_name,
+            'father_job'  => $request->father_job,
+            'mother_name' => $request->mother_name,
+            'mother_job'  => $request->mother_job,
+            'is_active'   => $request->is_active,
+        ]);
+
+        // isi field selain password & photo
         $data->fill($request->except(['password', 'photo']));
 
         if ($request->filled('password')) {
@@ -182,28 +192,31 @@ class StudentController extends Controller
 
         $data->save();
 
-        // Balik ke index, bawa flash message sukses
         return redirect()->route('admin.student.index')
             ->with('success', 'Data siswa berhasil diperbarui');
     }
+
 
 
     public function destroy($id)
     {
         $student = User::findOrFail($id);
 
-        // hapus payment & cicilan dulu
-        foreach ($student->payments as $payment) {
-            $payment->installments()->delete();
-            $payment->delete();
+        // hapus installment & payment
+        foreach ($student->installments as $installment) {
+            $installment->payments()->delete();
+            $installment->delete();
         }
 
         if ($student->photo && Storage::disk('public')->exists($student->photo)) {
             Storage::disk('public')->delete($student->photo);
         }
+
         $student->delete();
-        return redirect()->route('admin.student.index')->with('success', 'Data berhasil dihapus');
+
+        return redirect()->route('admin.student.index')->with('success', 'Data siswa berhasil dihapus');
     }
+
 
     private function getClassName($classId)
     {
@@ -218,5 +231,67 @@ class StudentController extends Controller
         ];
 
         return $classNames[$classId] ?? 'Kelas Tidak Diketahui';
+    }
+
+    public function fixPayments($id)
+    {
+        $student = User::findOrFail($id);
+
+        // cek apakah sudah punya installment atau payment
+        $hasInstallment = Installment::where('user_id', $student->id)->exists();
+        $hasPayment     = Payment::where('user_id', $student->id)->exists();
+
+        if ($hasInstallment || $hasPayment) {
+            return back()->with('info', 'Siswa ini sudah memiliki data pembayaran / cicilan.');
+        }
+
+        // ambil nominal dari kelas kalau tersedia, kalau tidak pakai default
+        $class = TbClass::find($student->class_id);
+        // ganti 'register_fee' sesuai nama kolom di tb_class, kalau tidak ada gunakan default
+        $amount = $class?->register_fee ?? $class?->fee ?? 450000;
+
+        DB::beginTransaction();
+        try {
+            // Buat parent installment (total kewajiban)
+            $installment = Installment::create([
+                'user_id'          => $student->id,
+                'nominal'          => $amount,
+                'remaining_balance' => $amount,
+                'due_date'         => Carbon::now()->addMonth(), // default jatuh tempo global
+                'status'           => 'pending',
+            ]);
+
+            // Pecah jadi 3 payment (anak). Ubahan: sesuaikan jumlah cicilan kalau mau
+            $totalCicilan = 3;
+            // bagi rata, sisakan sisa ke cicilan pertama
+            $per = intdiv($amount, $totalCicilan);
+            $remainder = $amount - ($per * $totalCicilan);
+
+            for ($i = 1; $i <= $totalCicilan; $i++) {
+                $amt = $per + ($i === 1 ? $remainder : 0);
+
+                Payment::create([
+                    'installment_id'   => $installment->id,
+                    'user_id'          => $student->id,
+                    'class_id'         => $student->class_id,
+                    'payment_for'      => 'register',
+                    'payment_category' => 'cicilan',
+                    'payment_type'     => 'tunai', // default, admin bisa edit setelahnya
+                    'code'             => 'CIC-' . Str::upper(Str::random(6)),
+                    'amount'           => $amt,
+                    'status'           => 'pending',
+                    'due_date'         => Carbon::now()->addMonths($i - 1)->startOfMonth(), // per cicilan
+                    'created_at'       => Carbon::now(),
+                    'updated_at'       => Carbon::now(),
+                ]);
+            }
+
+            DB::commit();
+            return back()->with('success', "Berhasil membuat installment + {$totalCicilan} payment untuk siswa {$student->name}.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("fixPayments error for user {$student->id}: " . $e->getMessage());
+            return back()->with('error', 'Gagal membuat pembayaran: ' . $e->getMessage());
+        }
     }
 }

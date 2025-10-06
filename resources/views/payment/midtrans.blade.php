@@ -43,11 +43,8 @@
         <div class="col-xl-8 col-lg-10 col-md-12 mx-auto">
           <div class="card shadow-lg border-0">
             <div class="card-body text-center p-5">
-              <h4>Pembayaran Online</h4>
-              <p>Kode Transaksi: <b>{{ $payment->code }}</b></p>
-              <p>Jumlah: Rp {{ number_format($payment->amount, 0, ',', '.') }}</p>
-
-              <button id="pay-button" class="btn btn-primary">Bayar Sekarang</button>
+              <h3>Proses Pembayaran via Midtrans</h3>
+    <button id="pay-button" class="btn btn-primary btn-lg mt-3">Bayar Sekarang</button>
             </div>
           </div>
         </div>
@@ -76,23 +73,13 @@
   <script src="{{ asset('assets/js/argon-dashboard.min.js?v=2.1.0') }}"></script>
 
   <!-- Midtrans Snap.js -->
-  <script type="text/javascript"
-    src="https://app.sandbox.midtrans.com/snap/snap.js"
-    data-client-key="{{ config('midtrans.client_key') }}"></script>
-
   <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
 <script type="text/javascript">
     document.getElementById('pay-button').onclick = function () {
         snap.pay('{{ $snapToken }}', {
-            onSuccess: function(result){
-                window.location.href = "{{ route('payment.thankyoupage') }}";
-            },
-            onPending: function(result){
-                alert("Menunggu pembayaran Anda.");
-            },
-            onError: function(result){
-                alert("Pembayaran gagal!");
-            }
+            onSuccess: function(result){ console.log(result); },
+            onPending: function(result){ console.log(result); },
+            onError: function(result){ console.log(result); }
         });
     };
 </script>

@@ -30,7 +30,7 @@
                 <h2>Terima kasih!</h2>
                 <p>Pembayaran tunai Anda sedang diproses. Silakan konfirmasi ke admin.</p>
 
-                <a href="https://wa.me/6285864921179?text={{ urlencode('Halo Admin, saya ingin konfirmasi pembayaran tunai.') }}"
+                <a href="https://wa.me/6285864921179?text={{ urlencode('Assalomualaikum Admin Deeniyat, saya ingin konfirmasi pembayaran tunai.') }}"
                     target="_blank" class="btn btn-success mt-3">
                     Hubungi Admin via WhatsApp
                 </a>

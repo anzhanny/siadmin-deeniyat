@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Installment;
+use App\Models\Payment;
+use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Notification;
@@ -25,46 +27,53 @@ class InstallmentController extends Controller
     }
 
     // Bayar cicilan (tunai / non-tunai)
-    public function payInstallment(Request $request, $id)
-    {
-        $installment = Installment::with('payment.user')->findOrFail($id);
+public function payInstallment($id)
+{
+    $user = Auth::user();
+    $cicilan = Payment::findOrFail($id); // pastikan ini memang table payments
 
-        if ($installment->status === 'paid') {
-            return back()->with('info', "Cicilan ke-{$installment->installments_to} sudah dibayar.");
-        }
-
-        if ($request->payment_type === 'tunai') {
-            $phone = "6289629183036";
-            $msg = "Halo admin, saya ingin membayar cicilan ID {$installment->id}";
-            return redirect()->away("https://wa.me/{$phone}?text=" . urlencode($msg));
-        }
-
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = false;
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
-
-        $params = [
-            'transaction_details' => [
-                'order_id' => 'CICILAN-' . $installment->id . '-' . time(),
-                'gross_amount' => $installment->nominal,
-            ],
-            'customer_details' => [
-                'first_name' => $installment->payment->user->name,
-                'email' => $installment->payment->user->email,
-                'phone' => $installment->payment->user->phone ?? '08123456789',
-            ],
-            'item_details' => [[
-                'id' => $installment->id,
-                'price' => $installment->nominal,
-                'quantity' => 1,
-                'name' => "Cicilan ke-{$installment->installments_to}",
-            ]],
-        ];
-
-        $snapToken = Snap::getSnapToken($params);
-        return view('student.installment.snap', compact('snapToken', 'installment'));
+    if ($cicilan->status === 'paid') {
+        return response()->json(['error' => 'Cicilan sudah lunas']);
     }
+
+    $orderId = "INSTALLMENT-{$cicilan->id}-" . time();
+
+    // update code biar konsisten dengan order_id
+    $cicilan->update([
+        'code'   => $orderId,
+        'status' => 'pending',
+    ]);
+
+    \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+    \Midtrans\Config::$isProduction = false;
+    \Midtrans\Config::$isSanitized  = true;
+    \Midtrans\Config::$is3ds        = true;
+
+    $params = [
+        'transaction_details' => [
+            'order_id'     => $orderId,
+            'gross_amount' => (int) $cicilan->amount, // pastikan integer dan > 0
+        ],
+        'customer_details' => [
+            'first_name' => $user->name ?? 'Guest',
+            'email'      => $user->email ?? 'noemail@example.com',
+            'phone'      => $user->phone ?? '08123456789',
+        ],
+    ];
+
+    try {
+        $snapToken = \Midtrans\Snap::getSnapToken($params);
+        return response()->json(['snapToken' => $snapToken]);
+    } catch (\Exception $e) {
+        // biar ketahuan error aslinya
+        Log::error('Midtrans error: ' . $e->getMessage(), ['params' => $params]);
+        return response()->json([
+            'error' => $e->getMessage(),
+            'params' => $params
+        ]);
+    }
+}
+
 
     // Callback Midtrans cicilan
     public function midtransCallback(Request $request)

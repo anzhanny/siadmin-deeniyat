@@ -61,8 +61,14 @@
 
         <div class="col-md-6 mb-3">
           <label for="birthdate" class="form-label">Tanggal Lahir</label>
-          <input type="date" value="{{ old('birthdate', $student->birthdate) }}" class="form-control" id="birthdate" name="birthdate" required>
+          <input type="date"
+            value="{{ old('birthdate', $student->birthdate ? $student->birthdate->format('Y-m-d') : '') }}"
+            class="form-control"
+            id="birthdate"
+            name="birthdate"
+            required>
         </div>
+
 
         <div class="col-md-6 mb-3">
           <label class="form-label d-block">Jenis Kelamin</label>

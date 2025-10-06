@@ -1,8 +1,8 @@
 @extends('layouts.layout')
+
 @section('content')
 <div class="row">
   <div class="col-12">
-
     <div class="card mb-4">
       <div class="card-header pb-0">
         <h6 class="mb-0">Riwayat Cicilan Pendaftaran</h6>
@@ -10,138 +10,114 @@
 
       <div class="card-body">
         <div class="table-responsive">
-
-          @if($payments->isEmpty())
-          <div class="p-4 text-center text-muted">Belum ada data cicilan.</div>
+          @if($installments->isEmpty())
+            <div class="p-4 text-center text-muted">Belum ada data cicilan.</div>
           @else
-          <div class="table-responsive">
             <table class="table align-items-center mb-0">
               <thead class="bg-light">
                 <tr>
-                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kode</th>
-                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Cicilan</th>
-                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nominal</th>
-                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Jatuh Tempo</th>
-                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
-                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tanggal Bayar</th>
-                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Aksi</th>
+                  <th class="text-center">#</th>
+                  <th class="text-center">Kode Pembayaran</th>
+                  <th class="text-center">Cicilan Ke</th>
+                  <th class="text-center">Nominal</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center">Tanggal Bayar</th>
+                  <th class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                @foreach($payments as $payment)
-                @foreach($payment->installments as $inst)
-                <tr>
-                  <td class="align-middle text-center text-sm">{{ $payment->code }}</td>
-                  <td class="align-middle text-center text-sm">Cicilan {{ $inst->installments_to }}</td>
-                  <td class="align-middle text-center text-sm">Rp {{ number_format($inst->nominal,0,',','.') }}</td>
-                  <td class="align-middle text-center text-sm">{{ $inst->due_date?->format('d-m-Y') ?? '-' }}</td>
-                  <td class="align-middle text-center text-sm">
-                    @if($inst->paid_at)
-                    <span class="badge bg-success">Paid</span>
-                    @else
-                    <span class="badge bg-warning text-dark">Pending</span>
-                    @endif
-                  </td>
-                  <td class="align-middle text-center text-sm">{{ $inst->paid_at?->format('d-m-Y') ?? '-' }}</td>
-                  <td class="align-middle text-center text-sm">
-                    @if(!$inst->paid_at)
-                    <button type="button"
-                      class="btn btn-sm btn-success btn-pay"
-                      data-id="{{ $inst->id }}"
-                      data-code="{{ $payment->code }} - Cicilan {{ $inst->installments_to }}"
-                      data-amount="{{ $inst->nominal }}"
-                      data-bs-toggle="modal"
-                      data-bs-target="#payModal">
-                      Bayar
-                    </button>
-                    @else
-                    <button class="btn btn-sm btn-secondary" disabled>Sudah Dibayar</button>
-                    @endif
-                  </td>
-                </tr>
-                @endforeach
+                @foreach($installments as $inst)
+                  @forelse($inst->payments as $i => $cicilan)
+                    <tr>
+                      <td class="text-center">{{ $loop->iteration }}</td>
+                      <td class="text-center">{{ $cicilan->code }}</td>
+                      <td class="text-center">Cicilan ke-{{ $cicilan->installment_to }}</td>
+                      <td class="text-center">Rp {{ number_format($cicilan->amount, 0, ',', '.') }}</td>
+                      <td class="text-center">
+                        @switch($cicilan->status)
+                          @case('paid') 
+                            <span class="badge bg-success">Lunas</span> 
+                            @break
+                          @case('partial') 
+                            <span class="badge bg-info">Sebagian</span> 
+                            @break
+                          @case('pending') 
+                            <span class="badge bg-warning">Menunggu</span> 
+                            @break
+                          @default 
+                            <span class="badge bg-danger">{{ ucfirst($cicilan->status) }}</span>
+                        @endswitch
+                      </td>
+                      <td class="text-center">{{ $cicilan->paid_at?->format('d/m/Y') ?? '-' }}</td>
+                      <td class="text-center">
+                        @if($cicilan->status !== 'paid')
+                          <button type="button" 
+                            class="btn btn-sm btn-primary installment-pay-btn" 
+                            data-id="{{ $cicilan->id }}">
+                            Bayar
+                          </button>
+                        @else
+                          <button class="btn btn-sm btn-secondary" disabled>Sudah Dibayar</button>
+                        @endif
+                      </td>
+                    </tr>
+                  @empty
+                    <tr>
+                      <td colspan="7" class="text-center text-muted">
+                        Belum ada cicilan untuk installment ini.
+                      </td>
+                    </tr>
+                  @endforelse
                 @endforeach
               </tbody>
-
             </table>
-          </div>
           @endif
-
-
         </div>
       </div>
-      <!-- Modal Pilih Tipe Pembayaran -->
-      <div class="modal fade" id="payModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <form id="payForm" method="POST">
-              @csrf
-              <div class="modal-header">
-                <h5 class="modal-title">Pilih Tipe Pembayaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body">
-                <p id="payInfo" class="mb-3 text-muted"></p>
-                <select name="payment_type" id="paymentType" class="form-select" required>
-                  <option value="">-- Pilih --</option>
-                  <option value="tunai">Tunai (Bayar via WhatsApp)</option>
-                  <option value="non-tunai">Non-Tunai (Midtrans)</option>
-                </select>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn btn-success">Lanjut Bayar</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- End Modal Pilih Tipe Pembayaran -->
     </div>
-
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+@endsection
 
+
+{{-- Script Midtrans khusus installment --}}
+@push('scripts')
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" 
+  data-client-key="{{ config('midtrans.client_key') }}"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    let payForm = document.getElementById("payForm");
-    let payInfo = document.getElementById("payInfo");
-    let paymentType = document.getElementById("paymentType");
-    let installmentId = null;
+document.querySelectorAll(".installment-pay-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    let installmentId = this.dataset.id;
+    console.log("Klik tombol installment id:", installmentId);
 
-    document.querySelectorAll(".btn-pay").forEach(btn => {
-      btn.addEventListener("click", function() {
-        installmentId = this.dataset.id;
-        let code = this.dataset.code;
-        let amount = this.dataset.amount;
-
-        payInfo.textContent = `Pembayaran ${code} sebesar Rp ${parseInt(amount).toLocaleString()}`;
-      });
-    });
-
-    payForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-
-      let type = paymentType.value;
-      if (!type) {
-        alert("Pilih tipe pembayaran terlebih dahulu!");
-        return;
+    fetch(`/student/installment/pay/${installmentId}`, {
+      method: "POST",
+      headers: {
+        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+        "Accept": "application/json",
+        "Content-Type": "application/json"
       }
-
-      if (type === "tunai") {
-        // redirect ke halaman WA redirect (GET)
-        window.location.href = "/student/installment/wa-redirect/" + installmentId;
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("Response dari server:", data);
+      if (data.snapToken) {
+        window.snap.pay(data.snapToken, {
+          onSuccess: function(result) { location.reload(); },
+          onPending: function(result) { location.reload(); },
+          onError: function(result) { alert("Pembayaran gagal"); }
+        });
       } else {
-        // submit normal ke Midtrans (POST)
-        payForm.action = "/student/installment/pay/" + installmentId;
-        payForm.submit();
+        alert(data.error || "Gagal dapat Snap Token");
       }
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      alert("Terjadi error saat request ke server.");
     });
   });
+});
 </script>
+    @stack('scripts')
 
-
-
-@endsection
+@endpush

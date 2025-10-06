@@ -48,6 +48,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+                    'birthdate' => 'date',
         ];
     }
 
@@ -66,17 +67,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class, 'user_id');
     }
-    public function installments(): HasManyThrough
+    public function installments(): HasMany
     {
-        return $this->hasManyThrough(
-            Installment::class,
-            Payment::class,
-            'user_id',   // Foreign key di Payment
-            'payment_id',// Foreign key di Installment
-            'id',        // Local key di User
-            'id'         // Local key di Payment
-        );
+        return $this->hasMany(Installment::class, 'user_id', 'id');
     }
+
 
     /**
      * Generate NIS otomatis
@@ -106,8 +101,8 @@ class User extends Authenticatable
         parent::boot();
 
         static::creating(function ($user) {
-            $yearStart = date('y'); 
-            $yearEnd = date('y', strtotime('+1 year')); 
+            $yearStart = date('y');
+            $yearEnd = date('y', strtotime('+1 year'));
             $user->academic_year = $yearStart . $yearEnd;
 
             $baseYear = 2012;
@@ -118,9 +113,9 @@ class User extends Authenticatable
         });
 
         static::deleting(function ($user) {
-            foreach ($user->payments as $payment) {
-                $payment->installments()->delete();
-                $payment->delete();
+            foreach ($user->installments as $installment) {
+                $installment->payments()->delete();
+                $installment->delete();
             }
         });
     }

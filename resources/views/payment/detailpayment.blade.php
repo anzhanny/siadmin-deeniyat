@@ -98,8 +98,10 @@
     <div class="container">
       <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
         <div class="col-xl-12 col-lg-12 col-md-12 mx-auto">
-          <form action="{{ route('payment.confirmpayment') }}" method="POST" id="paymentForm" data-total-amount="{{ ($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000) }}">
+          <form action="{{ route('payment.confirmpayment') }}" method="POST" id="paymentForm"
+            data-total-amount="{{ ($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000) }}">
             @csrf
+
             <!-- hidden class_id -->
             <input type="hidden" name="class_id"
               value="{{ session('class_id') ?? (auth()->user()->class_id ?? 0) }}">
@@ -108,105 +110,94 @@
             <input type="hidden" name="user_id"
               value="{{ session('user_id') ?? auth()->id() }}">
 
-            <!-- hidden method (biarkan kosong, nanti Midtrans yang isi) -->
+            <!-- hidden method (nanti diisi Midtrans kalau non-tunai) -->
             <input type="hidden" name="method" value="">
 
             <!-- hidden payment_for -->
             <input type="hidden" name="payment_for" value="register">
 
-
+            <!-- === Rincian Biaya === -->
             <div class="card z-index-0 border shadow-sm" style="background-color: #F5F7F8;">
-
               <div class="card-body">
                 <div class="p-4 bg-white rounded" style="border:1.5px solid #dee2e6;">
                   <div class="card-header text-center pt-4 bg-transparent border-0">
                     <h4 class="font-weight-bolder">Detail Pembayaran</h4>
-                    <p class="text-lead" style="font-size: 12px; margin-bottom: -10px;">Rincian biaya yang harus dibayar untuk pendaftaran
-                    </p>
                     <hr class="my-4 border border-secondary">
                   </div>
-
-                  <div class="d-flex justify-content-between mb-3" style="margin-left:1.5rem; margin-right:1.5rem; margin-top:-2rem;">
+                  <div class="d-flex justify-content-between mb-3">
                     <strong>Biaya Pendaftaran</strong>
-                    <span class="col-6 ps-md-10">: Rp{{ number_format($class->registration_fee ?? 200000, 0, ',', '.') }}</span>
+                    <span>: Rp{{ number_format($class->registration_fee ?? 200000, 0, ',', '.') }}</span>
                   </div>
-                  <div class="d-flex justify-content-between mb-3" style="margin:1.5rem">
+                  <div class="d-flex justify-content-between mb-3">
                     <strong>Biaya Prasarana</strong>
-                    <span class="col-6 ps-md-10">: Rp{{ number_format($class->infrastructure_fee ?? 100000, 0, ',', '.') }}</span>
+                    <span>: Rp{{ number_format($class->infrastructure_fee ?? 100000, 0, ',', '.') }}</span>
                   </div>
-                  <div class="d-flex justify-content-between mb-3" style="margin:1.5rem">
+                  <div class="d-flex justify-content-between mb-3">
                     <strong>Biaya Seragam</strong>
-                    <span class="col-6 ps-md-10">: Rp{{ number_format($class->uniform_fee ?? 150000, 0, ',', '.') }}</span>
+                    <span>: Rp{{ number_format($class->uniform_fee ?? 150000, 0, ',', '.') }}</span>
                   </div>
-                  <div class="d-flex justify-content-between mb-3" style="margin:1.5rem">
-                    <strong class="fw-bold text-primary">Total Biaya</strong>
-                    <span class="col-6 ps-md-10 fw-bold text-primary">: Rp{{ number_format(($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000), 0, ',', '.') }}</span>
+                  <div class="d-flex justify-content-between mb-3 text-primary fw-bold">
+                    <strong>Total Biaya</strong>
+                    <span>: Rp{{ number_format(($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000), 0, ',', '.') }}</span>
                   </div>
                 </div>
               </div>
 
+              <!-- === Pilih Tipe Pembayaran === -->
               <div class="card-body">
                 <div class="p-4 bg-white rounded" style="border:1.5px solid #dee2e6;">
                   <div class="card-header text-center pt-4 bg-transparent border-0">
                     <h4 class="font-weight-bolder">Pilih Tipe Pembayaran</h4>
-                    <p class="text-lead" style="font-size: 12px; margin-bottom: -10px;">Pilih metode pembayaran yang sesuai dengan preferensi Anda</p>
                   </div>
                   <div class="p-4">
                     <div class="payment-option" onclick="selectPaymentType('tunai')">
                       <input type="radio" name="payment_type" value="tunai" id="tunai" required>
                       <label for="tunai" class="h6 mb-2">Tunai</label>
-                      <p class="text-muted mb-0">Bayar langsung dan datang ke sekolah</p>
+                      <p class="text-muted mb-0">Bayar langsung ke sekolah</p>
                     </div>
-
                     <div class="payment-option" onclick="selectPaymentType('non-tunai')">
                       <input type="radio" name="payment_type" value="non-tunai" id="non-tunai" required>
                       <label for="non-tunai" class="h6 mb-2">Non-Tunai</label>
-                      <p class="text-muted mb-0">Bayar melalui bank/e-wallet tanpa harus ke sekolah</p>
+                      <p class="text-muted mb-0">Bayar via Midtrans (QRIS, transfer, e-wallet)</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-
+              <!-- === Pilih Kategori Pembayaran === -->
               <div class="card-body">
                 <div class="p-4 bg-white rounded" style="border:1.5px solid #dee2e6;">
                   <div class="card-header text-center pt-4 bg-transparent border-0">
                     <h4 class="font-weight-bolder">Pilih Kategori Pembayaran</h4>
-                    <p class="text-lead" style="font-size: 12px; margin-bottom: -10px;">Pilih cara pembayaran yang sesuai dengan kemampuan finansial Anda</p>
                   </div>
                   <div class="p-4">
                     <div class="payment-option" onclick="selectPaymentCategory('lunas')">
                       <input type="radio" name="payment_category" value="lunas" id="lunas" required>
                       <label for="lunas" class="h6 mb-2">Lunas</label>
-                      <p class="text-muted mb-0">Bayar seluruh total biaya Rp{{ number_format(($class->registration_fee ?? 200000) + ($class->infrastructure_fee ?? 100000) + ($class->uniform_fee ?? 150000), 0, ',', '.') }}</p>
+                      <p class="text-muted mb-0">Bayar sekaligus seluruh total biaya</p>
                     </div>
-
                     <div class="payment-option" onclick="selectPaymentCategory('cicilan')">
                       <input type="radio" name="payment_category" value="cicilan" id="cicilan" required>
                       <label for="cicilan" class="h6 mb-2">Cicilan</label>
-                      <p class="text-muted mb-0">Total biaya yang bisa dibayar dalam 3x cicilan adalah Rp150.000/Cicilan</p>
+                      <p class="text-muted mb-0">Dibayar 3x @ Rp150.000</p>
                     </div>
                   </div>
+
                   <div class="text-end">
                     <button type="submit" class="btn btn-secondary" id="lanjutkanBtn" disabled>
                       Lanjutkan
                     </button>
-
-                    <div class="text-start mt-2" id="formStatus">
-                      <small class="text-muted">
-                        <i class="fas fa-info-circle"></i>
-                        Pilih tipe pembayaran dan kategori pembayaran uang sesuai dengan kemampuan Anda untuk melanjutkan
-                      </small>
-                    </div>
+                  </div>
+                  <div class="text-start mt-2">
+                    <small class="text-muted">
+                      <i class="fas fa-info-circle"></i> Pilih tipe & kategori pembayaran untuk melanjutkan
+                    </small>
                   </div>
                 </div>
-
               </div>
-
-
-
             </div>
           </form>
+
         </div>
       </div>
     </div>

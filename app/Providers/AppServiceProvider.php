@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Http\Repositories\TransactionRepository as RepositoriesTransactionRepository;
 use App\Http\Repositories\TransactionRepositoryInterface as RepositoriesTransactionRepositoryInterface;
 use Midtrans\Config;
-
-
+use App\Models\Payment;
+use App\Observers\PaymentObserver;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -25,10 +27,15 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot()
-{
-    Config::$serverKey = config('midtrans.server_key');
-    Config::$isProduction = config('midtrans.is_production');
-    Config::$isSanitized = config('midtrans.is_sanitized');
-    Config::$is3ds = config('midtrans.is_3ds');
-}
+    {
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
+        Payment::observe(PaymentObserver::class);
+
+        // if (app()->environment('local')) {
+        //     URL::forceScheme('https');
+        // }
+    }
 }

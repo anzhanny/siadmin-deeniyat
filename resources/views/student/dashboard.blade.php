@@ -43,7 +43,7 @@
   </div>
 
   <!-- Total Tunggakan -->
-  <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+  <!-- <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
     <a href="{{ route('student.payment.installment') }}" class="text-decoration-none">
       <div class="card shadow-lg border-0">
         <div class="card-body p-3">
@@ -73,7 +73,7 @@
         </div>
       </div>
     </a>
-  </div>
+  </div> -->
 
   <!-- Riwayat Pembayaran Terakhir -->
   <div class="col-12 col-md-6 col-lg-5 mb-4">
@@ -88,10 +88,10 @@
                   @if($lastHistory)
                   @if($lastHistory instanceof \App\Models\Payment)
                   Bayar {{ ucfirst($lastHistory->payment_for) }}
-                  ({{ $lastHistory->paid_at?->format('d-m-Y') ?? $lastHistory->created_at->format('d-m-Y') }})
+                  ({{ $lastHistory->paid_at?->format('d-m-Y') }})
                   @elseif($lastHistory instanceof \App\Models\Installment)
                   Bayar Cicilan {{ $lastHistory->installments_to }} Pendaftaran
-                  ({{ $lastHistory->paid_at?->format('d-m-Y') ?? $lastHistory->created_at->format('d-m-Y') }})
+                  ({{ $lastHistory->paid_at?->format('d-m-Y') }})
                   @endif
                   @else
                   Belum Ada
@@ -108,7 +108,6 @@
                   0
                   @endif
                 </h5>
-
               </div>
             </div>
             <div class="col-4 text-end">
@@ -121,6 +120,7 @@
       </div>
     </a>
   </div>
+
 
 </div>
 

@@ -5,96 +5,102 @@
   <div class="col-12">
     <div class="card mb-4">
       <div class="card-header pb-0">
-        <h6>Detail Pembayaran "{{ $payment->user ? $payment->user->name : '-' }}"</h6>
+        <h6>Detail Pembayaran "{{ $payment->user->name ?? '-' }}"</h6>
       </div>
       <div class="card-body px-4 py-3">
 
-        {{-- Tabel utama --}}
+        {{-- Info utama --}}
         <div class="table-responsive">
           <table class="table table-bordered">
             <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-10">Nama Siswa</th>
-              <td class="text-dark text-s opacity-10">{{ $payment->user ? $payment->user->name : '-' }}</td>
+              <th>Nama Siswa</th>
+              <td>{{ $payment->user->name ?? '-' }}</td>
             </tr>
             <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Kelas</th>
-              <td class="text-dark text-s opacity-10">{{ $payment->class ? $payment->class->class_name : '-' }}</td>
+              <th>Kelas</th>
+              <td>{{ $payment->user->class->class_name ?? '-' }}</td>
             </tr>
             <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Tipe Pembayaran</th>
-              <td class="text-dark text-s opacity-10">{{ ucfirst($payment->payment_type) }}</td>
+              <th>Kategori Pembayaran</th>
+              <td>{{ ucfirst($payment->payment_category) }}</td>
             </tr>
             <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Kategori Pembayaran</th>
-              <td class="text-dark text-s opacity-10">{{ ucfirst($payment->payment_category) }}</td>
+              <th>Jumlah</th>
+              <td>Rp {{ number_format($payment->amount ?? 0,0,',','.') }}</td>
             </tr>
             <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Metode Pembayaran</th>
-              <td class="text-dark text-s opacity-10">{{ ucfirst($payment->method) }}</td>
-            </tr>
-            <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Bulan/Tahun</th>
-              <td class="text-dark text-s opacity-10">{{ $payment->month ?? '-' }} {{ $payment->year ?? '-' }}</td>
-            </tr>
-            <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Status</th>
-              <td class="text-dark text-s opacity-10">
-                @if($payment->status == 'paid')
-                <span class="badge bg-success">Lunas</span>
-                @elseif($payment->status == 'pending')
-                <span class="badge bg-warning text-dark">Menunggu</span>
+              <th>Status</th>
+              <td>
+                @if($payment->status === 'paid')
+                  <span class="badge bg-success">Lunas</span>
+                @elseif($payment->status === 'pending')
+                  <span class="badge bg-warning text-dark">Menunggu</span>
+                @elseif($payment->status === 'failed')
+                  <span class="badge bg-danger">Batal</span>
                 @else
-                <span class="badge bg-danger">Dibatalkan</span>
+                  <span class="badge bg-secondary">{{ ucfirst($payment->status) }}</span>
                 @endif
               </td>
             </tr>
             <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Jumlah</th>
-              <td class="text-dark text-s opacity-10">Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
-            </tr>
-            <tr>
-              <th class="text-dark text-s font-weight-bolder opacity-9">Waktu Bayar</th>
-              <td class="text-dark text-s opacity-10">
-                {{ $payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->format('d-m-Y H:i') : '-' }}
-              </td>
+              <th>Waktu Bayar</th>
+              <td>{{ $payment->paid_at?->format('d-m-Y H:i') ?? '-' }}</td>
             </tr>
           </table>
         </div>
 
-        {{-- Tambahin detail cicilan kalau kategori cicilan --}}
-        @if($payment->payment_category === 'cicilan' && $payment->installments->count() > 0)
+        {{-- Jika cicilan --}}
+        @if($payment->payment_category === 'cicilan' && $payment->installment)
         <div class="mt-4">
           <h6>Rincian Cicilan</h6>
           <div class="table-responsive">
             <table class="table table-sm table-bordered">
-              <thead class="text-white" style="background-color: #344767;">
+              <thead class="bg-dark text-white">
                 <tr>
-                  <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-10">#</th>
-                  <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-10">Cicilan Ke</th>
-                  <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-10">Nominal</th>
-                  <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-10">Status</th>
-                  <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-10">Jatuh Tempo</th>
-                  <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-10">Tanggal Bayar</th>
+                  <th class="text-center">#</th>
+                  <th class="text-center">Cicilan Ke</th>
+                  <th class="text-center">Nominal</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center">Jatuh Tempo</th>
+                  <th class="text-center">Tanggal Bayar</th>
+                  <th class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                @foreach($payment->installments as $i => $installment)
+                @foreach($payment->installment->payments as $i => $p)
                 <tr class="text-center">
-                  <td class="text-dark text-s opacity-10">{{ $i+1 }}</td>
-                  <td class="text-dark text-s opacity-10">Cicilan ke-{{ $installment->installments_to }}</td>
-                  <td class="text-dark text-s opacity-10">Rp {{ number_format($installment->nominal ?? 0, 0, ',', '.') }}</td>
-                  <td class="text-dark text-s opacity-10">
-                    @if($installment->status === 'paid')
-                    <span class="badge bg-success">Lunas</span>
-                    @elseif($installment->status === 'overdue')
-                    <span class="badge bg-danger">Terlambat</span>
+                  <td>{{ $i+1 }}</td>
+                  <td>{{ $p->installment_to }}</td>
+                  <td>Rp {{ number_format($p->amount ?? 0,0,',','.') }}</td>
+                  <td>
+                    @if($p->status === 'paid')
+                      <span class="badge bg-success">Lunas</span>
+                    @elseif($p->status === 'pending')
+                      <span class="badge bg-warning text-dark">Menunggu</span>
+                    @elseif($p->status === 'failed')
+                      <span class="badge bg-danger">Batal</span>
                     @else
-                    <span class="badge bg-warning text-dark">Belum Bayar</span>
+                      <span class="badge bg-secondary">{{ ucfirst($p->status) }}</span>
                     @endif
                   </td>
-                  <td class="text-dark text-s opacity-10">{{ $installment->due_date?->format('d-m-Y') ?? '-' }}</td>
-                  <td class="text-dark text-s opacity-10">{{ $installment->paid_at?->format('d-m-Y H:i') ?? '-' }}</td>
-
+                  <td>{{ $p->due_date?->format('d-m-Y') ?? '-' }}</td>
+                  <td>{{ $p->paid_at?->format('d-m-Y H:i') ?? '-' }}</td>
+                  <td>
+                    {{-- Update status --}}
+                    <form action="{{ route('admin.payment.updateStatus', $p->id) }}" method="POST" class="d-inline">
+                      @csrf
+                      @method('PUT')
+                      @if($p->status === 'pending')
+                        <button type="submit" name="status" value="paid" class="btn btn-sm btn-success" onclick="return confirm('Tandai LUNAS?');">✔</button>
+                        <button type="submit" name="status" value="failed" class="btn btn-sm btn-secondary" onclick="return confirm('Tandai BATAL?');">✖</button>
+                      @elseif($p->status === 'paid')
+                        <button type="submit" name="status" value="pending" class="btn btn-sm btn-warning" onclick="return confirm('Kembalikan ke MENUNGGU?');">↺</button>
+                      @elseif($p->status === 'failed')
+                        <button type="submit" name="status" value="paid" class="btn btn-sm btn-success" onclick="return confirm('Tandai LUNAS?');">✔</button>
+                        <button type="submit" name="status" value="pending" class="btn btn-sm btn-warning" onclick="return confirm('Kembalikan ke MENUNGGU?');">↺</button>
+                      @endif
+                    </form>
+                  </td>
                 </tr>
                 @endforeach
               </tbody>
@@ -105,7 +111,6 @@
 
         <div class="text-end mt-3">
           <a href="{{ route('admin.payment.index') }}" class="btn btn-secondary">Kembali</a>
-          <a href="{{ route('admin.payment.edit', $payment->id) }}" class="btn btn-primary">Edit</a>
         </div>
 
       </div>

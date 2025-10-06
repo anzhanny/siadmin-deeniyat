@@ -6,60 +6,80 @@
             @csrf
             @method('PUT')
             <div class="card">
-                <div class="card-header pb-0">
-                </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <!-- Nama -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Nama Lengkap</label>
                             <input class="form-control" type="text" name="name" value="{{ old('name', $data->name) }}">
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Email -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Email</label>
                             <input class="form-control" type="email" name="email" value="{{ old('email', $data->email) }}">
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- NIS -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">NIS</label>
                             <input class="form-control" type="text" value="{{ $data->nis }}" readonly>
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Kelas -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Kelas</label>
                             <input class="form-control" type="text" value="{{ $data->class?->class_name ?? '-' }}" readonly>
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Phone -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">No Telepon</label>
                             <input class="form-control" type="text" name="phone" value="{{ old('phone', $data->phone) }}">
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Address -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Alamat</label>
                             <input class="form-control" type="text" name="address" value="{{ old('address', $data->address) }}">
+                        </div>
+
+                        <!-- Password -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-control-label">Ganti Password</label>
+                            <input class="form-control" type="password" name="password" placeholder="Kosongkan jika tidak ingin mengubah password">
+                            <small class="text-muted">*Biarkan kosong jika tidak ingin mengganti password.</small>
                         </div>
                     </div>
 
                     <hr class="horizontal dark">
                     <p class="text-uppercase text-sm">Data Orang Tua</p>
                     <div class="row">
-                        <div class="col-md-6">
+                        <!-- Father -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Nama Ayah</label>
                             <input class="form-control" type="text" name="father_name" value="{{ old('father_name', $data->father_name) }}">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Pekerjaan Ayah</label>
                             <input class="form-control" type="text" name="father_job" value="{{ old('father_job', $data->father_job) }}">
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Mother -->
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Nama Ibu</label>
                             <input class="form-control" type="text" name="mother_name" value="{{ old('mother_name', $data->mother_name) }}">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 mb-3">
                             <label class="form-control-label">Pekerjaan Ibu</label>
                             <input class="form-control" type="text" name="mother_job" value="{{ old('mother_job', $data->mother_job) }}">
                         </div>
                     </div>
+
                     <div class="text-end mt-4">
+                        <a href="{{ route('student.profile.index') }}" class="btn btn-secondary btn-sm">Kembali</a>
                         <button type="submit" class="btn btn-primary btn-sm ms-auto">Simpan</button>
                     </div>
-
                 </div>
             </div>
     </div>

@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\student;
+namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Installment;
 use App\Models\Payment;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -14,35 +13,35 @@ class DashboardController extends Controller
     {
         $userId = Auth::id();
 
-        // Status tunggakan cicilan
+        // 1. Hitung tunggakan cicilan
         $overdueCount = Installment::where('status', 'overdue')
-            ->whereHas('payment', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
+            ->where('user_id', $userId)
             ->count();
 
-        // Last payment (SPP)
+        // 2. Ambil pembayaran SPP terakhir (yang paid)
         $lastSpp = Payment::where('user_id', $userId)
             ->where('payment_for', 'spp')
-            ->latest('created_at')
-            ->first();
-
-        // Last installment
-        $lastInstallment = Installment::whereHas('payment', function ($q) use ($userId) {
-            $q->where('user_id', $userId);
-        })
             ->where('status', 'paid')
             ->latest('paid_at')
             ->first();
 
-        // Gabungkan untuk riwayat terakhir
-        $lastPayment = Payment::where('user_id', $userId)
+        // 3. Ambil cicilan terakhir yang paid
+        $lastInstallment = Installment::where('user_id', $userId)
             ->where('status', 'paid')
-            ->latest('updated_at')
+            ->latest('paid_at')
             ->first();
 
+        // 4. Ambil pembayaran langsung terakhir (register lunas / spp)
+        $lastPayment = Payment::where('user_id', $userId)
+            ->where('status', 'paid')
+            ->latest('paid_at')
+            ->first();
+
+        // 5. Tentukan riwayat terakhir (compare waktu)
+        $lastHistory = null;
+
         if ($lastPayment && $lastInstallment) {
-            $lastHistory = $lastPayment->updated_at > $lastInstallment->paid_at
+            $lastHistory = $lastPayment->paid_at > $lastInstallment->paid_at
                 ? $lastPayment
                 : $lastInstallment;
         } else {
@@ -50,7 +49,6 @@ class DashboardController extends Controller
         }
 
         return view('student.dashboard', compact(
-            'lastPayment',
             'lastSpp',
             'overdueCount',
             'lastHistory'

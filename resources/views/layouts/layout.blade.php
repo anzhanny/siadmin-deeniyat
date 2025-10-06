@@ -83,6 +83,15 @@
 
           </div> -->
         </li>
+        <!-- installment   -->
+         <!-- <li class="nav-item">
+          <a class="nav-link {{ Route::is('admin.installment.index') ? 'active' : '' }}" href="{{ route('admin.installment.index') }}">
+            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+              <i class="fa fa-hourglass-half text-dark text-sm opacity-10"></i>
+            </div>
+            <span class="nav-link-text ms-1">Data Cicilan</span>
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link {{ Route::is('admin.report.index') ? 'active' : '' }}" href="{{ route('admin.report.index') }}">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
@@ -90,7 +99,7 @@
             </div>
             <span class="nav-link-text ms-1">Laporan Pembayaran</span>
           </a>
-        </li>
+        </li> -->
 
 
         <li class="nav-item mt-3">
@@ -172,10 +181,10 @@
         @include('layouts.breadcrumb')
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-            <div class="input-group">
+            <!-- <div class="input-group">
               <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
               <input type="text" class="form-control" placeholder="Type here...">
-            </div>
+            </div> -->
           </div>
           <ul class="navbar-nav  justify-content-end">
 
@@ -193,7 +202,7 @@
                 <i class="fa fa-cog fixed-plugin-button-nav cursor-pointer"></i>
               </a>
             </li>
-            <li class="nav-item dropdown pe-2 d-flex align-items-center">
+            <!-- <li class="nav-item dropdown pe-2 d-flex align-items-center">
               <a href="javascript:;" class="nav-link text-white p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa fa-bell cursor-pointer"></i>
               </a>
@@ -265,7 +274,7 @@
                   </a>
                 </li>
               </ul>
-            </li>
+            </li> -->
           </ul>
         </div>
       </div>
@@ -286,7 +295,7 @@
                 <!-- for a better web. -->
               </div>
             </div>
-            <div class="col-lg-6">
+            <!-- <div class="col-lg-6">
               <ul class="nav nav-footer justify-content-center justify-content-lg-end">
                 <li class="nav-item">
                   <a href="https://www.creative-tim.com" class="nav-link text-muted" target="_blank">Creative Tim</a>
@@ -301,7 +310,7 @@
                   <a href="https://www.creative-tim.com/license" class="nav-link pe-0 text-muted" target="_blank">License</a>
                 </li>
               </ul>
-            </div>
+            </div> -->
           </div>
         </div>
       </footer>
@@ -394,6 +403,7 @@
   <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
   <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
   <script src="../assets/js/plugins/chartjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     var ctx1 = document.getElementById("chart-line").getContext("2d");
 
@@ -490,6 +500,8 @@
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="{{ asset('assets/js/argon-dashboard.min.js?v=2.1.0') }}" type="text/javascript"></script>
+      @stack('scripts')
+
 </body>
 
 </html>

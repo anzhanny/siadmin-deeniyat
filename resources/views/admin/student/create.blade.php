@@ -2,6 +2,16 @@
 @section('content')
 <div class="row">
   <div class="col-12">
+    @if ($errors->any())
+    <div class="alert alert-danger">
+      <ul>
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+    @endif
+
     <form action="{{ route('admin.student.store') }}" method="POST" enctype="multipart/form-data"
       class="p-4 border rounded shadow-sm bg-light needs-validation" novalidate>
       @csrf
@@ -18,25 +28,6 @@
           <input type="text" class="form-control text-danger small fst-italic" style="outline: none;"
             id="nis" value="*Akan diisi otomatis oleh sistem" readonly disabled>
         </div>
-
-        <!-- Pendidikan Formal -->
-        <div class="col-md-6 mb-3">
-          <label for="grade" class="form-label">Kelas Pendidikan Formal Sebelumnya
-            <span class="text-danger">*</span>
-          </label>
-          <select class="form-select" id="grade" name="grade" required>
-            <option value="">Pilih Tingkat</option>
-            <option value="0">TK</option>
-            <option value="1">Kelas 1 SD</option>
-            <option value="2">Kelas 2 SD</option>
-            <option value="3">Kelas 3 SD</option>
-            <option value="4">Kelas 4 SD</option>
-            <option value="5">Kelas 5 SD</option>
-            <option value="6">Kelas 6 SD</option>
-          </select>
-        </div>
-
-
 
         <!-- Email -->
         <div class="col-md-6 mb-3">
@@ -64,6 +55,27 @@
             Format: 08xxxxxxxxxx (10-13 digit)
           </div>
         </div>
+
+        <!-- Pendidikan Formal -->
+        <div class="col-md-6 mb-3">
+          <label for="grade" class="form-label">Kelas Pendidikan Formal Sebelumnya
+            <span class="text-danger">*</span>
+          </label>
+          <select class="form-select" id="grade" name="grade" required>
+            <option value="">Pilih Tingkat</option>
+            <option value="0">TK</option>
+            <option value="1">Kelas 1 SD</option>
+            <option value="2">Kelas 2 SD</option>
+            <option value="3">Kelas 3 SD</option>
+            <option value="4">Kelas 4 SD</option>
+            <option value="5">Kelas 5 SD</option>
+            <option value="6">Kelas 6 SD</option>
+          </select>
+        </div>
+
+
+
+
 
         <!-- Alamat -->
         <div class="col-md-6 mb-3">
@@ -123,35 +135,42 @@
           <label for="photo" class="form-label">Foto</label>
           <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
         </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="payment_category" class="form-label">Kategori Pembayaran</label>
-        <select name="payment_category" id="payment_category" class="form-select" required>
-          <option value="lunas">Lunas</option>
-          <option value="cicilan">Cicilan</option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="payment_type" class="form-label">Tipe Pembayaran</label>
-        <select name="payment_type" id="payment_type" class="form-select" required>
-          <option value="tunai">Tunai</option>
-          <option value="non-tunai">Non-Tunai</option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="amount" class="form-label">Nominal Pembayaran</label>
-        <input type="number" name="amount" id="amount" class="form-control" value="450000" required>
-      </div>
 
 
-      <!-- Button Simpan & Kembali -->
-      <div class="text-end mt-4">
-        <a href="{{ route('admin.student.index') }}" class="btn btn-secondary">Kembali</a>
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
+        {{-- === Data Pembayaran === --}}
+        <h5 class="mt-4 mb-3">Pilih Pembayaran</h5>
+
+        <div class="col-md-6 mb-3">
+          <label for="payment_type" class="form-label">Tipe Pembayaran</label>
+          <select name="payment_type" id="payment_type" class="form-select" required>
+            <option value="">Pilih Tipe</option>
+            <option value="tunai" {{ old('payment_type') == 'tunai' ? 'selected' : '' }}>Tunai</option>
+            <option value="non-tunai" {{ old('payment_type') == 'non-tunai' ? 'selected' : '' }}>Non-Tunai</option>
+          </select>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label for="payment_category" class="form-label">Kategori Pembayaran</label>
+          <select name="payment_category" id="payment_category" class="form-select" required>
+            <option value="">Pilih Kategori</option>
+            <option value="lunas" {{ old('payment_category') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+            <option value="cicilan" {{ old('payment_category') == 'cicilan' ? 'selected' : '' }}>Cicilan</option>
+          </select>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label for="amount" class="form-label">Nominal Pembayaran</label>
+          <input type="number" name="amount" id="amount" class="form-control"
+            value="{{ old('amount') }}" placeholder="Masukkan nominal" required>
+        </div>
+
+
+
+        <!-- Button Simpan & Kembali -->
+        <div class="text-end mt-4">
+          <a href="{{ route('admin.student.index') }}" class="btn btn-secondary">Kembali</a>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
     </form>
   </div>
 </div>

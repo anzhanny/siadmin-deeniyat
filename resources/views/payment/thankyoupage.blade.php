@@ -31,13 +31,6 @@
           <div class="col-lg-8 text-center mx-auto text-white">
             <img src="{{ asset('assets/img/logos/deeniyat-logo.png') }}" alt="Deeniyat Logo" style="width: 80px;">
             <h1 class="mt-4 fw-bold text-white">Terima Kasih!</h1>
-            <p class="lead mt-3">
-              Pembayaran Anda telah diproses dengan baik.
-              Kami akan segera memverifikasi dan menghubungi Anda jika diperlukan.
-            </p>
-            @if(session('payment_type') == 'tunai')
-            <a href="https://wa.me/6289629183036" target="_blank" class="btn btn-success">Hubungi Admin via WhatsApp</a>
-            @endif
             <div class="mt-5">
               <a href="{{ route('login') }}" class="btn btn-lg btn-primary">
                 <i class="fas fa-home me-2"></i> Kembali ke Beranda

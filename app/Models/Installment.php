@@ -11,13 +11,12 @@ class Installment extends Model
 
     protected $table = 'tb_installment';
     protected $fillable = [
-        'payment_id',
+        'user_id',
         'nominal',
-        'installments_to',
-        'paid_at',
         'remaining_balance',
         'due_date',
         'status',
+        'paid_at'
     ];
 
     protected $dates = [
@@ -28,14 +27,53 @@ class Installment extends Model
     ];
 
     protected $casts = [
-    'due_date' => 'date',
-    'paid_at'  => 'datetime',
-];
+        'due_date' => 'date',
+        'paid_at'  => 'datetime',
+    ];
 
 
-    // Relasi ke Payment (jika ada tabel payments)
-    public function payment()
+    public function payments()
     {
-        return $this->belongsTo(Payment::class, 'payment_id');
+        return $this->hasMany(Payment::class, 'installment_id', 'id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function class()
+    {
+        return $this->hasOneThrough(
+            TbClass::class,
+            Payment::class,
+            'installment_id', // FK di Payment yg referensi ke Installment
+            'id',             // PK di TbClass
+            'id',             // PK di Installment
+            'class_id'        // FK di Payment ke TbClass
+        );
+    }
+
+
+
+
+    public function updateStatus()
+{
+    $totalPaid = $this->payments()->where('status', 'paid')->sum('amount');
+    $totalNominal = $this->nominal; // total_amount dari parent
+
+    if ($totalPaid >= $totalNominal) {
+        $this->status  = 'paid';
+        $this->paid_at = now();
+    } elseif ($totalPaid > 0) {
+        $this->status = 'partial';
+    } else {
+        $this->status = 'pending';
+    }
+
+    // update remaining_balance
+    $this->remaining_balance = max($totalNominal - $totalPaid, 0);
+    $this->save();
+}
+
 }

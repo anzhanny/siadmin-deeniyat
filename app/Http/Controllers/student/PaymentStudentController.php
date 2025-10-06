@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\student;
+namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Http\Services\PaymentService;
@@ -25,36 +25,66 @@ class PaymentStudentController extends Controller
     public function index()
     {
         $userId = Auth::id();
-        $payments = Payment::with('installments')->where('user_id', $userId)->latest()->get();
 
-        $registerPayment = $payments->firstWhere('payment_for', 'register');
-        $sppPayments = $payments->where('payment_for', 'spp')->values();
+        // Ambil semua installment (parent) milik user, beserta child payments
+        $installments = Installment::where('user_id', $userId)
+            ->with('payments')
+            ->orderBy('due_date', 'asc')
+            ->get();
 
-        // hitung total pembayaran tahun ini
-        $total_pembayaran = Payment::where('user_id', $userId)
+        // Untuk kompatibilitas view yang sebelumnya memakai "registerPayment" (pembayaran langsung/lunas)
+        $registerPayment = Payment::where('user_id', $userId)
+            ->where('payment_for', 'register')
+            ->whereNull('installment_id') // jika ada payment tanpa link ke installment
+            ->latest()
+            ->first();
+
+        // SPP tetap dari Payment (bulanan)
+        $sppPayments = Payment::where('user_id', $userId)
             ->where('payment_for', 'spp')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get();
+
+        // Hitung total pembayaran SPP yang sudah 'paid' pada tahun ini
+        $total_pembayaran = $sppPayments
             ->where('status', 'paid')
-            ->whereYear('paid_at', date('Y'))
+            ->filter(function ($p) {
+                return $p->paid_at && $p->paid_at->format('Y') == date('Y');
+            })
             ->sum('amount');
 
-        return view('student.payment.spp', compact('payments', 'registerPayment', 'sppPayments', 'total_pembayaran'));
+        // NOTE: kita kirim 'payments' sebagai $installments supaya view lama tetap work
+        return view('student.payment.spp', [
+            'payments' => $installments,
+            'registerPayment' => $registerPayment,
+            'sppPayments' => $sppPayments,
+            'total_pembayaran' => $total_pembayaran,
+        ]);
     }
+
 
 
     public function registerPayment()
     {
         $userId = Auth::id();
 
-        $payment = Payment::with('installments')
-            ->where('user_id', $userId)
+        // Jika ada payment register yang dibuat sebagai "lunas" (tanpa installment) ambil itu
+        $payment = Payment::where('user_id', $userId)
             ->where('payment_for', 'register')
+            ->whereNull('installment_id')
             ->latest()
             ->first();
 
-        $installments = $payment ? $payment->installments : collect();
+        // Ambil semua installment user (akan tampil sebagai jadwal cicilan)
+        $installments = Installment::where('user_id', $userId)
+            ->with('payments')
+            ->orderBy('installments_to', 'asc')
+            ->get();
 
         return view('student.payment.register', compact('payment', 'installments'));
     }
+
 
     public function sppPayment()
     {
@@ -85,30 +115,34 @@ class PaymentStudentController extends Controller
         $nominal = 50000;
         $orderId = "SPP-{$bulan}-{$user->id}-" . time();
 
+        // ❌ jangan create lalu save lagi → cukup create()
         $payment = Payment::create([
-            'user_id' => $user->id,
-            'payment_for' => 'spp',
-            'amount' => $nominal,
-            'month' => $bulan,
-            'year' => $tahun,
-            'status' => 'pending',
-            'code' => $orderId,
+            'user_id'          => $user->id,
+            'payment_for'      => 'spp',
+            'payment_category' => 'lunas',
+            'payment_type'     => 'non-tunai',
+            'amount'           => $nominal,
+            'month'            => $bulan,
+            'year'             => $tahun,
+            'status'           => 'pending',
+            'code'             => $orderId,
         ]);
 
+        // Midtrans
         \Midtrans\Config::$serverKey = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = false;
-        \Midtrans\Config::$isSanitized = true;
-        \Midtrans\Config::$is3ds = true;
+        \Midtrans\Config::$isSanitized  = true;
+        \Midtrans\Config::$is3ds        = true;
 
         $params = [
             'transaction_details' => [
-                'order_id' => $orderId,
+                'order_id'     => $orderId,
                 'gross_amount' => $nominal,
             ],
             'customer_details' => [
                 'first_name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone ?? '08123456789',
+                'email'      => $user->email,
+                'phone'      => $user->phone ?? '08123456789',
             ],
         ];
 
@@ -117,74 +151,63 @@ class PaymentStudentController extends Controller
         return response()->json(['snapToken' => $snapToken]);
     }
 
-    
+
 
     public function installmentPayment()
     {
         $userId = Auth::id();
 
-        // Ambil semua pembayaran pendaftaran yang cicilan
-        $payments = Payment::where('user_id', $userId)
-            ->where('payment_for', 'register')
-            ->where('payment_category', 'cicilan')
-            ->with('installments') // pastikan relasi ada di model Payment
+        // Ambil parent installments, bukan payments
+        $installments = Installment::where('user_id', $userId)
+            ->with(['payments' => function ($q) {
+                $q->orderBy('installment_to', 'asc');
+            }])
             ->get();
 
-        return view('student.payment.installment', compact('payments'));
+        return view('student.payment.installment', compact('installments'));
     }
 
-    public function payInstallment(Request $request, $installmentId)
-    {
-        $installment = Installment::findOrFail($installmentId);
 
-        if ($installment->status === 'paid') {
-            return back()->with('info', "Cicilan ke-{$installment->installments_to} sudah dibayar.");
-        }
+//     public function payInstallment($id)
+// {
+//     $installment = Installment::with(['payments', 'user'])->findOrFail($id);
 
-        if ($request->payment_type === 'tunai') {
-            // langsung redirect WA
-            return redirect()->away(
-                "https://wa.me/6289629183036?text=Halo admin, saya ingin bayar cicilan ID {$installment->id}"
-            );
-        }
+//     // ambil payment cicilan yang masih pending
+//     $payment = $installment->payments()->where('status', 'pending')->first();
+//     if (!$payment) {
+//         return response()->json(['error' => 'Tidak ada cicilan pending'], 404);
+//     }
 
-        if ($request->payment_type === 'non-tunai') {
-            \Midtrans\Config::$serverKey = config('midtrans.server_key');
-            \Midtrans\Config::$isProduction = config('midtrans.is_production');
-            \Midtrans\Config::$isSanitized = true;
-            \Midtrans\Config::$is3ds = true;
+//     // Midtrans config
+//     \Midtrans\Config::$serverKey = config('midtrans.server_key');
+//     \Midtrans\Config::$isProduction = config('midtrans.is_production');
+//     \Midtrans\Config::$isSanitized = true;
+//     \Midtrans\Config::$is3ds = true;
 
-            $params = [
-                'transaction_details' => [
-                    'order_id'      => 'CICILAN-' . $installment->id . '-' . time(),
-                    'gross_amount'  => $installment->nominal,
-                ],
-                'customer_details' => [
-                    'first_name' => $installment->payment->user->name,
-                    'email'      => $installment->payment->user->email,
-                    'phone'      => $installment->payment->user->phone ?? '081234567890',
-                ],
-                'item_details' => [[
-                    'id'       => $installment->id,
-                    'price'    => $installment->nominal,
-                    'quantity' => 1,
-                    'name'     => "Cicilan ke-{$installment->installments_to}",
-                ]],
-            ];
+//     $params = [
+//         'transaction_details' => [
+//             'order_id'      => $payment->code, // ambil dari payments
+//             'gross_amount'  => $payment->amount,
+//         ],
+//         'customer_details' => [
+//             'first_name' => $installment->user->name,
+//             'email'      => $installment->user->email,
+//             'phone'      => $installment->user->phone ?? '081234567890',
+//         ],
+//         'item_details' => [[
+//             'id'       => $payment->id,
+//             'price'    => $payment->amount,
+//             'quantity' => 1,
+//             'name'     => "Cicilan ke-{$payment->installment_to}",
+//         ]],
+//     ];
 
-            try {
-                $snapToken = \Midtrans\Snap::getSnapToken($params);
+//     $snapToken = \Midtrans\Snap::getSnapToken($params);
 
-                // arahkan ke halaman khusus untuk menampilkan Snap
-                return view('student.installment.snap', compact('snapToken', 'installment'));
-            } catch (\Exception $e) {
-                return back()->with('error', 'Midtrans error: ' . $e->getMessage());
-            }
-        }
+//     return response()->json(['snapToken' => $snapToken]);
+// }
 
 
-        return back()->with('error', 'Tipe pembayaran tidak valid.');
-    }
 
 
 
@@ -213,16 +236,14 @@ class PaymentStudentController extends Controller
      */
     public function detailPayment()
     {
-        // Get user from session or create a default class object
         $class = null;
 
-        // Try to get class from session
         if (session('class_id')) {
             $class = TbClass::find(session('class_id'));
         }
 
-        // If no class found, create a default class object with default fees
-        $class = TbClass::find(session('class_id')) ?? (object) [
+        // fallback biaya default
+        $class = $class ?? (object) [
             'registration_fee'   => 200000,
             'infrastructure_fee' => 100000,
             'uniform_fee'        => 150000,
@@ -231,28 +252,36 @@ class PaymentStudentController extends Controller
         return view('payment.detailpayment', compact('class'));
     }
 
-    public function processPayment(Request $request, $id)
+    public function processPayment(Request $request)
     {
-        $payment = Payment::findOrFail($id);
-
-        $payment->update([
-            'payment_type'     => $request->payment_type,
-            'payment_category' => $request->payment_category,
-            'method'           => $request->method,
+        // ✅ gunakan firstOrNew supaya tidak bikin duplikat
+        $payment = Payment::firstOrNew([
+            'user_id'     => $request->user_id,
+            'class_id'    => $request->class_id,
+            'payment_for' => $request->payment_for,
         ]);
 
+        // update kolom lain
+        $payment->fill([
+            'payment_type'     => $request->payment_type,
+            'payment_category' => $request->payment_category,
+            'amount'           => $request->total_amount,
+            'status'           => $payment->exists ? $payment->status : 'pending',
+            'code'             => $payment->code ?? 'REG-' . uniqid(),
+        ]);
+        $payment->save();
+
+        // === logika payment type ===
         if ($payment->status === 'paid') {
-            return redirect()->route('payment.thankyoupage', $payment->id)
+            return redirect()->route('payment.thankyoupage')
                 ->with('success', 'Pembayaran sudah selesai.');
         }
 
-        // Tunai langsung WA
-        if ($request->payment_type === 'tunai') {
-            return redirect()->route('payment.waredirect', ['id' => $payment->id]);
+        if ($payment->payment_type === 'tunai') {
+            return redirect()->route('payment.waredirect', $payment->id);
         }
 
-        // ===== MODE DEMO (tapi tetap munculin Snap QRIS) =====
-        if (config('payment.mode') === 'demo') {
+        if ($payment->payment_type === 'non-tunai') {
             \Midtrans\Config::$serverKey = config('midtrans.server_key');
             \Midtrans\Config::$isProduction = false;
             \Midtrans\Config::$isSanitized = true;
@@ -260,25 +289,22 @@ class PaymentStudentController extends Controller
 
             $params = [
                 'transaction_details' => [
-                    'order_id'     => 'ORDER-' . uniqid(),
+                    'order_id' => $payment->code, // pakai kode unik dari tabel kamu
                     'gross_amount' => $payment->amount,
                 ],
                 'customer_details' => [
-                    'first_name' => Auth::user()->name ?? 'Calon Siswa',
-                    'email'      => Auth::user()->email ?? 'email@example.com',
-                    'phone'      => Auth::user()->phone ?? '08123456789',
+                    'first_name' => $payment->user->name ?? 'Calon Siswa',
+                    'email' => $payment->user->email ?? 'email@example.com',
+                    'phone' => $payment->user->phone ?? '08123456789',
                 ],
             ];
 
-            try {
-                $snapToken = \Midtrans\Snap::getSnapToken($params);
-                return view('payment.demo', compact('snapToken', 'payment'));
-            } catch (\Exception $e) {
-                return redirect()->route('payment.detailpayment')
-                    ->with('error', 'Gagal membuat transaksi demo: ' . $e->getMessage());
-            }
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            return view('payment.midtrans', compact('snapToken', 'payment'));
         }
     }
+
 
     // SIMULASI
     public function simulate($id)
@@ -322,81 +348,20 @@ class PaymentStudentController extends Controller
                 ->with('error', 'Gagal membuat transaksi Midtrans: ' . $e->getMessage());
         }
     }
-
-
-
-
-
-    // public function processPayment(Request $request, $id)
-    // {
-    //     $payment = Payment::findOrFail($id);
-
-    //     $request->validate([
-    //         'payment_type'     => 'required|in:tunai,non-tunai',
-    //         'payment_category' => 'required|in:lunas,cicilan',
-    //         'method'           => 'nullable|in:qris',
-    //     ]);
-
-    //     $payment->update([
-    //         'payment_type'     => $request->payment_type,
-    //         'payment_category' => $request->payment_category,
-    //         'method'           => $request->method,
-    //     ]);
-
-    //     // Kalau sudah paid, jangan proses ulang
-    //     if ($payment->status === 'paid') {
-    //         return redirect()->route('payment.thankyoupage', $payment->id)
-    //             ->with('success', 'Pembayaran sudah selesai.');
-    //     }
-
-    //     // Jika pembayaran tunai → langsung redirect WA
-    //     if ($request->payment_type === 'tunai') {
-    //         return redirect()->route('payment.waredirect', ['id' => $payment->id]);
-    //     }
-
-    //     // REAL MODE: Midtrans
-    //     $totalAmount = 450000;
-
-    //     \Midtrans\Config::$serverKey = config('midtrans.server_key');
-    //     \Midtrans\Config::$isProduction = false; // true kalau live
-    //     \Midtrans\Config::$isSanitized = true;
-    //     \Midtrans\Config::$is3ds = true;
-
-    //     $params = [
-    //         'transaction_details' => [
-    //             'order_id'     => 'ORDER-' . uniqid(),
-    //             'gross_amount' => $totalAmount,
-    //         ],
-    //         'customer_details' => [
-    //             'first_name' => Auth::user()->name ?? 'Calon Siswa',
-    //             'email'      => Auth::user()->email ?? 'email@example.com',
-    //             'phone'      => Auth::user()->phone ?? '08123456789',
-    //         ],
-    //     ];
-
-    //     try {
-    //         $snapToken = \Midtrans\Snap::getSnapToken($params);
-    //         return view('payment.midtrans', compact('snapToken', 'payment'));
-    //     } catch (\Exception $e) {
-    //         return redirect()->route('payment.detailpayment')
-    //             ->with('error', 'Gagal membuat transaksi Midtrans: ' . $e->getMessage());
-    //     }
-    // }
-
-
     public function waRedirect($id)
     {
         $payment = Payment::findOrFail($id);
 
-        // buat link WA (simulasi kirim konfirmasi)
+        // buat link WA
         $phone = "6285864921179"; // nomor admin / bendahara
-        $message = "Halo Admin Deeniyat, saya Ingin melakukan mengonfirmasi pembayaran pendaftaran.\nKode: {$payment->code}\n
-        Nama: " . Auth::user()->name . " 
+        $message = "Halo Admin Deeniyat, saya ingin melakukan konfirmasi pembayaran pendaftaran.\n
+        Kode: {$payment->code}\n
+        Nama: " . Auth::user()->name . "\n
         Jumlah: Rp " . number_format($payment->amount, 0, ',', '.');
 
         $url = "https://wa.me/{$phone}?text=" . urlencode($message);
 
-        \Illuminate\Support\Facades\Auth::logout();
+        Auth::logout();
         return view('payment.waredirect', compact('url'));
     }
 
@@ -494,48 +459,155 @@ class PaymentStudentController extends Controller
     /**
      * Show payment confirmation page
      */
-    public function confirmPayment(Request $request)
-    {
-        $user   = Auth::user();
-        $classId = $user->class_id;
+  public function confirmPayment(Request $request)
+{
+    $user = Auth::user();
 
-        // Cek apakah sudah ada payment register
-        $payment = Payment::with('installments') // langsung ambil cicilannya
-            ->where('user_id', $user->id)
-            ->where('payment_for', 'register')
-            ->first();
+    // cek apakah user sudah punya pembayaran register
+    $existingPayment = Payment::where('user_id', $user->id)
+        ->where('payment_for', 'register')
+        ->first();
 
-        if (!$payment) {
-            // Buat baru kalau belum ada
-            $payment = app(PaymentService::class)->createRegisterPayment(
-                $user,
-                $request->payment_category, // lunas / cicilan
-                $request->payment_type,     // tunai / qris / midtrans
-                450000
-            );
+    if ($existingPayment) {
+        // update pilihan payment kalau sudah ada
+        $existingPayment->update([
+            'payment_category' => $request->payment_category, // lunas / cicilan
+            'payment_type'     => $request->payment_type,     // tunai / non-tunai
+        ]);
+
+        $payment = $existingPayment;
+    } else {
+        // handle pembuatan payment baru sesuai kategori
+        if ($request->payment_category === 'lunas') {
+            // langsung buat 1 payment 450k
+            $payment = Payment::create([
+                'user_id'          => $user->id,
+                'class_id'         => null,
+                'payment_for'      => 'register',
+                'payment_category' => 'lunas',
+                'payment_type'     => $request->payment_type,
+                'method'           => $request->payment_type === 'non-tunai' ? 'midtrans' : 'tunai',
+                'code'             => strtoupper(uniqid('REG-')),
+                'due_date'         => now()->addDays(3),
+                'amount'           => 450000,
+                'installment_to'   => null,
+                'description'      => 'Pembayaran registrasi (lunas)',
+                'status'           => 'pending',
+            ]);
+        } else {
+            // buat installment parent
+            $installment = Installment::create([
+                'user_id'           => $user->id,
+                'nominal'           => 450000,
+                'remaining_balance' => 450000,
+                'due_date'          => now()->addMonth(), // jatuh tempo pertama
+                'status'            => 'pending',
+            ]);
+
+            // pecah jadi 3x payment @150k
+            $cicilan = 3;
+            $nominal = 450000 / $cicilan;
+            $payment = null;
+
+            for ($i = 1; $i <= $cicilan; $i++) {
+                $p = Payment::create([
+                    'installment_id'   => $installment->id,
+                    'user_id'          => $user->id,
+                    'class_id'         => null,
+                    'payment_for'      => 'register',
+                    'payment_category' => 'cicilan',
+                    'payment_type'     => $request->payment_type,
+                    'method'           => $request->payment_type === 'non-tunai' ? 'midtrans' : 'tunai',
+                    'code'             => strtoupper(uniqid("REG-INST{$i}-")),
+                    'due_date'         => now()->addMonths($i - 1),
+                    'amount'           => $nominal,
+                    'installment_to'   => $i,
+                    'description'      => "Pembayaran registrasi cicilan ke-$i",
+                    'status'           => 'pending',
+                ]);
+
+                if ($i === 1) {
+                    $payment = $p; // simpan cicilan pertama untuk ditampilkan di confirm page
+                }
+            }
         }
-
-        // Simpan ke session (opsional)
-        session([
-            'payment_type'     => $payment->payment_type,
-            'payment_category' => $payment->payment_category,
-            'total_amount'     => $payment->amount,
-            'user_id'          => $payment->user_id,
-            'student_class'    => $this->getClassName($classId),
-            'class_id'         => $classId,
-        ]);
-
-        return view('payment.confirmpayment', compact('payment'));
     }
 
-    public function showConfirm()
-    {
-        return view('payment.confirmpayment', [
-            'payment_type' => session('payment_type'),
-            'payment_category' => session('payment_category'),
-            'total_amount' => session('total_amount'),
-        ]);
+    // simpan ke session untuk showConfirm
+    session([
+        'payment_id'       => $payment->id,
+        'payment_type'     => $payment->payment_type,
+        'payment_category' => $payment->payment_category,
+        'total_amount'     => $payment->amount,
+    ]);
+
+    // bikin SnapToken kalau non-tunai
+    $snapToken = null;
+    if ($payment->payment_type === 'non-tunai') {
+        // dummy dulu
+        // $snapToken = 'DUMMY-SNAP-TOKEN';
+
+        // kalau sudah integrasi Midtrans:
+        $params = [
+            'transaction_details' => [
+                'order_id'     => $payment->code,
+                'gross_amount' => $payment->amount,
+            ],
+            'customer_details' => [
+                'first_name' => $user->name,
+                'email'      => $user->email,
+                'phone'      => $user->phone,
+            ],
+        ];
+        $snapToken = \Midtrans\Snap::getSnapToken($params);
     }
+
+    return view('payment.confirmpayment', [
+        'payment'   => $payment,
+        'snapToken' => $snapToken,
+    ]);
+}
+
+
+public function showConfirm()
+{
+    $paymentId = session('payment_id');
+    $payment   = Payment::find($paymentId);
+
+    if (!$payment) {
+        return redirect()->route('login')->with('error', 'Data pembayaran tidak ditemukan');
+    }
+
+    // default null
+    $snapToken = null;
+
+    if ($payment->payment_type === 'non-tunai') {
+        // dummy snap token
+        $snapToken = 'DUMMY-SNAP-TOKEN';
+
+        // integrasi midtrans kalau sudah siap
+        $params = [
+            'transaction_details' => [
+                'order_id'     => $payment->code,
+                'gross_amount' => $payment->amount,
+            ],
+            'customer_details' => [
+                'first_name' => $payment->user->name,
+                'email'      => $payment->user->email,
+                'phone'      => $payment->user->phone,
+            ],
+        ];
+        $snapToken = \Midtrans\Snap::getSnapToken($params);
+    }
+
+    return view('payment.confirmpayment', [
+        'payment'   => $payment,
+        'snapToken' => $snapToken,
+    ]);
+}
+
+
+
 
 
     /**
@@ -548,6 +620,7 @@ class PaymentStudentController extends Controller
     }
 
 
+
     public function thankyouPage()
     {
         \Illuminate\Support\Facades\Auth::logout();
@@ -556,47 +629,81 @@ class PaymentStudentController extends Controller
     }
 
     public function finalizePayment(Request $request, $paymentId)
-    {
-        $payment = Payment::findOrFail($paymentId);
+{
+    $payment = Payment::findOrFail($paymentId);
 
-        // cek kalau cicilan
-        if ($payment->payment_category === 'cicilan') {
-            $total = $payment->amount; // misal 450000
-            $installments = 3;
-            $installmentAmount = $total / $installments;
+    // cek kalau cicilan
+    if ($payment->payment_category === 'cicilan') {
+        $total = $payment->amount; // misal 450000
+        $installments = 3; // jumlah cicilan
+        $perInstallment = ceil($total / $installments);
 
-            // update payment utama
-            $payment->update([
-                'remaining_balance' => $total - $installmentAmount,
-                'status'            => 'pending',
-                'payment_category'  => 'cicilan',
-            ]);
-        } else {
-            // kalau lunas langsung
-            $payment->update([
-                'remaining_balance' => 0,
-                'status'            => 'paid',
-                'paid_at'           => now(),
+        // 🔹 Buat parent installment
+        $installment = Installment::create([
+            'user_id'   => $payment->user_id,
+            'payment_id'=> $payment->id,
+            'nominal'   => $total,
+            'status'    => 'pending',
+        ]);
+
+        // 🔹 Generate child payments
+        for ($i = 1; $i <= $installments; $i++) {
+            Payment::create([
+                'installment_id'  => $installment->id,
+                'user_id'         => $payment->user_id,
+                'class_id'        => $payment->class_id,
+                'payment_for'     => 'register',
+                'payment_category'=> 'cicilan',
+                'payment_type'    => $payment->payment_type,
+                'amount'          => $perInstallment,
+                'status'          => 'pending',
+                'code'            => 'CICILAN-' . $installment->id . '-' . $i . '-' . time(),
+                'month'           => null,
+                'year'            => null,
             ]);
         }
 
-        return redirect()->route('student.thankyou')
-            ->with('success', 'Pembayaran berhasil diproses.');
+        // update parent payment (boleh pending saja)
+        $payment->update([
+            'status'            => 'pending',
+            'remaining_balance' => $total,
+        ]);
+
+    } else {
+        // kalau lunas langsung
+        $payment->update([
+            'remaining_balance' => 0,
+            'status'            => 'paid',
+            'paid_at'           => now(),
+        ]);
     }
+
+    return redirect()->route('student.thankyoupage')
+        ->with('success', 'Pembayaran berhasil diproses.');
+}
+
 
 
     // history payment
     public function paymentHistory()
     {
-        $userId = Auth::id();
+        $user = Auth::user();
 
-        $payments = Payment::where('user_id', $userId)
-            ->where('payment_for', 'register')
+        // Ambil cicilan (parent + child)
+        $installments = Installment::with('payments')
+            ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('student.payment.history', compact('payments'));
+        // Ambil pembayaran langsung (spp, register lunas, dll)
+        $directPayments = Payment::where('user_id', $user->id)
+            ->whereNull('installment_id') // berarti bukan cicilan
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('student.payment.history', compact('installments', 'directPayments'));
     }
+
 
     /**
      * Complete payment process
@@ -695,7 +802,6 @@ class PaymentStudentController extends Controller
                 'email'      => $payment->user->email,
                 'phone'      => $payment->user->phone ?? '08123456789',
             ],
-            'enabled_payments' => ['other_qris'], // ✅ hanya QRIS
         ];
 
         $snapToken = Snap::getSnapToken($params);
@@ -749,4 +855,97 @@ class PaymentStudentController extends Controller
 
         return response()->json(['message' => 'Callback processed successfully']);
     }
+
+
+    public function getSnapToken(Payment $payment)
+    {
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = false; // ubah ke true kalau sudah live
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+
+        // Ambil user yang login
+        $user = Auth::user();
+
+        $params = [
+            'transaction_details' => [
+                'order_id'      => $payment->code,         // kode unik payment
+                'gross_amount'  => $payment->amount,       // nominal
+            ],
+            'customer_details' => [
+                'first_name'    => $user?->name ?? 'User',
+                'email'         => $user?->email ?? 'user@example.com',
+                'phone'         => $user?->phone ?? '08123456789', // fallback default
+            ],
+        ];
+
+        try {
+            $snapToken = Snap::getSnapToken($params);
+
+            return response()->json([
+                'status'    => 'success',
+                'snapToken' => $snapToken,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+// public function confirm($id)
+// {
+//     $payment = Payment::with('user')->findOrFail($id);
+
+//     // kalau non-tunai generate Snap Token
+//     $snapToken = null;
+//     if ($payment->payment_type === 'non-tunai') {
+//         \Midtrans\Config::$serverKey = config('midtrans.server_key');
+//         \Midtrans\Config::$isProduction = false;
+//         \Midtrans\Config::$isSanitized = true;
+//         \Midtrans\Config::$is3ds = true;
+
+//         $params = [
+//             'transaction_details' => [
+//                 'order_id'     => $payment->code,
+//                 'gross_amount' => $payment->amount,
+//             ],
+//             'customer_details' => [
+//                 'first_name' => $payment->user->name,
+//                 'email'      => $payment->user->email,
+//                 'phone'      => $payment->user->phone ?? '08123456789',
+//             ],
+//         ];
+
+//         $snapToken = \Midtrans\Snap::getSnapToken($params);
+//     }
+
+//     return view('payment.confirm', compact('payment', 'snapToken'));
+// }
+
+
+    // Proses simpan jika tunai
+    // public function processPayment(Request $request)
+    // {
+    //     // Simpan payment ke database
+    //     $payment = Payment::create([
+    //         'user_id'          => $request->user_id,
+    //         'class_id'         => $request->class_id,
+    //         'payment_for'      => $request->payment_for,
+    //         'payment_category' => $request->payment_category,
+    //         'amount'           => $request->total_amount,
+    //         'status'           => 'pending', // default
+    //     ]);
+
+    //     return redirect()->away(
+    //         "https://wa.me/6285864921179?text=Halo admin, saya ingin bayar tunai untuk Payment ID {$payment->id}"
+    //     );
+    // }
+
+    // // Thankyou page setelah non-tunai
+    // public function thankyouPage()
+    // {
+    //     return view('payment.thankyoupage');
+    // }
 }

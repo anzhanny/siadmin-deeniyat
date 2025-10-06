@@ -21,68 +21,60 @@
                             </tr>
                         </thead>
                         <tbody>
-    @php $rowNumber = 1; @endphp
-    @forelse ($payments as $payment)
-        @if($payment->payment_category === 'cicilan')
-            {{-- tampilkan installment per cicilan --}}
-            @foreach($payment->installments as $installment)
-                <tr>
-                    <td class="align-middle text-center text-sm">{{ $rowNumber++ }}</td>
-                    <td class="align-middle text-center text-sm">{{ $payment->code }}</td>
-                    <td class="align-middle text-center text-sm">
-                        {{ $payment->payment_for }}<br>
-                        <small class="text-muted">Cicilan ke-{{ $installment->installments_to }}</small>
-                    </td>
-                    <td class="align-middle text-center text-sm">
-                        <span class="text-primary">Cicilan</span>
-                    </td>
-                    <td class="align-middle text-center text-sm">
-                        Rp {{ number_format($installment->nominal, 0, ',', '.') }}
-                    </td>
-                    <td class="align-middle text-center text-sm">
-                        @if($installment->status === 'paid')
-                            <span class="badge bg-success text-white">Paid</span>
-                        @elseif($installment->status === 'overdue')
-                            <span class="badge bg-danger text-white">Overdue</span>
-                        @else
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        @endif
-                    </td>
-                    <td class="align-middle text-center text-sm">
-                        {{ $installment->paid_at ? $installment->paid_at->format('d-m-Y') : '-' }}
-                    </td>
-                </tr>
-            @endforeach
-        @else
-            {{-- tampilkan pembayaran normal (register lunas/tunai, atau spp lunas) --}}
-            <tr>
-                <td class="align-middle text-center text-sm">{{ $rowNumber++ }}</td>
-                <td class="align-middle text-center text-sm">{{ $payment->code }}</td>
-                <td class="align-middle text-center text-sm">{{ $payment->payment_for }}</td>
-                <td class="align-middle text-center text-sm">
-                    {{ ucfirst($payment->payment_category) }}
-                </td>
-                <td class="align-middle text-center text-sm">
-                    Rp {{ number_format($payment->amount, 0, ',', '.') }}
-                </td>
-                <td class="align-middle text-center text-sm">
-                    @if($payment->status === 'paid')
-                        <span class="badge bg-success text-white">Paid</span>
-                    @else
-                        <span class="badge bg-danger text-white">Pending</span>
-                    @endif
-                </td>
-                <td class="align-middle text-center text-sm">
-                    {{ $payment->paid_at ? $payment->paid_at->format('d-m-Y') : '-' }}
-                </td>
-            </tr>
-        @endif
-    @empty
-        <tr>
-            <td colspan="7" class="text-center">Belum ada riwayat pembayaran</td>
-        </tr>
-    @endforelse
-</tbody>
+                            @php $rowNumber = 1; @endphp
+
+                            {{-- tampilkan cicilan --}}
+                            @foreach ($installments as $installment)
+                            @foreach ($installment->payments as $payment)
+                            <tr>
+                                <td>{{ $rowNumber++ }}</td>
+                                <td>{{ $payment->code }}</td>
+                                <td>{{ $payment->payment_for }}<br>
+                                    <small class="text-muted">Cicilan ke-{{ $installment->installments_to }}</small>
+                                </td>
+                                <td><span class="text-primary">Cicilan</span></td>
+                                <td>Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
+                                <td>
+                                    @if($payment->status === 'paid')
+                                    <span class="badge bg-success">Sukses</span>
+                                    @else
+                                    <span class="badge bg-warning text-dark">Menunggu</span>
+                                    @endif
+                                </td>
+                                <td>{{ $payment->paid_at ? $payment->paid_at->format('d-m-Y') : '-' }}</td>
+                            </tr>
+                            @endforeach
+                            @endforeach
+
+                            {{-- tampilkan pembayaran langsung --}}
+                            @foreach ($directPayments as $payment)
+                            <tr>
+                                <td>{{ $rowNumber++ }}</td>
+                                <td>{{ $payment->code }}</td>
+                                <td>{{ $payment->payment_for }}</td>
+                                <td>{{ ucfirst($payment->payment_category) }}</td>
+                                <td>Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
+                                <td>
+                                    @if($payment->status === 'paid')
+                                    <span class="badge bg-success">Sukses</span>
+                                    @elseif($payment->status === 'failed')
+                                    <span class="badge bg-danger">Gagal</span>
+                                    @else
+                                    <span class="badge bg-warning">Menunggu</span>
+                                    @endif
+                                </td>
+                                <td>{{ $payment->paid_at ? $payment->paid_at->format('d-m-Y') : '-' }}</td>
+                            </tr>
+                            @endforeach
+
+                            @if($installments->isEmpty() && $directPayments->isEmpty())
+                            <tr>
+                                <td colspan="7" class="text-center">Belum ada riwayat pembayaran</td>
+                            </tr>
+                            @endif
+
+
+                        </tbody>
 
                     </table>
                 </div>

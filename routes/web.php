@@ -9,6 +9,8 @@ use App\Http\Controllers\admin\InstallmentController;
 use App\Http\Controllers\admin\PayRegisterController;
 use App\Http\Controllers\admin\ReportController;
 use App\Http\Controllers\admin\SppController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MidtransCallbackController;
 use App\Http\Controllers\SesiController;
 use App\Http\Controllers\student\DashboardController as StudentDashboardController;
@@ -23,6 +25,7 @@ use App\Models\Role;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use SebastianBergmann\CodeCoverage\Report\Xml\Report;
 use Symfony\Component\HttpKernel\Profiler\Profile;
 
 /*
@@ -41,9 +44,12 @@ use Symfony\Component\HttpKernel\Profiler\Profile;
 // });
 
 // auth login
+Route::get('/', [LandingController::class, 'index'])->name('index');
+
+// auth login
 Route::middleware(['guest'])->group(function () {
-    Route::get('/', [SesiController::class, 'index'])->name('login');
-    Route::post('/', [SesiController::class, 'login']);
+    Route::get('/login', [SesiController::class, 'index'])->name('login');
+    Route::post('/login', [SesiController::class, 'login']);
 });
 
 Route::get('/home', function () {
@@ -58,9 +64,6 @@ Route::get('/home', function () {
     }
 });
 
-Route::get('/landing', function () {
-    return view('index'); // resources/views/home.blade.php
-})->name('landing');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/logout', [SesiController::class, 'logout']);
@@ -93,6 +96,8 @@ Route::get('/admin/student-data/{id}/edit', [AdminStudentController::class, 'edi
 Route::get('/admin/student-data/{id}/show', [AdminStudentController::class, 'show'])->name('admin.student.show');
 Route::put('/admin/student-data/{id}', [AdminStudentController::class, 'update'])->name('admin.student.update');
 Route::delete('/admin/student-data/{id}', [AdminStudentController::class, 'destroy'])->name('admin.student.destroy');
+Route::put('/student/{id}/fix-payments', [AdminStudentController::class, 'fixPayments'])
+    ->name('admin.student.fixPayments');
 
 Route::get('/admin/class-data', [ClassController::class, 'index'])->name('admin.class.index');
 Route::get('/admin/class-data/create', [ClassController::class, 'create'])->name('admin.class.create');
@@ -107,18 +112,67 @@ Route::post('/admin/payment-data', [PaymentController::class, 'store'])->name('a
 Route::get('/admin/payment-data/{id}/edit', [PaymentController::class, 'edit'])->name('admin.payment.edit');
 Route::get('/admin/payment-data/{id}/show', [PaymentController::class, 'show'])->name('admin.payment.show');
 Route::put('/admin/payment-data/{id}/updateStatus', [PaymentController::class, 'updateStatus'])->name('admin.payment.updateStatus');
-Route::put('/admin/installment/{id}/updateStatus', [InstallmentController::class, 'updateStatus'])->name('admin.installment.updateStatus');
-Route::put('/admin/payment-data/{id}', [PaymentController::class, 'update'])->name('admin.payment.update');
-Route::delete('/admin/payment-data/{id}', [PaymentController::class, 'destroy'])->name('admin.payment.destroy');
 
+Route::get('/payment/detail', [PaymentStudentController::class, 'detailPayment'])->name('payment.detailpayment');
+Route::post('/payment/confirm', [PaymentStudentController::class, 'confirmPayment'])->name('payment.confirmpayment');
+Route::get('/payment/confirm', [PaymentStudentController::class, 'showConfirm'])->name('payment.showConfirm');
+
+Route::post('/payment/process', [PaymentStudentController::class, 'processPayment'])->name('payment.process');
+Route::get('/payment/thankyou', [PaymentStudentController::class, 'thankyouPage'])->name('payment.thankyoupage');
+
+Route::post('payment/finalize', [PaymentStudentController::class, 'finalizePayment'])->name('payment.finalize');
+
+
+Route::put('/admin/installment/{id}/updateStatus', [InstallmentController::class, 'updateStatus'])->name('admin.installment.updateStatus');
+Route::post('/admin/installment/{id}/payments', [InstallmentController::class, 'addPayment'])->name('admin.installment.addPayment');
+Route::put('/admin/installment/{installmentId}/payments/{paymentId}', [InstallmentController::class, 'editPayment'])->name('admin.installment.editPayment');
+Route::delete('/admin/installment/{installmentId}/payments/{paymentId}', [InstallmentController::class, 'deletePayment'])->name('admin.installment.deletePayment');
+
+// Route::put('/admin/payment-data/{id}', [PaymentController::class, 'update'])->name('admin.payment.update');
+// Route::delete('/admin/payment-data/{id}', [PaymentController::class, 'destroy'])->name('admin.payment.destroy');
+// Route::prefix('admin')->name('admin.')->group(function () {
+//     Route::get('payment', [PaymentController::class, 'index'])->name('payment.index');
+//     Route::put('payment/{id}/status', [PaymentController::class, 'updateStatus'])->name('payment.updateStatus');
+
+//     // Cicilan
+//     Route::put('installment/{id}/status', [PaymentController::class, 'updateInstallmentStatus'])->name('installment.updateStatus');
+// });
+
+// Untuk pembayaran (payment lunas atau cicilan tunggal)
+Route::put('/admin/payment/{id}/status', [PaymentController::class, 'updateStatus'])
+    ->name('admin.payment.updateStatus');
+
+// Untuk update cicilan child payment
+Route::put('/admin/payment/{id}/update-status', [PaymentController::class, 'updatePaymentStatus'])
+    ->name('admin.payment.updateChildStatus');
+
+// Untuk update installment parent
+Route::put('/admin/installment/{id}/status', [InstallmentController::class, 'updateStatus'])
+    ->name('admin.installment.updateStatus');
+ 
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::get('payments', [PaymentController::class, 'index'])->name('payment.index');
+    // Route::put('payments/{id}/status', [PaymentController::class, 'updateStatus'])->name('payment.updateStatus');
+
+    // Route::put('installments/{id}/status',   [InstallmentController::class, 'updateStatus'])->name('admin.installment.updateStatus');
+});
+Route::post('payment/{id}/update-status', [PaymentController::class, 'updateStatus'])
+    ->name('admin.payment.updateStatus');
+
+Route::post('payment/{id}/update-status-installment', [PaymentController::class, 'updateInstallmentStatus'])
+    ->name('admin.payment.updateInstallmentStatus');
+// Route::put('/admin/payment/{id}/update-status', [PaymentController::class, 'updatePaymentStatus'])->name('admin.payment.updateStatus');
+Route::put('/admin/payments/{id}/due-date', [PaymentController::class, 'updatePaymentDueDate'])->name('admin.payment.updatePaymentDueDate');
+
+
+Route::get('/admin/payment/export', [PaymentController::class, 'export'])->name('admin.payment.export');
 // ADMIN - Payment Management
 
 Route::post('admin/payment-data/send/{month}/{year}', [PaymentController::class, 'sendSppInvoices'])->name('admin.payments.send');
 Route::get('admin/payment-data/generateSPP/form', [PaymentController::class, 'showGenerateSppForm'])->name('admin.payments.generateSPP.form');
 Route::match(['get', 'post'], '/admin/payment-data/generateSPP', [PaymentController::class, 'generateSPP'])->name('admin.payment.generateSPP');
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('payment', PaymentController::class);
-
+    
     // khusus filter pembayaran
     Route::get('payment/spp', [PaymentController::class, 'spp'])->name('payment.spp.index');
 });
@@ -140,7 +194,10 @@ Route::post('admin/installment-data', [InstallmentController::class, 'store'])->
 Route::get('admin/installment-data/{id}/edit', [InstallmentController::class, 'edit'])->name('admin.installment.edit');
 Route::get('admin/installment-data/{id}/show', [InstallmentController::class, 'show'])->name('admin.installment.show');
 Route::put('admin/installment-data/{id}', [InstallmentController::class, 'update'])->name('admin.installment.update');
-Route::put('admin/installment-data/{installment}/updateStatus', [InstallmentController::class, 'updateDueDate'])->name('admin.installment.updateDueDate');
+// Route::put('admin/installment-data/{installment}/updateStatus', [InstallmentController::class, 'updateDueDate'])->name('admin.installment.updateDueDate');
+// Route::put('/admin/installments/{id}/status', [InstallmentController::class, 'updateStatus'])->name('admin.installment.updateStatus');
+// Route::put('/admin/installments/{id}/due-date', [InstallmentController::class, 'updateDueDate'])->name('admin.installment.updateDueDate');
+
 Route::delete('admin/installment-data/{id}', [InstallmentController::class, 'destroy'])->name('admin.installment.destroy');
 
 // Laporan
@@ -161,12 +218,17 @@ Route::get('/payment/snap/{id}', [PaymentStudentController::class, 'payWithSnap'
 Route::get('/payment/qris/{id}', [PaymentStudentController::class, 'payQris'])->name('payment.qris');
 
 Route::post('/payment/callback', [PaymentStudentController::class, 'handleCallback'])->name('payment.callback');
+Route::post('/midtrans/webhook', [PaymentStudentController::class, 'handleCallback'])->name('midtrans.webhook');
 
 Route::post('/student/payment/{id}/simulate', [PaymentStudentController::class, 'simulate'])
     ->name('student.payment.simulate');
 
-Route::get('/student/installment/pay/{id}', [PaymentStudentController::class, 'payInstallment'])->name('student.installment.pay');
-Route::get('/student/installment/wa-redirect/{id}',[PaymentStudentController::class, 'waRedirectInstallment'])->name('payment.waredirect_installment');
+// routes/web.php
+Route::post('/student/installment/pay/{id}', [StudentInstallmentController::class, 'payInstallment'])
+    ->name('student.installment.pay');
+
+
+Route::get('/student/installment/wa-redirect/{id}', [PaymentStudentController::class, 'waRedirectInstallment'])->name('payment.waredirect_installment');
 
 
 // wa
@@ -194,8 +256,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/student/payment/register/pay/{id}', [PaymentStudentController::class, 'payRegister'])->name('student.payment.register.pay');
 
     Route::get('/student/payment/installment', [PaymentStudentController::class, 'installmentPayment'])->name('student.payment.installment');
-    Route::post('/student/payment/installment/pay/{id}', [PaymentStudentController::class, 'payInstallment'])->name('student.payment.installment.pay');
-
 
     // Riwayat Pembayaran
     Route::get('/student/payment/history', [PaymentStudentController::class, 'paymentHistory'])->name('student.payment.history');
@@ -210,28 +270,20 @@ Route::put('/student/profile/{id}', [StudentProfileController::class, 'update'])
 
 Route::get('/migrate-student', [MigrateStudentController::class, 'migrate']);
 
+// routes/web.php
+
+Route::get('/payment/detail', [PaymentStudentController::class, 'detailPayment'])->name('payment.detailpayment');
+Route::post('/payment/confirm', [PaymentStudentController::class, 'confirmPayment'])->name('payment.confirmpayment');
+Route::post('/payment/process', [PaymentStudentController::class, 'processPayment'])->name('payment.process');
+Route::get('/payment/thankyou', [PaymentStudentController::class, 'thankyouPage'])->name('payment.thankyoupage');
+Route::get('/payment/wa/{id}', [PaymentStudentController::class, 'waRedirect'])->name('payment.waredirect');
+Route::post('payment/finalize/{payment}', [PaymentStudentController::class, 'finalizePayment'])->name('payment.finalize');
+
 // Payment routes
 Route::prefix('payment')->name('payment.')->group(function () {
     // Route::post('/process', [PaymentStudentController::class, 'processPayment'])->name('process');
     Route::post('/complete/{payment_id}', [PaymentStudentController::class, 'completePayment'])->name('complete');
 });
-
-Route::get('/payment/detail', [PaymentStudentController::class, 'detailPayment'])->name('payment.detailpayment');
-Route::post('/payment/confirm', [PaymentStudentController::class, 'confirmPayment'])->name('payment.confirmpayment');
-Route::get('/payment/confirm', [PaymentStudentController::class, 'showConfirm'])->name('payment.showConfirm');
-
-Route::post('/payment/process/{id}', [PaymentStudentController::class, 'processPayment'])->name('payment.process');
-Route::get('/payment/thankyou', [PaymentStudentController::class, 'thankyouPage'])->name('payment.thankyoupage');
-
-Route::post('payment/finalize', [PaymentStudentController::class, 'finalizePayment'])->name('payment.finalize');
-
-// Rute untuk halaman Thank You setelah pembayaran
-// Route::get('/payment/thankyoupage', function () {
-//     return view('payment.thankyoupage'); // pastikan file ada di resources/views/thankyou.blade.php
-// })->name('payment.thankyoupage');
-
-// STUDENT - Payment
-Route::prefix('student')->name('student.')->group(function () {});
 
 
 // TESTING EMAIL TINKER
@@ -249,14 +301,12 @@ Route::prefix('payment')->controller(PaymentStudentController::class)->group(fun
     Route::get('/', 'index')->name('student.payment.index');
     Route::get('/register', 'registerPayment')->name('student.payment.register');
     Route::post('/register/confirm', 'confirmPayment')->name('student.payment.confirm');
-    Route::get('/wa/{id}', 'waRedirect')->name('payment.waredirect');
     Route::post('/midtrans/callback', 'midtransCallback')->name('payment.callback');
 });
 
 // Installments
 Route::prefix('installment')->controller(PaymentStudentController::class)->group(function () {
     Route::get('/', 'installmentPayment')->name('student.installment.index');
-    Route::post('/pay/{id}', 'payInstallment')->name('student.installment.pay');
     Route::get('/wa/{id}', 'waRedirectInstallment')->name('installment.waredirect');
     Route::post('/midtrans/callback', 'midtransCallback')->name('installment.callback');
 });
@@ -265,3 +315,6 @@ Route::prefix('installment')->controller(PaymentStudentController::class)->group
 Route::get('/student/spp', [PaymentStudentController::class, 'sppPayment'])->name('student.payment.spp');
 Route::post('/student/spp/pay/{month}', [PaymentStudentController::class, 'paySpp'])->name('student.spp.pay');
 Route::post('/student/spp/midtrans/callback', [PaymentStudentController::class, 'midtransCallback'])->name('spp.callback');
+
+Route::post('/payment/get-snap-token', [PaymentController::class, 'getSnapToken'])
+    ->name('payment.getSnapToken');

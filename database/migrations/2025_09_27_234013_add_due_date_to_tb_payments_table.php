@@ -9,16 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+     public function up(): void
     {
-        Schema::table('tb_installment', function (Blueprint $table) {
-            $table->date('due_date')->nullable()->after('remaining_balance');
+        Schema::table('tb_payments', function (Blueprint $table) {
+            $table->date('due_date')->nullable()->after('amount'); // jatuh tempo per cicilan
         });
     }
 
-    public function down()
+    public function down(): void
     {
-        Schema::table('tb_installment', function (Blueprint $table) {
+        Schema::table('tb_payments', function (Blueprint $table) {
             $table->dropColumn('due_date');
         });
     }
