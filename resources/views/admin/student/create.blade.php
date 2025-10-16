@@ -1,5 +1,39 @@
 @extends('layouts.layout')
 @section('content')
+<style>
+  .password-toggle {
+    position: absolute;
+    right: 1.5rem;
+    top: 70%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #9a9fa3;
+  }
+
+  @media (max-width: 576px) {
+    .password-toggle {
+      right: 1rem;
+      top: 70%;
+      font-size: 1rem;
+    }
+  }
+
+          .form-check-input:checked {
+            background-color: #5e72e4;
+            border-color: #5e72e4;
+          }
+
+          .form-check-label {
+            font-weight: 500;
+            color: #344767;
+          }
+
+          .form-check-inline {
+            margin-right: 15px;
+          }
+
+</style>
+
 <div class="row">
   <div class="col-12">
     @if ($errors->any())
@@ -38,10 +72,16 @@
         </div>
 
         <!-- Password -->
-        <div class="col-md-6 mb-3">
-          <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-          <input type="password" class="form-control" id="password" name="password" required>
+        <div class="col-md-6 mb-3 position-relative">
+          <label for="password" class="form-label">
+            Password <span class="text-danger">*</span>
+          </label>
+          <input type="password" class="form-control pe-5" id="password" name="password" required>
+          <span class="password-toggle" onclick="togglePassword('password', 'toggleIcon1')">
+            <i id="toggleIcon1" class="fas fa-eye"></i>
+          </span>
         </div>
+
 
         <!-- No Telp -->
         <div class="col-md-6 mb-3">
@@ -140,23 +180,39 @@
         {{-- === Data Pembayaran === --}}
         <h5 class="mt-4 mb-3">Pilih Pembayaran</h5>
 
-        <div class="col-md-6 mb-3">
-          <label for="payment_type" class="form-label">Tipe Pembayaran</label>
-          <select name="payment_type" id="payment_type" class="form-select" required>
-            <option value="">Pilih Tipe</option>
-            <option value="tunai" {{ old('payment_type') == 'tunai' ? 'selected' : '' }}>Tunai</option>
-            <option value="non-tunai" {{ old('payment_type') == 'non-tunai' ? 'selected' : '' }}>Non-Tunai</option>
-          </select>
+        <div class="row">
+          {{-- === Tipe Pembayaran === --}}
+          <div class="col-md-6 mb-3" >
+            <label class="form-label d-block mb-2">Tipe Pembayaran</label>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="payment_type" id="type_tunai" value="tunai"
+                {{ old('payment_type') == 'tunai' ? 'checked' : '' }} required>
+              <label class="form-check-label" for="type_tunai">Tunai</label>
+            </div>
+            <div class="form-check form-check-inline" hidden>
+              <input class="form-check-input" type="radio" name="payment_type" id="type_non_tunai" value="non-tunai"
+                {{ old('payment_type') == 'non-tunai' ? 'checked' : '' }} required>
+              <label class="form-check-label" for="type_non_tunai">Non-Tunai</label>
+            </div>
+          </div>
+
+          {{-- === Kategori Pembayaran === --}}
+          <div class="col-md-6 mb-3">
+            <label class="form-label d-block mb-2">Kategori Pembayaran</label>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="payment_category" id="category_lunas" value="lunas"
+                {{ old('payment_category') == 'lunas' ? 'checked' : '' }} required>
+              <label class="form-check-label" for="category_lunas">Lunas</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="payment_category" id="category_cicilan" value="cicilan"
+                {{ old('payment_category') == 'cicilan' ? 'checked' : '' }} required>
+              <label class="form-check-label" for="category_cicilan">Cicilan</label>
+            </div>
+          </div>
         </div>
 
-        <div class="col-md-6 mb-3">
-          <label for="payment_category" class="form-label">Kategori Pembayaran</label>
-          <select name="payment_category" id="payment_category" class="form-select" required>
-            <option value="">Pilih Kategori</option>
-            <option value="lunas" {{ old('payment_category') == 'lunas' ? 'selected' : '' }}>Lunas</option>
-            <option value="cicilan" {{ old('payment_category') == 'cicilan' ? 'selected' : '' }}>Cicilan</option>
-          </select>
-        </div>
+        
 
         <div class="col-md-6 mb-3">
           <label for="amount" class="form-label">Nominal Pembayaran</label>
@@ -190,4 +246,20 @@
     });
   })();
 </script>
+<script>
+  function togglePassword(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+</script>
+
 @endsection

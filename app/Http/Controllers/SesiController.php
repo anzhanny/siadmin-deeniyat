@@ -6,6 +6,8 @@ use App\Models\TbClass;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\StudentVerificationMail;
 
 class SesiController extends Controller
 {
@@ -41,7 +43,12 @@ class SesiController extends Controller
         $data->name = $name;
         $data->role_id = 2;
         $data->email = $email;
-        $data->password = bcrypt($password);
+
+        $plainPassword = $password; // password asli dari input user
+        $data->password = bcrypt($plainPassword);
+        $data->plain_password = $plainPassword; // untuk email
+
+        // $data->password = bcrypt($password);
         $data->birthplace = $birthplace;
         $data->birthdate = $birthdate;
         $data->gender = $gender;
@@ -62,6 +69,11 @@ class SesiController extends Controller
 
         $data->save();
 
+        // Kirim email verifikasi
+Mail::to($data->email)->send(new StudentVerificationMail($data));
+
+// Hapus plain_password setelah email terkirim
+$data->update(['plain_password' => null]);
         // Auto-assign kelas (cek kuota, bikin kelas baru jika penuh)
         $assignedClass = TbClass::assignStudentToClass($request->grade, $data->id);
 
@@ -155,7 +167,7 @@ class SesiController extends Controller
      */
     private function getClassName($classId)
     {
-        
+
         $classNames = [
             0 => 'Kelas TK',
             1 => 'Kelas 1',

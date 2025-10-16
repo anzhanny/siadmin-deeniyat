@@ -19,6 +19,9 @@ use Midtrans\CoreApi;
 use Midtrans\Snap;
 use Midtrans\Notification;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\StudentVerificationMail;
+
 
 
 class PaymentStudentController extends Controller
@@ -627,12 +630,22 @@ public function showConfirm()
 
 
 
-    public function thankyouPage()
-    {
-        \Illuminate\Support\Facades\Auth::logout();
+public function thankyouPage()
+{
+    // Ambil user yang sedang login
+    $user = Auth::user();
 
-        return view('payment.thankyoupage');
-    }
+    // Atau ambil dari payment terakhir
+    $latestPayment = Payment::where('user_id', $user->id ?? null)
+        ->latest('id')
+        ->first();
+
+        \Illuminate\Support\Facades\Auth::logout();
+    return view('payment.thankyoupage', compact('user', 'latestPayment'));
+}
+
+
+
 
     public function finalizePayment(Request $request, $paymentId)
 {
@@ -949,9 +962,4 @@ public function showConfirm()
     //     );
     // }
 
-    // // Thankyou page setelah non-tunai
-    // public function thankyouPage()
-    // {
-    //     return view('payment.thankyoupage');
-    // }
 }

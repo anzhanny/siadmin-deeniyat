@@ -31,11 +31,28 @@
           <div class="col-lg-8 text-center mx-auto text-white">
             <img src="{{ asset('assets/img/logos/deeniyat-logo.png') }}" alt="Deeniyat Logo" style="width: 80px;">
             <h1 class="mt-4 fw-bold text-white">Terima Kasih!</h1>
-            <p class="mt-4 text-lg text-white">Pembayaran Anda Berhasil.</p>
-            <div class="mt-5">
-              <a href="{{ route('login') }}" class="btn btn-lg btn-primary">
-                <i class="fas fa-home me-2"></i> Halaman Login
-              </a>
+            <p>Terima kasih sudah melakukan pembayaran. Silakan klik tombol di bawah untuk verifikasi data Anda.</p>
+
+            @if(session('success'))
+            <div class="alert alert-success mt-3">{{ session('success') }}</div>
+            @elseif(session('error'))
+            <div class="alert alert-danger mt-3">{{ session('error') }}</div>
+            @elseif(session('info'))
+            <div class="alert alert-info mt-3">{{ session('info') }}</div>
+            @endif
+
+            <form action="{{ route('send.verification.email') }}" method="POST">
+  @csrf
+  <input type="hidden" name="user_id" 
+         value="{{ $user->id ?? $latestPayment->user_id ?? '' }}">
+  <button type="submit" class="btn btn-dark mt-4">
+    <i class="fa fa-envelope"></i> Verifikasi Data & Kirim ke Email
+  </button>
+</form>
+
+
+            <div class="mt-4">
+              <a href="{{ route('login') }}" class="btn btn-info">Kembali ke Login</a>
             </div>
           </div>
         </div>

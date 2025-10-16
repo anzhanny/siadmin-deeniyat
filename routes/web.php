@@ -20,6 +20,7 @@ use App\Http\Controllers\student\PaymentStudentController;
 use App\Http\Controllers\student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\SppController as StudentSppController;
 use App\Http\Controllers\student\SppDataController as StudentSppDataController;
+use App\Http\Controllers\VerificationController;
 use App\Models\Installment;
 use App\Models\Role;
 use Illuminate\Support\Facades\Route;
@@ -119,7 +120,7 @@ Route::get('/payment/confirm', [PaymentStudentController::class, 'showConfirm'])
 
 Route::post('/payment/process', [PaymentStudentController::class, 'processPayment'])->name('payment.process');
 Route::get('/payment/thankyou', [PaymentStudentController::class, 'thankyouPage'])->name('payment.thankyoupage');
-
+Route::post('/send-verification', [VerificationController::class, 'sendVerificationEmail'])->name('send.verification.email');
 Route::post('payment/finalize', [PaymentStudentController::class, 'finalizePayment'])->name('payment.finalize');
 
 
@@ -318,3 +319,15 @@ Route::post('/student/spp/midtrans/callback', [PaymentStudentController::class, 
 
 Route::post('/payment/get-snap-token', [PaymentController::class, 'getSnapToken'])
     ->name('payment.getSnapToken');
+
+    Route::get('/test-email', function () {
+    try {
+        Mail::raw('Halo! Ini tes SMTP dari Laravel.', function ($message) {
+            $message->to('emailkamu@gmail.com')
+                    ->subject('Tes SMTP Laravel');
+        });
+        return '✅ Email berhasil dikirim!';
+    } catch (\Exception $e) {
+        return '❌ Gagal: ' . $e->getMessage();
+    }
+});
