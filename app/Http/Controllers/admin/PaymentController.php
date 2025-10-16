@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SppInvoiceMail;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,48 +37,71 @@ class PaymentController extends Controller
      * List semua pembayaran
      */
     public function index(Request $request)
-    {
-        $classes = TbClass::all();
-        $payments = Payment::with(['user.class', 'installment.user.class'])
+{
+    $classes = TbClass::all();
 
-            // 🔍 Search
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $search = $request->search;
-                $q->where(function ($sub) use ($search) {
-                    $sub->whereHas('user', function ($sq) use ($search) {
-                        $sq->where('name', 'like', "%{$search}%");
-                    })->orWhereHas('installment.user', function ($sq) use ($search) {
-                        $sq->where('name', 'like', "%{$search}%");
-                    })->orWhere('code', 'like', "%{$search}%");
-                });
-            })
+    $query = Payment::with(['user.class', 'installment.user.class'])
 
-            // 📌 Filter jenis pembayaran (spp / register)
-            ->when($request->filled('payment_for'), function ($q) use ($request) {
-                $q->where('payment_for', $request->payment_for);
-            })
+        // 🔍 Search
+        ->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+            $q->where(function ($sub) use ($search) {
+                $sub->whereHas('user', function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%");
+                })->orWhereHas('installment.user', function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%");
+                })->orWhere('code', 'like', "%{$search}%");
+            });
+        })
 
-            // 📌 Filter status (pending / paid / failed)
-            ->when($request->filled('status'), function ($q) use ($request) {
-                $q->where('status', $request->status);
-            })
+        // 📅 Filter tanggal dari payment atau installment
+        ->when($request->start_date || $request->end_date, function ($q) use ($request) {
+            $start = $request->start_date ? $request->start_date . ' 00:00:00' : '1900-01-01 00:00:00';
+            $end   = $request->end_date ? $request->end_date . ' 23:59:59' : now();
 
-            // 📌 Filter kategori (lunas / cicilan)
-            ->when($request->filled('payment_category'), function ($q) use ($request) {
-                $q->where('payment_category', $request->payment_category);
-            })
+            $q->where(function ($sub) use ($start, $end) {
+                $sub->whereBetween('tb_payments.created_at', [$start, $end])
+                    ->orWhere(function ($or) use ($start, $end) {
+                        $or->whereHas('installment', function ($iq) use ($start, $end) {
+                            $iq->whereBetween('created_at', [$start, $end]);
+                        });
+                    });
+            });
+        })
 
-            ->when($request->filled('class_id'), function ($q) use ($request) {
-                $q->whereHas('user.class', function ($sub) use ($request) {
-                    $sub->where('id', $request->class_id);
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(25)
-            ->appends($request->query());
+        // 📌 Filter jenis pembayaran (spp / register)
+        ->when($request->filled('payment_for'), function ($q) use ($request) {
+            $q->where('payment_for', $request->payment_for);
+        })
 
-        return view('admin.payment.index', compact('payments', 'classes'));
-    }
+        // 📌 Filter status (pending / paid / failed)
+        ->when($request->filled('status'), function ($q) use ($request) {
+            $q->where('status', $request->status);
+        })
+
+        // 📌 Filter kategori (lunas / cicilan)
+        ->when($request->filled('payment_category'), function ($q) use ($request) {
+            $q->where('payment_category', $request->payment_category);
+        })
+
+        // 📌 Filter berdasarkan kelas
+        ->when($request->filled('class_id'), function ($q) use ($request) {
+            $q->whereHas('user.class', function ($sub) use ($request) {
+                $sub->where('id', $request->class_id);
+            });
+        });
+
+    // 💰 Hitung total pendapatan (sesuai filter)
+    $totalIncome = (clone $query)->where('status', 'paid')->sum('amount');
+
+    // 🔽 Ambil data dengan pagination
+    $payments = $query->orderBy('created_at', 'desc')
+        ->paginate(25)
+        ->appends($request->query());
+
+    return view('admin.payment.index', compact('payments', 'classes', 'totalIncome'));
+}
+
 
 
     // public function update(Request $request, $id)
@@ -122,19 +146,19 @@ class PaymentController extends Controller
     /**
      * Update due date cicilan (child payment).
      */
-public function updatePaymentDueDate(Request $request, $id)
-{
-    $validated = $request->validate([
-        'due_date' => 'required|date'
-    ]);
+    public function updatePaymentDueDate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'due_date' => 'required|date'
+        ]);
 
-    $payment = Payment::findOrFail($id);
-    $payment->update([
-        'due_date' => $validated['due_date'],
-    ]);
+        $payment = Payment::findOrFail($id);
+        $payment->update([
+            'due_date' => $validated['due_date'],
+        ]);
 
-    return back()->with('success', 'Jatuh tempo cicilan berhasil diperbarui.');
-}
+        return back()->with('success', 'Jatuh tempo cicilan berhasil diperbarui.');
+    }
 
 
     public function updateStatus(Request $request, $id)
@@ -163,7 +187,7 @@ public function updatePaymentDueDate(Request $request, $id)
 
         return view('admin.payment.show', compact('payment'));
     }
-    
+
 
 
 
@@ -428,150 +452,156 @@ public function updatePaymentDueDate(Request $request, $id)
 
 
     public function export(Request $request)
-    {
-        $query = Payment::with(['user.class', 'installment.user.class'])
-            // 🔍 Search
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $search = $request->search;
-                $q->where(function ($sub) use ($search) {
-                    $sub->whereHas('user', function ($sq) use ($search) {
-                        $sq->where('name', 'like', "%{$search}%");
-                    })->orWhereHas('installment.user', function ($sq) use ($search) {
-                        $sq->where('name', 'like', "%{$search}%");
-                    })->orWhere('code', 'like', "%{$search}%");
-                });
-            })
+{
+    Carbon::setLocale('id'); // 🇮🇩 supaya bulan & tanggal tampil dalam bahasa Indonesia
 
-            // 📌 Filter jenis pembayaran (spp / register)
-            ->when($request->filled('payment_for'), function ($q) use ($request) {
-                $q->where('payment_for', $request->payment_for);
-            })
-
-            // 📌 Filter status
-            ->when($request->filled('status'), function ($q) use ($request) {
-                $q->where('status', $request->status);
-            })
-
-            // 📌 Filter kategori
-            ->when($request->filled('payment_category'), function ($q) use ($request) {
-                $q->where('payment_category', $request->payment_category);
-            })
-
-            ->when($request->filled('class_id'), function ($q) use ($request) {
-                $q->whereHas('user.class', function ($sub) use ($request) {
-                    $sub->where('id', $request->class_id);
-                });
+    $query = Payment::with(['user.class', 'installment.user.class'])
+        // 🔍 Pencarian nama / kode pembayaran
+        ->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+            $q->where(function ($sub) use ($search) {
+                $sub->whereHas('user', function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%");
+                })->orWhereHas('installment.user', function ($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%");
+                })->orWhere('code', 'like', "%{$search}%");
             });
+        })
 
+        // 📌 Jenis pembayaran (SPP / Register)
+        ->when($request->filled('payment_for'), function ($q) use ($request) {
+            $q->where('payment_for', $request->payment_for);
+        })
 
+        // 📌 Status pembayaran
+        ->when($request->filled('status'), function ($q) use ($request) {
+            $q->where('status', $request->status);
+        })
 
-        $payments = $query->orderBy('created_at', 'desc')->get();
+        // 📌 Kategori (lunas / cicilan)
+        ->when($request->filled('payment_category'), function ($q) use ($request) {
+            $q->where('payment_category', $request->payment_category);
+        })
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+        // 📌 Filter kelas
+        ->when($request->filled('class_id'), function ($q) use ($request) {
+            $q->whereHas('user.class', function ($sub) use ($request) {
+                $sub->where('id', $request->class_id);
+            });
+        })
 
-        // Judul
-        $sheet->mergeCells('A1:J1');
-        $sheet->setCellValue('A1', 'LAPORAN PEMBAYARAN');
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        // 📆 Filter rentang tanggal
+        ->when($request->filled('start_date') && $request->filled('end_date'), function ($q) use ($request) {
+            $start = $request->start_date . ' 00:00:00';
+            $end = $request->end_date . ' 23:59:59';
+            $q->whereBetween('created_at', [$start, $end]);
+        });
 
-        // Header tabel
-        $headers = [
-            'No',
-            'Kode Pembayaran',
-            'Nama Siswa',
-            'Kelas',
-            'Jenis',
-            'Kategori',
-            'Nominal Tagihan',   // dari installment
-            'Jumlah Dibayar',    // dari payments
-            'Status',
-            'Tanggal Bayar'
-        ];
-        $sheet->fromArray($headers, null, 'A3');
+    $payments = $query->orderBy('created_at', 'desc')->get();
 
-        $sheet->getStyle('A3:J3')->getFont()->setBold(true);
-        $sheet->getStyle('A3:J3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A3:J3')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+    // Hitung total bayar
+    $totalAmount = $payments->sum('amount');
 
-        // Data
-        $row = 4;
-        $no = 1;
-        $totalNominal = 0;
-        $totalAmount = 0;
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
 
-        foreach ($payments as $p) {
-            $nama = optional(optional($p->installment)->user)->name ?? optional($p->user)->name ?? '-';
-            $kelas = optional(optional(optional($p->installment)->user)->class)->class_name
-                ?? optional(optional($p->user)->class)->class_name ?? '-';
+    // 🧾 Judul utama
+    $sheet->mergeCells('A1:H1');
+    $sheet->setCellValue('A1', 'LAPORAN PEMBAYARAN DEENIYAT AL HIDAYAH');
+    $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+    $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-            $jenis = $p->payment_for === 'spp' ? 'SPP' : 'Register';
-            $kategori = $p->payment_category === 'lunas' ? 'Lunas' : 'Cicilan';
-
-            // Nominal tagihan dari installment
-            $nominal = $p->installment->nominal ?? 0;
-
-            // Jumlah yang dibayar dari payments
-            $amount = $p->amount ?? 0;
-
-            $status = match ($p->status) {
-                'paid' => 'Lunas',
-                'pending' => 'Menunggu',
-                'failed' => 'Batal',
-                default => ucfirst($p->status)
-            };
-
-            $tanggal = $p->paid_at ? $p->paid_at->format('d/m/Y') : '-';
-
-            $sheet->fromArray([
-                $no++,
-                $p->code,
-                $nama,
-                $kelas,
-                $jenis,
-                $kategori,
-                $nominal,
-                $amount,
-                $status,
-                $tanggal
-            ], null, 'A' . $row);
-
-            $sheet->getStyle("A{$row}:J{$row}")
-                ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-
-            // akumulasi total
-            $totalNominal += $nominal;
-            $totalAmount += $amount;
-
-            $row++;
-        }
-
-        // Tambah baris total
-        $sheet->setCellValue("F{$row}", "TOTAL");
-        $sheet->setCellValue("G{$row}", $totalNominal);
-        $sheet->setCellValue("H{$row}", $totalAmount);
-
-        $sheet->getStyle("F{$row}:H{$row}")->getFont()->setBold(true);
-        $sheet->getStyle("F{$row}:H{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-
-        // Format angka ke Rupiah
-        $sheet->getStyle('G4:G' . $row)
-            ->getNumberFormat()->setFormatCode('"Rp" #,##0');
-        $sheet->getStyle('H4:H' . $row)
-            ->getNumberFormat()->setFormatCode('"Rp" #,##0');
-
-        // Auto-size kolom
-        foreach (range('A', 'J') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        // Buat file download
-        $writer = new Xlsx($spreadsheet);
-        $filename = 'laporan_pembayaran.xlsx';
-
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
-        }, $filename);
+    // 🗓️ Periode (dalam bahasa Indonesia)
+    $periodeText = 'Semua Periode';
+    if ($request->filled('start_date') && $request->filled('end_date')) {
+        $start = Carbon::parse($request->start_date)->translatedFormat('d F Y');
+        $end = Carbon::parse($request->end_date)->translatedFormat('d F Y');
+        $periodeText = "Periode: {$start} s.d. {$end}";
     }
+
+    $sheet->mergeCells('A2:H2');
+    $sheet->setCellValue('A2', $periodeText);
+    $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle('A2')->getFont()->setItalic(true);
+
+    // Header tabel
+    $headers = [
+        'No',
+        'Kode Pembayaran',
+        'Nama Siswa',
+        'Kelas',
+        'Jenis Pembayaran',
+        'Kategori',
+        'Jumlah Dibayar',
+        'Tanggal Bayar'
+    ];
+    $sheet->fromArray($headers, null, 'A4');
+
+    $sheet->getStyle('A4:H4')->getFont()->setBold(true);
+    $sheet->getStyle('A4:H4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle('A4:H4')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+    // Isi data
+    $row = 5;
+    $no = 1;
+
+    foreach ($payments as $p) {
+        $nama = optional(optional($p->installment)->user)->name ?? optional($p->user)->name ?? '-';
+        $kelas = optional(optional(optional($p->installment)->user)->class)->class_name
+            ?? optional(optional($p->user)->class)->class_name ?? '-';
+        $jenis = $p->payment_for === 'spp' ? 'SPP' : 'Register';
+        $kategori = $p->payment_category === 'lunas' ? 'Lunas' : 'Cicilan';
+        $amount = $p->amount ?? 0;
+        $tanggal = $p->paid_at
+            ? Carbon::parse($p->paid_at)->translatedFormat('d F Y')
+            : '-';
+
+        $sheet->fromArray([
+            $no++,
+            $p->code,
+            $nama,
+            $kelas,
+            $jenis,
+            $kategori,
+            $amount,
+            $tanggal
+        ], null, 'A' . $row);
+
+        $sheet->getStyle("A{$row}:H{$row}")
+            ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        $row++;
+    }
+
+    // Baris total
+    $sheet->setCellValue("F{$row}", "TOTAL PEMBAYARAN");
+    $sheet->setCellValue("G{$row}", $totalAmount);
+
+    $sheet->getStyle("F{$row}:G{$row}")->getFont()->setBold(true);
+    $sheet->getStyle("F{$row}:G{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+    // Format ke Rupiah
+    $sheet->getStyle('G5:G' . $row)
+        ->getNumberFormat()->setFormatCode('"Rp" #,##0');
+
+    // Auto-size kolom
+    foreach (range('A', 'H') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    // Nama file dinamis
+    $filename = 'laporan_pembayaran_deeniyat_al_hidayah';
+    if ($request->filled('start_date') && $request->filled('end_date')) {
+        $filename .= '_' . date('d-m-Y', strtotime($request->start_date)) . '_sd_' . date('d-m-Y', strtotime($request->end_date));
+    }
+    $filename .= '.xlsx';
+
+    $writer = new Xlsx($spreadsheet);
+
+    return response()->streamDownload(function () use ($writer) {
+        $writer->save('php://output');
+    }, $filename);
+}
+
+
 }

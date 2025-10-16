@@ -31,17 +31,17 @@
 
             <tbody>
               @foreach($data as $class)
-              <tr @if($class->user->count() >= $class->amount) class="bg-danger text-white" @endif>
-                <td>{{ $loop->iteration }}</td>
-                <td>{{ $class->class_name }}</td>
-                <td>
+              <tr @if($class->user->count() >= $class->amount) class="bg-light text-white" @endif>
+               <td class="align-middle text-center text-sm">{{ $loop->iteration }}</td>
+               <td class="align-middle text-center text-sm">{{ $class->class_name }}</td>
+               <td class="align-middle text-center text-sm">
                   <a href="#" data-class-id="{{ $class->id }}" class="toggle-students">
                     {{ $class->user->count() }} / {{ $class->amount }}
                   </a>
                 </td>
-                <td>{{ $class->teacher_name ?? '-' }}</td>
-                <td>{{ $class->academic_year_first }}/{{ $class->academic_year_last }}</td>
-                <td>
+               <td class="align-middle text-center text-sm">{{ $class->teacher_name ?? '-' }}</td>
+               <td class="align-middle text-center text-sm">{{ $class->academic_year_first }}/{{ $class->academic_year_last }}</td>
+               <td class="align-middle text-center text-sm">
                    <button type="button" class="btn btn-primary btn-icon btn-sm p-1" style="width: 30px; height: 30px;" title="Edit Class">
                     <a href="{{ route('admin.class.edit', $class->id) }}" class="text-white font-weight-bold text-xs">
                       <i class="fa fa-edit pt-1" aria-hidden="true"></i>

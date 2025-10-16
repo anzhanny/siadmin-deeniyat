@@ -4,10 +4,10 @@
 <div class="row mb-2" style="padding-left: 30px;">
   <div class="col-6">
 
-    <h4 class="mb-1 text-white">Halo, {{ Auth::user()->name }}</h4>
-    <p class="text-sm text-white mb-0">
-      {{ Auth::user()->class->class_name ?? '-' }}
-    </p>
+    <h4 class="mb-1 text-white">Halo, {{ Auth::user()->name }} - {{ Auth::user()->class->class_name ?? '-' }}</h4>
+    <h5 class="text-sm text-white mb-2">
+      Nomor Induk Siswa : {{ Auth::user()->nis ?? '-' }} <br>
+</h5>
 
   </div>
 </div>

@@ -13,11 +13,12 @@
                             <tr>
                                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">#</th>
                                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kode</th>
-                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Pembayaran</th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Detail Pembayaran</th>
+                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tanggal Bayar</th>
                                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kategori</th>
                                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Jumlah</th>
                                 <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
-                                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Tanggal Bayar</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -27,21 +28,21 @@
                             @foreach ($installments as $installment)
                             @foreach ($installment->payments as $payment)
                             <tr>
-                                <td>{{ $rowNumber++ }}</td>
-                                <td>{{ $payment->code }}</td>
-                                <td>{{ $payment->payment_for }}<br>
-                                    <small class="text-muted">Cicilan ke-{{ $installment->installments_to }}</small>
+                                <td class="align-middle text-center text-sm">{{ $rowNumber++ }}</td>
+                                <td class="align-middle text-center text-sm"><span class="badge bg-dark text-white">{{ $payment->code }}</span></td>
+                                <td class="align-middle text-center text-sm">
+                                    <small class="text-muted">{{ $payment->description }}</small>
                                 </td>
-                                <td><span class="text-primary">Cicilan</span></td>
-                                <td>Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
-                                <td>
+                                <td class="align-middle text-center text-sm">{{ $payment->due_date ? $payment->due_date->format('d/m/Y') : '-' }}</td>
+                                <td class="align-middle text-center text-sm"><span class="text-primary">Cicilan</span></td>
+                                <td class="align-middle text-center text-sm">Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
+                                <td class="align-middle text-center text-sm">
                                     @if($payment->status === 'paid')
                                     <span class="badge bg-success">Sukses</span>
                                     @else
                                     <span class="badge bg-warning text-dark">Menunggu</span>
                                     @endif
                                 </td>
-                                <td>{{ $payment->paid_at ? $payment->paid_at->format('d-m-Y') : '-' }}</td>
                             </tr>
                             @endforeach
                             @endforeach
@@ -49,12 +50,13 @@
                             {{-- tampilkan pembayaran langsung --}}
                             @foreach ($directPayments as $payment)
                             <tr>
-                                <td>{{ $rowNumber++ }}</td>
-                                <td>{{ $payment->code }}</td>
-                                <td>{{ $payment->payment_for }}</td>
-                                <td>{{ ucfirst($payment->payment_category) }}</td>
-                                <td>Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
-                                <td>
+                                <td class="align-middle text-center text-sm">{{ $rowNumber++ }}</td>
+                                <td class="align-middle text-center text-sm">{{ $payment->code }}</td>
+                                <td class="align-middle text-center text-sm">{{ $payment->payment_for }}</td>
+                                <td class="align-middle text-center text-sm">{{ $payment->paid_at ? $payment->paid_at->format('d-m-Y') : '-' }}</td>
+                                <td class="align-middle text-center text-sm">{{ ucfirst($payment->payment_category) }}</td>
+                                <td class="align-middle text-center text-sm">Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
+                                <td class="align-middle text-center text-sm">
                                     @if($payment->status === 'paid')
                                     <span class="badge bg-success">Sukses</span>
                                     @elseif($payment->status === 'failed')
@@ -63,7 +65,6 @@
                                     <span class="badge bg-warning">Menunggu</span>
                                     @endif
                                 </td>
-                                <td>{{ $payment->paid_at ? $payment->paid_at->format('d-m-Y') : '-' }}</td>
                             </tr>
                             @endforeach
 

@@ -107,8 +107,8 @@ class PaymentService
                     'payment_for'      => 'register',
                     'payment_category' => 'cicilan',
                     'payment_type'     => $type,
-                    'method'           => $type === 'tunai' ? 'cash' : 'qris',
-                    'code'             => 'REG-INST-' . $i . '-' . strtoupper(uniqid()),
+                    'method'           => $type === 'tunai' ? 'cash' : 'e-payment', // Atau midtrans
+                    'code'             => strtoupper(uniqid("REG-INST{$i}-")),
                     'due_date'         => $dueDate,
                     'amount'           => $i === $installmentCount
                         ? ($totalAmount - ($perInstallment * ($installmentCount - 1)))
@@ -126,48 +126,47 @@ class PaymentService
         });
     }
 
-public function updatePaymentStatus(Payment $payment, string $status): void
-{
-    // Update status payment
-    $payment->status = $status;
+    public function updatePaymentStatus(Payment $payment, string $status): void
+    {
+        // Update status payment
+        $payment->status = $status;
 
-    if ($status === 'paid' && !$payment->paid_at) {
-        $payment->paid_at = now();
-    } elseif ($status !== 'paid') {
-        $payment->paid_at = null;
+        if ($status === 'paid' && !$payment->paid_at) {
+            $payment->paid_at = now();
+        } elseif ($status !== 'paid') {
+            $payment->paid_at = null;
+        }
+
+        $payment->save();
+
+        // Kalau ada parent installment → update juga
+        if ($payment->installment_id) {
+            $this->updateInstallmentStatus($payment->installment_id);
+        }
     }
 
-    $payment->save();
+    public function updateInstallmentStatus(int $installmentId): void
+    {
+        $installment = Installment::with('payments')->find($installmentId);
 
-    // Kalau ada parent installment → update juga
-    if ($payment->installment_id) {
-        $this->updateInstallmentStatus($payment->installment_id);
+        if (!$installment) return;
+
+        $totalPayments = $installment->payments->count();
+        $paidPayments  = $installment->payments->where('status', 'paid')->count();
+        $remaining     = $installment->payments->where('status', '!=', 'paid')->sum('amount');
+
+        if ($paidPayments === 0) {
+            $installment->status = 'pending';
+            $installment->paid_at = null;
+        } elseif ($paidPayments < $totalPayments) {
+            $installment->status = 'partial';
+            $installment->paid_at = null;
+        } else {
+            $installment->status  = 'paid';
+            $installment->paid_at = now();
+        }
+
+        $installment->remaining_balance = $remaining;
+        $installment->save();
     }
-}
-
-public function updateInstallmentStatus(int $installmentId): void
-{
-    $installment = Installment::with('payments')->find($installmentId);
-
-    if (!$installment) return;
-
-    $totalPayments = $installment->payments->count();
-    $paidPayments  = $installment->payments->where('status', 'paid')->count();
-    $remaining     = $installment->payments->where('status', '!=', 'paid')->sum('amount');
-
-    if ($paidPayments === 0) {
-        $installment->status = 'pending';
-        $installment->paid_at = null;
-    } elseif ($paidPayments < $totalPayments) {
-        $installment->status = 'partial';
-        $installment->paid_at = null;
-    } else {
-        $installment->status  = 'paid';
-        $installment->paid_at = now();
-    }
-
-    $installment->remaining_balance = $remaining;
-    $installment->save();
-}
-
 }

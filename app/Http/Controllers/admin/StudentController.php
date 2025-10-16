@@ -17,11 +17,24 @@ use Psy\VersionUpdater\Installer;
 
 class StudentController extends Controller
 {
-    public function index()
-    {
-        $data = User::with('class')->where('role_id', 2)->paginate(20);
-        return view('admin.student.index', compact('data'));
-    }
+public function index(Request $request)
+{
+    // Ambil input dari form pencarian
+    $search = $request->input('search');
+
+    // Ambil data user yang berperan sebagai siswa (role_id = 2)
+    $data = User::with('class')
+        ->where('role_id', 2)
+        ->when($search, function ($query, $search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        })
+        ->orderBy('name', 'desc')
+        ->paginate(20)
+        ->appends(['search' => $search]); // biar pagination tetap bawa keyword search
+
+    return view('admin.student.index', compact('data'));
+}
+
 
     public function create()
     {
@@ -87,7 +100,7 @@ class StudentController extends Controller
             'nominal'           => $total,
             'remaining_balance' => $total,
             'status'            => $request->payment_category === 'lunas' ? 'paid' : 'pending',
-            'due_date'          => now()->addMonth(), // contoh
+            'due_date'          => Carbon::now()->addMonth(2), // contoh
         ]);
 
         // --- Buat Payment sebagai child ---
@@ -103,6 +116,7 @@ class StudentController extends Controller
                 'status'           => 'paid',
                 'paid_at'          => now(),
                 'code'             => 'REG-' . strtoupper(Str::random(10)),
+
             ]);
 
             $installment->update(['remaining_balance' => 0]);
@@ -120,7 +134,10 @@ class StudentController extends Controller
                     'amount'           => $perInstall,
                     'status'           => 'pending',
                     'paid_at'          => null,
-                    'code'             => 'REG-' . strtoupper(Str::random(10)),
+                    'code'             => strtoupper(uniqid("REG-INST{$i}-")),
+                    'due_date'         => now()->addMonths($i - 1),
+                    'installment_to'   => $i,
+                    'description'      => "Pembayaran registrasi cicilan ke-$i",
                 ]);
             }
         }

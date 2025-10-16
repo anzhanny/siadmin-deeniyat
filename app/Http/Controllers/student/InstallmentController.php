@@ -36,7 +36,7 @@ public function payInstallment($id)
         return response()->json(['error' => 'Cicilan sudah lunas']);
     }
 
-    $orderId = "INSTALLMENT-{$cicilan->id}-" . time();
+    $orderId = $cicilan->code;
 
     // update code biar konsisten dengan order_id
     $cicilan->update([

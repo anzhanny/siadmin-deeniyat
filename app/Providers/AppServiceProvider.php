@@ -32,10 +32,10 @@ class AppServiceProvider extends ServiceProvider
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized = config('midtrans.is_sanitized');
         Config::$is3ds = config('midtrans.is_3ds');
-        Payment::observe(PaymentObserver::class);
+        // Payment::observe(PaymentObserver::class);
 
-        // if (app()->environment('local')) {
-        //     URL::forceScheme('https');
-        // }
+        if (app()->environment('local')) {
+            URL::forceScheme('https');
+        }
     }
 }

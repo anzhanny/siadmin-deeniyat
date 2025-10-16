@@ -14,9 +14,10 @@
         </div>
 
         <div class="col-md-6 mb-3">
-          <label for="nis" class="form-label">NIS</label>
+          <label for="nis" class="form-label">NIS</label>      
           <input type="text" value="{{ old('nis', $student->nis) }}"
-            class="form-control" id="nis" name="nis" readonly>
+           class="form-control" style="outline: none;" id="nis" name="nis" readonly disabled>
+            <span class="text-danger text-xs fst-italic">*Tidak bisa diedit karena terisi otomatis oleh sistem</span>
         </div>
 
         <div class="col-md-6 mb-3">
@@ -73,12 +74,16 @@
         <div class="col-md-6 mb-3">
           <label class="form-label d-block">Jenis Kelamin</label>
           <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" id="gender_male" name="gender" value="Laki-Laki" {{ old('gender', $student->gender) == 'Laki-Laki' ? 'checked' : '' }} required>
-            <label class="form-check-label" for="gender_male">Laki-Laki</label>
+<input class="form-check-input" type="radio" id="gender_male" name="gender"
+  value="Laki-Laki"
+  {{ old('gender', strtolower($student->gender)) == 'laki-laki' ? 'checked' : '' }} required>            
+  <label class="form-check-label" for="gender_male">Laki-Laki</label>
           </div>
           <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" id="gender_female" name="gender" value="Perempuan" {{ old('gender', $student->gender) == 'Perempuan' ? 'checked' : '' }}>
-            <label class="form-check-label" for="gender_female">Perempuan</label>
+<input class="form-check-input" type="radio" id="gender_female" name="gender"
+  value="Perempuan"
+  {{ old('gender', strtolower($student->gender)) == 'perempuan' ? 'checked' : '' }}>
+              <label class="form-check-label" for="gender_female">Perempuan</label>
           </div>
         </div>
 

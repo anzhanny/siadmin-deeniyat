@@ -6,16 +6,27 @@
     <div class="card mb-4">
 
       <div class="card-header pb-0">
-        <div class="d-flex justify-content-between mb-0">
-          <!-- tambah data -->
-          <a href="{{ route('admin.student.create') }}">
-            <button class="btn btn-primary">
-              <i class="ni ni-fat-add"></i> Tambah Data
-            </button>
-          </a>
-        </div>
+  <div class="d-flex justify-content-between align-items-center mb-3 text-sm">
+    <!-- Tombol tambah data di kiri -->
+    <a href="{{ route('admin.student.create') }}">
+      <button class="btn btn-primary">
+        <i class="ni ni-fat-add"></i> Tambah Data
+      </button>
+    </a>
+
+    <!-- Form search di kanan -->
+    <form method="GET" action="{{ route('admin.student.index') }}" class="d-flex align-items-center gap-2">
+      <div class="input-group" style="width: 220px;">
+        <span class="input-group-text text-body"><i class="fas fa-search"></i></span>
+        <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Cari Nama Siswa...">
       </div>
+      <button type="submit" class="btn btn-info mt-3">Cari</button>
+    </form>
+  </div>
+</div>
+
       <div class="card-body px-0 pt-0 pb-2">
+        
         <div class="table-responsive p-0">
           <table class="table text-center align-items-center mb-0">
             <thead>
@@ -54,7 +65,8 @@
                   <img src="{{ asset('storage/' . $value->photo) }}"
                     alt="photo" width="40" height="40" style="object-fit: cover; border-radius: 5px;">
                   @else
-                  <p>-</p>
+                  <img src="{{ asset('assets/img/non-profile.png') }}"                     
+                  alt="photo" width="40" height="40" style="object-fit: cover; border-radius: 5px;">
                   @endif
                 </td>
 
@@ -149,5 +161,6 @@
     rows.forEach(row => tbody.appendChild(row));
   }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 @endsection

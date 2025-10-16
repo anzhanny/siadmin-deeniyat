@@ -31,9 +31,10 @@
           <div class="col-lg-8 text-center mx-auto text-white">
             <img src="{{ asset('assets/img/logos/deeniyat-logo.png') }}" alt="Deeniyat Logo" style="width: 80px;">
             <h1 class="mt-4 fw-bold text-white">Terima Kasih!</h1>
+            <p class="mt-4 text-lg text-white">Pembayaran Anda Berhasil.</p>
             <div class="mt-5">
               <a href="{{ route('login') }}" class="btn btn-lg btn-primary">
-                <i class="fas fa-home me-2"></i> Kembali ke Beranda
+                <i class="fas fa-home me-2"></i> Halaman Login
               </a>
             </div>
           </div>

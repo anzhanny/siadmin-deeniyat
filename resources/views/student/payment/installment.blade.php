@@ -14,26 +14,26 @@
             <div class="p-4 text-center text-muted">Belum ada data cicilan.</div>
           @else
             <table class="table align-items-center mb-0">
-              <thead class="bg-light">
+              <thead>
                 <tr>
-                  <th class="text-center">#</th>
-                  <th class="text-center">Kode Pembayaran</th>
-                  <th class="text-center">Cicilan Ke</th>
-                  <th class="text-center">Nominal</th>
-                  <th class="text-center">Status</th>
-                  <th class="text-center">Tanggal Bayar</th>
-                  <th class="text-center">Aksi</th>
+                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">#</th>
+                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kode Pembayaran</th>
+                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Cicilan Ke</th>
+                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nominal</th>
+                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
+                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Jatuh Tempo</th>
+                  <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 @foreach($installments as $inst)
                   @forelse($inst->payments as $i => $cicilan)
                     <tr>
-                      <td class="text-center">{{ $loop->iteration }}</td>
-                      <td class="text-center">{{ $cicilan->code }}</td>
-                      <td class="text-center">Cicilan ke-{{ $cicilan->installment_to }}</td>
-                      <td class="text-center">Rp {{ number_format($cicilan->amount, 0, ',', '.') }}</td>
-                      <td class="text-center">
+                     <td class="align-middle text-center text-sm">{{ $loop->iteration }}</td>
+                     <td class="align-middle text-center text-sm"><span class="badge bg-dark text-white">{{ $cicilan->code }}</span></td>
+                     <td class="align-middle text-center text-sm">Cicilan ke-{{ $cicilan->installment_to }}</td>
+                     <td class="align-middle text-center text-sm">Rp {{ number_format($cicilan->amount, 0, ',', '.') }}</td>
+                     <td class="align-middle text-center text-sm">
                         @switch($cicilan->status)
                           @case('paid') 
                             <span class="badge bg-success">Lunas</span> 
@@ -48,8 +48,8 @@
                             <span class="badge bg-danger">{{ ucfirst($cicilan->status) }}</span>
                         @endswitch
                       </td>
-                      <td class="text-center">{{ $cicilan->paid_at?->format('d/m/Y') ?? '-' }}</td>
-                      <td class="text-center">
+                     <td class="align-middle text-center text-sm">{{ $cicilan->due_date?->format('d/m/Y') ?? '-' }}</td>
+                     <td class="align-middle text-center text-sm">
                         @if($cicilan->status !== 'paid')
                           <button type="button" 
                             class="btn btn-sm btn-primary installment-pay-btn" 

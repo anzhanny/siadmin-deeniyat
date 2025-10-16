@@ -96,12 +96,12 @@
   <!-- Sidebar Foto -->
   <div class="col-md-4">
     <div class="card card-profile">
-      <img src="{{ asset('assets/img/bg-profile.jpg') }}" alt="Image placeholder" class="card-img-top">
+      <img src="{{ asset('assets/img/bg-profile1.png') }}" alt="Image placeholder" class="card-img-top">
       <div class="row justify-content-center">
         <div class="col-4 col-lg-4 order-lg-2">
           <div class="mt-n4 mt-lg-n6 mb-4 mb-lg-0">
             <a href="javascript:;">
-              <img src="{{ $data->photo ? asset('storage/'.$data->photo) : asset('assets/img/default-avatar.png') }}"
+              <img src="{{ $data->photo ? asset('storage/'.$data->photo) : asset('assets/img/non-profile.png') }}"
                 class="rounded-circle img-fluid border border-2 border-white">
             </a>
           </div>

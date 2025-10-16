@@ -7,6 +7,7 @@
         'admin.student.index' => 'Data Siswa',
         'admin.student.create' => 'Tambah Data Siswa',
         'admin.student.edit' => 'Edit Data Siswa',
+        'admin.student.show' => 'Detail Data Siswa',
        
         'admin.class.index' => 'Data Kelas',
         'admin.class.create' => 'Tambah data Kelas',

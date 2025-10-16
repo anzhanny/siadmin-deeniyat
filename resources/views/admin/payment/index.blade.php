@@ -4,82 +4,124 @@
 <div class="row">
   <div class="col-12">
     <div class="card mb-4">
-      <div class="card-header pb-0 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">Daftar Pembayaran</h6>
+      <div class="card-header pb-0 d-flex justify-content-between align-items-center text-xs ">
+        <h6 class="mb-0"></h6>
+        
         <div>
           <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#generateSppModal">
             <i class="fa fa-envelope"></i> Generate & Kirim Tagihan SPP
           </button>
-          <a href="{{ route('admin.payment.export', request()->query()) }}" class="btn btn-primary btn-sm text-white">
+          <a href="{{ route('admin.payment.export', request()->query()) }}" class="btn btn-success btn-sm">
             <i class="fa fa-file-excel"></i> Ekspor Laporan
           </a>
         </div>
       </div>
-      <div class="card-body px-3 pt-3 pb-2">
+      <div class="card-body px-3 pt-3 pb-2 ">
 
-        {{-- 🔍 Filter --}}
-        <form method="GET" action="{{ route('admin.payment.index') }}" class="row g-2 mb-3">
-          <div class="col-md-2">
-            <div class="input-group">
-              <span class="input-group-text text-body"><i class="fas fa-search"></i></span>
-              <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Cari Siswa...">
-            </div>
-          </div>
+       {{-- 🔍 Filter --}}
+<form method="GET" action="{{ route('admin.payment.index') }}" 
+      class="row g-2 align-items-end mb-3 text-sm">
 
-          <div class="col-md-2">
-            <select name="class_id" class="form-select">
-              <option value="">-- Semua Kelas --</option>
-              @foreach($classes as $class)
-              <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->class_name }}</option>
-              @endforeach
-            </select>
-          </div>
+  {{-- 🔍 Cari Siswa --}}
+  <div class="col-md-2">
+    <label class="form-label mb-1 text-xs">Cari Siswa</label>
+    <div class="input-group input-group-sm">
+      <span class="input-group-text text-body"><i class="fas fa-search"></i></span>
+      <input type="text" class="form-control" name="search" 
+             value="{{ request('search') }}" placeholder="Nama siswa...">
+    </div>
+  </div>
 
-          <div class="col-md-2">
-            <select name="payment_for" class="form-select">
-              <option value="">-- Semua Jenis --</option>
-              <option value="spp" {{ request('payment_for')=='spp' ? 'selected' : '' }}>SPP</option>
-              <option value="register" {{ request('payment_for')=='register' ? 'selected' : '' }}>Register</option>
-            </select>
-          </div>
+  {{-- 📘 Kelas --}}
+  <div class="col-md-2">
+    <label class="form-label mb-1 text-xs">Kelas</label>
+    <select name="class_id" class="form-select form-select-sm">
+      <option value="">-- Semua --</option>
+      @foreach($classes as $class)
+        <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>
+          {{ $class->class_name }}
+        </option>
+      @endforeach
+    </select>
+  </div>
 
-          <div class="col-md-2">
-            <select name="status" class="form-select">
-              <option value="">-- Semua Status --</option>
-              <option value="pending" {{ request('status')=='pending' ? 'selected' : '' }}>Menunggu</option>
-              <option value="paid" {{ request('status')=='paid' ? 'selected' : '' }}>Lunas</option>
-              <option value="failed" {{ request('status')=='failed' ? 'selected' : '' }}>Batal</option>
-            </select>
-          </div>
+  {{-- 💳 Jenis Pembayaran --}}
+  <div class="col-md-2">
+    <label class="form-label mb-1 text-xs">Jenis</label>
+    <select name="payment_for" class="form-select form-select-sm">
+      <option value="">-- Semua --</option>
+      <option value="spp" {{ request('payment_for') == 'spp' ? 'selected' : '' }}>SPP</option>
+      <option value="register" {{ request('payment_for') == 'register' ? 'selected' : '' }}>Register</option>
+    </select>
+  </div>
 
-          <div class="col-md-2">
-            <select name="payment_category" class="form-select">
-              <option value="">-- Semua Kategori --</option>
-              <option value="lunas" {{ request('payment_category')=='lunas' ? 'selected' : '' }}>Bayar Lunas</option>
-              <option value="cicilan" {{ request('payment_category')=='cicilan' ? 'selected' : '' }}>Bayar Cicilan</option>
-            </select>
-          </div>
+  {{-- 🧾 Status --}}
+  <div class="col-md-2">
+    <label class="form-label mb-1 text-xs">Status</label>
+    <select name="status" class="form-select form-select-sm">
+      <option value="">-- Semua --</option>
+      <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Menunggu</option>
+      <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Lunas</option>
+      <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Batal</option>
+    </select>
+  </div>
 
-          <div class="col-md-2 d-flex gap-2">
-            <button type="submit" class="btn btn-outline-primary">Filter</button>
-          </div>
-        </form>
+  {{-- 💰 Kategori --}}
+  <div class="col-md-2">
+    <label class="form-label mb-1 text-xs">Kategori</label>
+    <select name="payment_category" class="form-select form-select-sm">
+      <option value="">-- Semua --</option>
+      <option value="lunas" {{ request('payment_category') == 'lunas' ? 'selected' : '' }}>Bayar Lunas</option>
+      <option value="cicilan" {{ request('payment_category') == 'cicilan' ? 'selected' : '' }}>Bayar Cicilan</option>
+    </select>
+  </div>
+
+  {{-- 📅 Rentang Tanggal --}}
+<div class="col-md-3 d-flex align-items-center gap-2">
+  <div>
+    <label class="text-xs mb-0">Tgl Mulai</label>
+    <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control form-control-sm">
+  </div>
+  <div>
+    <label class="text-xs mb-0">Tgl Akhir</label>
+    <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control form-control-sm">
+  </div>
+</div>
+
+  {{-- 🔘 Tombol --}}
+  <div class="col-md-2 d-flex gap-2 justify-content-end" style="margin-left: 100px; margin-top: 20px; margin-bottom: -16px">
+    <label for=""></label>
+    <button type="submit" class="btn btn-primary btn-sm w-100">Cari</button>
+    <a href="{{ route('admin.payment.index') }}" class="btn btn-secondary btn-sm w-100">Reset</a>
+  </div>
+
+</form>
+@if(request('start_date') || request('end_date'))
+  <div class="alert alert-success text-sm text-white">
+    <strong>Pemasukan pendapatan rentang tersebut:</strong> 
+    Rp {{ number_format($totalIncome, 0, ',', '.') }}
+  </div>
+@endif
+</div>
+
+
+
 
         {{-- 📊 Tabel Data --}}
         <div class="table-responsive">
           <table class="table align-items-center mb-0">
             <thead>
               <tr>
-                <th>No</th>
-                <th>Kode Pembayaran</th>
-                <th>Siswa</th>
-                <th>Kelas</th>
-                <th>Jenis</th>
-                <th>Kategori</th>
-                <th>Nominal</th>
-                <th>Status</th>
-                <th>Tgl Bayar</th>
-                <th>Aksi</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">No</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kode Pembayaran</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Siswa</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kelas</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Jenis</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Kategori</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Nominal</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Status</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Keterangan</th>
+                <th class="text-center text-uppercase text-dark text-xs font-weight-bolder opacity-7">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -97,25 +139,25 @@
               @endif
 
               <tr>
-                <td>{{ $no++ }}</td>
-                <td><span class="badge bg-dark text-white">{{ $payment->code }}</span></td>
-                <td>{{ optional(optional($payment->installment)->user)->name ?? optional($payment->user)->name ?? '-' }}</td>
-                <td>{{ optional(optional(optional($payment->installment)->user)->class)->class_name ?? optional(optional($payment->user)->class)->class_name ?? '-' }}</td>
-                <td>
+                <td class="align-middle text-center text-sm">{{ $no++ }}</td>
+                <td class="align-middle text-center text-sm"><span class="badge bg-dark text-white">{{ $payment->code }}</span></td>
+                <td class="align-middle text-center text-sm">{{ optional(optional($payment->installment)->user)->name ?? optional($payment->user)->name ?? '-' }}</td>
+                <td class="align-middle text-center text-sm">{{ optional(optional(optional($payment->installment)->user)->class)->class_name ?? optional(optional($payment->user)->class)->class_name ?? '-' }}</td>
+                <td class="align-middle text-center text-sm">
                   @if($payment->payment_for == 'register')
                   <span class="badge bg-info text-dark">Register</span>
                   @elseif($payment->payment_for == 'spp')
                   <span class="badge bg-primary text-white">SPP</span>
                   @endif
                 </td>
-                <td>
+                <td class="align-middle text-center text-sm">
                   @if($payment->payment_category == 'lunas')
                   <span class="badge bg-success text-white">Bayar Lunas</span>
                   @elseif($payment->payment_category == 'cicilan')
                   <span class="badge bg-info text-white">Bayar Cicilan</span>
                   @endif
                 </td>
-                <td>
+                <td class="align-middle text-center text-sm">
                   @if($payment->payment_category === 'lunas')
                   Rp {{ number_format($payment->amount, 0, ',', '.') }}
                   @elseif($payment->payment_category === 'cicilan' && $payment->installment)
@@ -124,7 +166,7 @@
                   -
                   @endif
                 </td>
-                <td>
+                <td class="align-middle text-center text-sm">
                   @php
                   if($payment->payment_category === 'cicilan' && $payment->installment){
                   $status = $payment->installment->status;
@@ -140,12 +182,29 @@
                   @elseif($status === 'pending')
                   <span class="badge bg-warning">Menunggu</span>
                   @elseif($status === 'failed')
-                  <span class="badge bg-secondary">Batal</span>
+                  <span class="badge bg-danger">Batal</span>
                   @else
-                  <span class="badge bg-danger">{{ ucfirst($status) }}</span>
+                  <span class="badge bg-dark">{{ ucfirst($status) }}</span>
                   @endif
                 </td>
-                <td>{{ $payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->format('d/m/Y') : '-' }}</td>
+                <!-- <td>{{ $payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->format('d/m/Y') : '-' }}</td> -->
+                <td class="align-middle text-center text-xxs">
+                  @if($payment->payment_category === 'cicilan')
+                  @if($payment->installment?->due_date)
+                  Jatuh tempo: <br> {{ \Carbon\Carbon::parse($payment->installment->due_date)->format('d M Y') }}
+                  @else
+                  Jatuh tempo: -
+                  @endif
+                  @else
+                  @if($payment->paid_at)
+                  Tgl bayar: <br> {{ \Carbon\Carbon::parse($payment->paid_at)->format('d M Y') }}
+                  @else
+                  Tgl bayar: -
+                  @endif
+                  @endif
+                </td>
+
+
                 <td>
                   {{-- Tombol Lunas --}}
                   @if($payment->payment_category === 'lunas')
@@ -159,7 +218,7 @@
                       <i class="fa fa-check"></i>
                     </button>
 
-                    <button type="submit" name="status" value="failed" class="btn btn-sm btn-secondary btn-icon p-1" style="width: 30px; height: 30px;" title="Tandai Batal" onclick="return confirm('Yakin tandai BATAL?');">
+                    <button type="submit" name="status" value="failed" class="btn btn-sm btn-danger btn-icon p-1" style="width: 30px; height: 30px;" title="Tandai Batal" onclick="return confirm('Yakin tandai BATAL?');">
                       <i class="fa fa-times"></i>
                     </button>
                     @elseif($payment->status === 'paid')
@@ -208,36 +267,36 @@
                       <table class="table table-sm table-bordered mb-0">
                         <thead class="bg-secondary text-white">
                           <tr>
-                            <th class="text-center text-white">#</th>
-                            <th class="text-center  text-white">Kode Pembayaran</th>
-                            <th class="text-center  text-white">Nama Siswa</th>
-                            <th class="text-center  text-white">Cicilan Ke</th>
-                            <th class="text-center  text-white">Nominal</th>
-                            <th class="text-center  text-white">Status</th>
-                            <th class="text-center  text-white">Tanggal Bayar</th>
-                            <th class="text-center  text-white">Aksi</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">#</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Kode Pembayaran</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Nama Siswa</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Cicilan Ke</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Nominal</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Status</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Tanggal Bayar</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Aksi</th>
                           </tr>
                         </thead>
                         <tbody>
                           @foreach($payment->installment->payments as $i => $cicilan)
                           <tr>
-                            <td class="text-center">{{ $i+1 }}</td>
-                            <td class="text-center">{{ $cicilan->code }}</td>
-                            <td class="text-center">{{ optional($cicilan->user)->name ?? '-' }}</td>
-                            <td class="text-center">Cicilan ke-{{ $cicilan->installment_to }}</td>
-                            <td class="text-center">Rp {{ number_format($cicilan->amount,0,',','.') }}</td>
-                            <td class="text-center">
+                            <td class="align-middle text-center text-sm">{{ $i+1 }}</td>
+                            <td class="align-middle text-center text-sm"><span class="badge bg-light text-dark">{{ $cicilan->code }}</span></td>
+                            <td class="align-middle text-center text-sm">{{ optional($cicilan->user)->name ?? '-' }}</td>
+                            <td class="align-middle text-center text-sm">Cicilan ke-{{ $cicilan->installment_to }}</td>
+                            <td class="align-middle text-center text-sm">Rp {{ number_format($cicilan->amount,0,',','.') }}</td>
+                            <td class="align-middle text-center text-sm">
                               @if($cicilan->status === 'paid') <span class="badge bg-success">Lunas</span>
                               @elseif($cicilan->status === 'partial') <span class="badge bg-info">Sebagian</span>
                               @elseif($cicilan->status === 'pending') <span class="badge bg-warning">Menunggu</span>
-                              @elseif($cicilan->status === 'failed') <span class="badge bg-secondary">Batal</span>
+                              @elseif($cicilan->status === 'failed') <span class="badge bg-danger">Batal</span>
                               @else <span class="badge bg-danger">{{ ucfirst($cicilan->status) }}</span>
                               @endif
                             </td>
-                            <td class="text-center">
+                            <td class="align-middle text-center text-sm">
                               {{ $cicilan->due_date ? \Carbon\Carbon::parse($cicilan->due_date)->format('d/m/Y') : '-' }}
                             </td>
-                            <td class="text-center">
+                            <td class="align-middle text-center text-sm">
                               {{-- Cicilan LUNAS -> bisa kembalikan ke pending --}}
                               @if($cicilan->status === 'paid')
                               <form action="{{ route('admin.payment.updateStatus', $cicilan->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ubah status cicilan ini?');">
@@ -265,7 +324,7 @@
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="status" value="failed">
-                                <button class="btn btn-sm btn-secondary btn-icon p-1" style="width: 30px; height: 30px;" title="Tandai Batal">
+                                <button class="btn btn-sm btn-danger btn-icon p-1" style="width: 30px; height: 30px;" title="Tandai Batal">
                                   <i class="fa fa-times"></i>
                                 </button>
                               </form>
@@ -368,13 +427,38 @@
           </div>
           <div class="modal-body">
             <div class="mb-2">
-              <label for="month" class="form-label">Bulan</label>
-              <input type="text" name="month" id="month" class="form-control" placeholder="Contoh: Juli" required>
-            </div>
-            <div class="mb-2">
-              <label for="year" class="form-label">Tahun</label>
-              <input type="number" name="year" id="year" class="form-control" value="{{ date('Y') }}" required>
-            </div>
+  <label for="month" class="form-label">Bulan</label>
+  <select name="month" id="month" class="form-control" required>
+    <option value="">-- Pilih Bulan --</option>
+    <option value="Januari" {{ request('month') == 'Januari' ? 'selected' : '' }}>Januari</option>
+    <option value="Februari" {{ request('month') == 'Februari' ? 'selected' : '' }}>Februari</option>
+    <option value="Maret" {{ request('month') == 'Maret' ? 'selected' : '' }}>Maret</option>
+    <option value="April" {{ request('month') == 'April' ? 'selected' : '' }}>April</option>
+    <option value="Mei" {{ request('month') == 'Mei' ? 'selected' : '' }}>Mei</option>
+    <option value="Juni" {{ request('month') == 'Juni' ? 'selected' : '' }}>Juni</option>
+    <option value="Juli" {{ request('month') == 'Juli' ? 'selected' : '' }}>Juli</option>
+    <option value="Agustus" {{ request('month') == 'Agustus' ? 'selected' : '' }}>Agustus</option>
+    <option value="September" {{ request('month') == 'September' ? 'selected' : '' }}>September</option>
+    <option value="Oktober" {{ request('month') == 'Oktober' ? 'selected' : '' }}>Oktober</option>
+    <option value="November" {{ request('month') == 'November' ? 'November' : '' }}>November</option>
+    <option value="Desember" {{ request('month') == 'Desember' ? 'selected' : '' }}>Desember</option>
+  </select>
+</div>
+
+<div class="mb-2">
+  <label for="year" class="form-label">Tahun</label>
+  <select name="year" id="year" class="form-control" required>
+    <option value="">-- Pilih Tahun --</option>
+    @php
+      $currentYear = date('Y');
+      for ($i = $currentYear - 5; $i <= $currentYear + 10; $i++) {
+          $selected = request('year') == $i ? 'selected' : '';
+          echo "<option value='{$i}' {$selected}>{$i}</option>";
+      }
+    @endphp
+  </select>
+</div>
+
             <div class="mb-2">
               <label for="amount" class="form-label">Jumlah (Rp)</label>
               <input type="number" name="amount" id="amount" class="form-control" value="50000" required>

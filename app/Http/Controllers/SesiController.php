@@ -147,7 +147,7 @@ class SesiController extends Controller
     public function logout()
     {
         Auth::logout();
-        return redirect('');
+        return redirect('login');
     }
 
     /**

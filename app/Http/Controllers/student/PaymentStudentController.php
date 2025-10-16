@@ -18,6 +18,8 @@ use Midtrans\Config;
 use Midtrans\CoreApi;
 use Midtrans\Snap;
 use Midtrans\Notification;
+use Illuminate\Support\Str;
+
 
 class PaymentStudentController extends Controller
 {
@@ -459,6 +461,8 @@ class PaymentStudentController extends Controller
     /**
      * Show payment confirmation page
      */
+
+    
   public function confirmPayment(Request $request)
 {
     $user = Auth::user();
@@ -491,7 +495,7 @@ class PaymentStudentController extends Controller
                 'due_date'         => now()->addDays(3),
                 'amount'           => 450000,
                 'installment_to'   => null,
-                'description'      => 'Pembayaran registrasi (lunas)',
+                'description'      => 'Pembayaran pendaftaran (lunas)',
                 'status'           => 'pending',
             ]);
         } else {
@@ -500,7 +504,7 @@ class PaymentStudentController extends Controller
                 'user_id'           => $user->id,
                 'nominal'           => 450000,
                 'remaining_balance' => 450000,
-                'due_date'          => now()->addMonth(), // jatuh tempo pertama
+                    'due_date'          => Carbon::now()->addMonth(2), // jatuh tempo pertama
                 'status'            => 'pending',
             ]);
 
@@ -518,12 +522,12 @@ class PaymentStudentController extends Controller
                     'payment_category' => 'cicilan',
                     'payment_type'     => $request->payment_type,
                     'method'           => $request->payment_type === 'non-tunai' ? 'midtrans' : 'tunai',
-                    'code'             => strtoupper(uniqid("REG-INST{$i}-")),
                     'due_date'         => now()->addMonths($i - 1),
                     'amount'           => $nominal,
                     'installment_to'   => $i,
-                    'description'      => "Pembayaran registrasi cicilan ke-$i",
+                    'description'      => "Pembayaran pendaftaran cicilan ke-$i",
                     'status'           => 'pending',
+                    'code'             => strtoupper(uniqid("REG-INST{$i}-")),
                 ]);
 
                 if ($i === 1) {
@@ -559,6 +563,8 @@ class PaymentStudentController extends Controller
                 'phone'      => $user->phone,
             ],
         ];
+
+        
         $snapToken = \Midtrans\Snap::getSnapToken($params);
     }
 

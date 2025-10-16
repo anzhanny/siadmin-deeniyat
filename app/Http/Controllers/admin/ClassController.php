@@ -11,7 +11,7 @@ class ClassController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+   public function index()
     {
         $data = TbClass::withCount('user')->paginate(20);
         return view('admin.class.index', compact('data'));
