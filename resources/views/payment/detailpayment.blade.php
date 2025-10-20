@@ -158,7 +158,7 @@
                     <div class="payment-option" onclick="selectPaymentType('non-tunai')">
                       <input type="radio" name="payment_type" value="non-tunai" id="non-tunai" required>
                       <label for="non-tunai" class="h6 mb-2">Non-Tunai</label>
-                      <p class="text-muted mb-0">Bayar via Midtrans (QRIS, transfer, e-wallet)</p>
+                      <p class="text-muted mb-0">Bayar via Midtrans menggunakan virtual account (VA)</p>
                     </div>
                   </div>
                 </div>
@@ -174,12 +174,12 @@
                     <div class="payment-option" onclick="selectPaymentCategory('lunas')">
                       <input type="radio" name="payment_category" value="lunas" id="lunas" required>
                       <label for="lunas" class="h6 mb-2">Lunas</label>
-                      <p class="text-muted mb-0">Bayar sekaligus seluruh total biaya</p>
+                      <p class="text-muted mb-0">Bayar sekaligus seluruh total biaya Rp450.000</p>
                     </div>
                     <div class="payment-option" onclick="selectPaymentCategory('cicilan')">
                       <input type="radio" name="payment_category" value="cicilan" id="cicilan" required>
                       <label for="cicilan" class="h6 mb-2">Cicilan</label>
-                      <p class="text-muted mb-0">Dibayar 3x @ Rp150.000</p>
+                      <p class="text-muted mb-0">Pembayaran dilakukan dalam 3 kali cicilan, masing-masing sebesar Rp150.000.</p>
                     </div>
                   </div>
 

@@ -40,7 +40,7 @@
                                     @if($payment->status === 'paid')
                                     <span class="badge bg-success">Sukses</span>
                                     @else
-                                    <span class="badge bg-warning text-dark">Menunggu</span>
+                                    <span class="badge bg-warning">Menunggu</span>
                                     @endif
                                 </td>
                             </tr>
@@ -51,7 +51,7 @@
                             @foreach ($directPayments as $payment)
                             <tr>
                                 <td class="align-middle text-center text-sm">{{ $rowNumber++ }}</td>
-                                <td class="align-middle text-center text-sm">{{ $payment->code }}</td>
+                                <td class="align-middle text-center text-sm"><span class="badge bg-dark text-white">{{ $payment->code }}</span></td>
                                 <td class="align-middle text-center text-sm">{{ $payment->payment_for }}</td>
                                 <td class="align-middle text-center text-sm">{{ $payment->paid_at ? $payment->paid_at->format('d-m-Y') : '-' }}</td>
                                 <td class="align-middle text-center text-sm">{{ ucfirst($payment->payment_category) }}</td>

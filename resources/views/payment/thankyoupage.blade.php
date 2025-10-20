@@ -31,7 +31,7 @@
           <div class="col-lg-8 text-center mx-auto text-white">
             <img src="{{ asset('assets/img/logos/deeniyat-logo.png') }}" alt="Deeniyat Logo" style="width: 80px;">
             <h1 class="mt-4 fw-bold text-white">Terima Kasih!</h1>
-            <p>Terima kasih sudah melakukan pembayaran. Silakan klik tombol di bawah untuk verifikasi data Anda.</p>
+            <p>Terima kasih sudah melakukan pembayaran. Jika Anda melakukan pembayaran secara tunai, maka tunggu konfirmasi dari admin baru setelah itu silakan klik tombol di bawah untuk verifikasi data Anda.</p>
 
             @if(session('success'))
             <div class="alert alert-success mt-3">{{ session('success') }}</div>
@@ -42,17 +42,16 @@
             @endif
 
             <form action="{{ route('send.verification.email') }}" method="POST">
-  @csrf
-  <input type="hidden" name="user_id" 
-         value="{{ $user->id ?? $latestPayment->user_id ?? '' }}">
-  <button type="submit" class="btn btn-dark mt-4">
-    <i class="fa fa-envelope"></i> Verifikasi Data & Kirim ke Email
-  </button>
-</form>
-
+              @csrf
+              <input type="hidden" name="user_id"
+                value="{{ $user->id ?? $latestPayment->user_id ?? '' }}">
+              <button type="submit" class="btn btn-dark mt-4">
+                <i class="fa fa-envelope"> </i> Verifikasi Data & Kirim ke Email
+              </button>
+            </form>
 
             <div class="mt-4">
-              <a href="{{ route('login') }}" class="btn btn-info">Kembali ke Login</a>
+              <a href="{{ route('login') }}" class="btn btn-info text-dark"><i class="fa fa-home"> </i>Halaman Login</a>
             </div>
           </div>
         </div>

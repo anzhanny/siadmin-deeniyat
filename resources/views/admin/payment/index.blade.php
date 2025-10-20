@@ -273,7 +273,7 @@
                             <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Cicilan Ke</th>
                             <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Nominal</th>
                             <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Status</th>
-                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Tanggal Bayar</th>
+                            <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Jatuh Tempo</th>
                             <th class="text-center text-uppercase text-white text-xs font-weight-bolder opacity-7">Aksi</th>
                           </tr>
                         </thead>

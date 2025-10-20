@@ -88,7 +88,7 @@
         <div class="row">
           <div class="col-8">
             <div class="numbers">
-              <p class="text-sm mb-0 text-uppercase font-weight-bold">Uang Masuk</p>
+              <p class="text-sm mb-0 text-uppercase font-weight-bold">Uang Masuk </p>
               <h5 class="font-weight-bolder mt-2">
                 Rp {{ number_format($totalUangMasuk, 0, ',', '.') }}
               </h5>
