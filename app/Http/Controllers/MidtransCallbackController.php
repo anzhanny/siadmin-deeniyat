@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Installment;
 use Illuminate\Http\Request;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Log;
 use Midtrans\Notification;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -37,35 +38,52 @@ class MidtransCallbackController extends Controller
 public function midtransCallback(Request $request)
 {
     try {
-        $notification = new Notification();
+        $notification = new \Midtrans\Notification();
 
-        $orderId          = $notification->order_id; 
+        $orderId           = $notification->order_id;
         $transactionStatus = $notification->transaction_status;
         $fraudStatus       = $notification->fraud_status;
 
-        $payment = Payment::where('code', $orderId)->first();
-        if (!$payment) {
+        // Cek semua pembayaran dengan kode yang sama
+        $payments = Payment::where('code', $orderId)->get();
+        if ($payments->isEmpty()) {
+            // Jika tidak ditemukan, coba cari by prefix (misal group transaksi)
+            $groupCode = explode('-', $orderId)[0]; // misal "SPPALL-20251027..."
+            $payments = Payment::where('group_code', $groupCode)->get();
+        }
+
+        if ($payments->isEmpty()) {
             return response()->json(['message' => 'Payment not found'], 404);
         }
 
-        if ($transactionStatus == 'capture') {
-            if ($fraudStatus == 'accept') {
+        foreach ($payments as $payment) {
+            if ($transactionStatus == 'capture') {
+                if ($fraudStatus == 'accept') {
+                    $payment->update(['status' => 'paid', 'paid_at' => now()]);
+                } else {
+                    $payment->update(['status' => 'failed']);
+                }
+            } elseif ($transactionStatus == 'settlement') {
                 $payment->update(['status' => 'paid', 'paid_at' => now()]);
-            } else {
+            } elseif ($transactionStatus == 'pending') {
+                $payment->update(['status' => 'pending']);
+            } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
                 $payment->update(['status' => 'failed']);
             }
-        } elseif ($transactionStatus == 'settlement') {
-            $payment->update(['status' => 'paid', 'paid_at' => now()]);
-        } elseif ($transactionStatus == 'pending') {
-            $payment->update(['status' => 'pending']);
-        } elseif (in_array($transactionStatus, ['deny','expire','cancel'])) {
-            $payment->update(['status' => 'failed']);
+
+            if ($payment->installment_id) {
+                app(\App\Http\Services\PaymentService::class)
+                    ->updateInstallmentStatus($payment->installment_id);
+            }
         }
 
-        // Update parent installment kalau ada
-        if ($payment->installment_id) {
-            app(\App\Http\Services\PaymentService::class)
-                ->updateInstallmentStatus($payment->installment_id);
+        // ✅ Jika order ini gabungan (tunggakan)
+        if (str_contains($orderId, 'SPP-ALL-') || str_contains($orderId, 'SPPALL-')) {
+            $prefix = explode('-', $orderId)[0]; // ambil bagian depan
+            $related = Payment::where('group_code', $prefix)->get();
+            foreach ($related as $p) {
+                $p->update(['status' => 'paid', 'paid_at' => now()]);
+            }
         }
 
         return response()->json(['message' => 'Callback processed'], 200);
@@ -73,7 +91,6 @@ public function midtransCallback(Request $request)
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
-
 
 
     public function testMidtrans(Request $request)

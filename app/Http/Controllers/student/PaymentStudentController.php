@@ -92,25 +92,53 @@ class PaymentStudentController extends Controller
 
 
     public function sppPayment()
-    {
-        $userId = Auth::id();
-        $startYear = 2025;
-        $months = [];
-        $start = Carbon::createFromDate($startYear, 7, 1);
+{
+    $userId = Auth::id();
+    $startYear = 2025;
+    $months = [];
+    $start = Carbon::createFromDate($startYear, 7, 1);
 
-        for ($i = 0; $i < 12; $i++) {
-            $months[] = $start->copy()->addMonths($i)->format('F-Y');
-        }
-
-        $payments = Payment::where('user_id', $userId)
-            ->where('payment_for', 'spp')
-            ->get()
-            ->keyBy(function ($item) {
-                return $item->month . '-' . $item->year; // key sesuai format months[]
-            });
-
-        return view('student.payment.spp', compact('months', 'payments'));
+    // Buat daftar bulan ajaran dari Juli-2025 s/d Juni-2026
+    for ($i = 0; $i < 12; $i++) {
+        $months[] = $start->copy()->addMonths($i)->format('F-Y');
     }
+
+    // Ambil semua data payment SPP user
+    $payments = Payment::where('user_id', $userId)
+        ->where('payment_for', 'spp')
+        ->whereIn('status', ['paid', 'settlement']) // pastikan yang udah lunas
+        ->get();
+
+    // Buat array mapping untuk tandai bulan yang sudah dibayar
+    $paidMap = [];
+
+    foreach ($payments as $p) {
+        $rawMonth = trim($p->month);
+        $year = trim($p->year);
+
+        // kalau month seperti "Agustus-September" → pecah jadi dua
+        $bulanSplit = preg_split('/[\s\-\/]+/', $rawMonth);
+
+        foreach ($bulanSplit as $m) {
+            $key = ucfirst(strtolower($m)) . '-' . $year;
+            $paidMap[$key] = true;
+        }
+    }
+
+    // Simpan dalam bentuk key agar gampang dipanggil di Blade
+    $paymentsKeyed = collect();
+    foreach ($months as $m) {
+        if (isset($paidMap[$m])) {
+            $paymentsKeyed[$m] = true;
+        }
+    }
+
+    return view('student.payment.spp', [
+        'months' => $months,
+        'payments' => $paymentsKeyed,
+    ]);
+}
+
 
     public function paySpp($month)
     {
@@ -156,6 +184,220 @@ class PaymentStudentController extends Controller
         return response()->json(['snapToken' => $snapToken]);
     }
 
+public function checkArrears($monthParam)
+{
+    $user = Auth::user();
+    $monthParam = urldecode($monthParam);
+
+    // 🟢 Normalisasi nama bulan Inggris ke Indonesia agar cocok
+    $englishToIndo = [
+        'january' => 'Januari', 'february' => 'Februari', 'march' => 'Maret', 'april' => 'April',
+        'may' => 'Mei', 'june' => 'Juni', 'july' => 'Juli', 'august' => 'Agustus',
+        'september' => 'September', 'october' => 'Oktober', 'november' => 'November', 'december' => 'Desember'
+    ];
+
+    foreach ($englishToIndo as $eng => $indo) {
+        if (stripos($monthParam, $eng) !== false) {
+            $monthParam = str_ireplace($eng, $indo, $monthParam);
+            break;
+        }
+    }
+
+    // Mulai tahun ajaran (ubah kalau perlu)
+    $startYear = 2025;
+    $start = Carbon::createFromDate($startYear, 7, 1); // Juli 2025
+
+    // Build array Carbon untuk 12 bulan ajaran
+    $academicDates = [];
+    for ($i = 0; $i < 12; $i++) {
+        $d = $start->copy()->addMonths($i);
+        $academicDates[] = $d;
+    }
+
+    // Helper: peta nama bulan bahasa Indonesia
+    $idMonths = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+    ];
+
+    // Cari index target di academicDates
+    $targetIndex = null;
+    foreach ($academicDates as $idx => $dt) {
+        $variants = [];
+
+        // Variasi format yang mungkin dikirim dari frontend
+        $variants[] = $dt->format('F-Y');     // "October-2025"
+        $variants[] = $dt->format('F Y');     // "October 2025"
+        $variants[] = $dt->format('m-Y');     // "10-2025"
+        $variants[] = $dt->format('m Y');     // "10 2025"
+        $variants[] = $idMonths[(int)$dt->format('n')] . ' ' . $dt->format('Y'); // "Oktober 2025"
+        $variants[] = $idMonths[(int)$dt->format('n')] . '-' . $dt->format('Y'); // "Oktober-2025"
+
+        foreach ($variants as $v) {
+            if (mb_strtolower($v) === mb_strtolower($monthParam)) {
+                $targetIndex = $idx;
+                break 2;
+            }
+        }
+    }
+
+    if ($targetIndex === null) {
+        return response()->json(['error' => 'Bulan tidak valid atau tidak ditemukan dalam kalender akademik.'], 400);
+    }
+
+    // Buat daftar bulan dari awal tahun ajaran hingga bulan target
+    $monthsToCheckDates = array_slice($academicDates, 0, $targetIndex + 1);
+
+    // Ambil data pembayaran user dari DB
+    $dbPayments = Payment::where('user_id', $user->id)
+        ->where('payment_for', 'spp')
+        ->get(['month', 'year', 'status']);
+
+    $paidKeys = [];
+    $anyRecordedKeys = [];
+
+    $monthNameToNumber = [
+        'januari'=> '01','februari'=>'02','maret'=>'03','april'=>'04',
+        'mei'=>'05','juni'=>'06','juli'=>'07','agustus'=>'08',
+        'september'=>'09','oktober'=>'10','november'=>'11','desember'=>'12',
+        'january'=>'01','february'=>'02','march'=>'03','april'=>'04',
+        'may'=>'05','june'=>'06','july'=>'07','august'=>'08',
+        'september'=>'09','october'=>'10','november'=>'11','december'=>'12',
+    ];
+
+    foreach ($dbPayments as $p) {
+        $rawMonth = (string) ($p->month ?? '');
+        $rawYear  = (string) ($p->year ?? '');
+        $key = null;
+
+        if (preg_match('/^\d{1,2}$/', $rawMonth) && preg_match('/^\d{4}$/', $rawYear)) {
+            $mm = str_pad($rawMonth, 2, '0', STR_PAD_LEFT);
+            $key = $mm . '-' . $rawYear;
+        } else {
+            $mnorm = mb_strtolower(trim($rawMonth));
+            if (isset($monthNameToNumber[$mnorm]) && preg_match('/^\d{4}$/', $rawYear)) {
+                $mm = $monthNameToNumber[$mnorm];
+                $key = $mm . '-' . $rawYear;
+            } elseif (preg_match('/(\d{1,2})[^\d]+(\d{4})/', $rawMonth, $matches)) {
+                $mm = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+                $key = $mm . '-' . $matches[2];
+            }
+        }
+
+        if ($key) {
+            $anyRecordedKeys[$key] = true;
+            if ($p->status === 'paid') {
+                $paidKeys[$key] = true;
+            }
+        }
+    }
+
+    // Buat list bulan yang belum dibayar
+    $unpaidMonths = [];
+    foreach ($monthsToCheckDates as $d) {
+        $k = $d->format('m') . '-' . $d->format('Y');
+        if (isset($paidKeys[$k])) continue;
+
+        if (isset($anyRecordedKeys[$k]) && !isset($paidKeys[$k])) {
+            $unpaidMonths[] = $idMonths[(int)$d->format('n')] . ' ' . $d->format('Y');
+            continue;
+        }
+
+        if (!isset($anyRecordedKeys[$k])) {
+            $unpaidMonths[] = $idMonths[(int)$d->format('n')] . ' ' . $d->format('Y');
+        }
+    }
+
+    $totalAmount = count($unpaidMonths) * 50000;
+
+    // Jika hanya bulan yang diklik saja yang belum dibayar
+    if (count($unpaidMonths) === 1) {
+        $only = end($unpaidMonths);
+        $clickedDisplay = $idMonths[(int)$monthsToCheckDates[$targetIndex]->format('n')] . ' ' . $monthsToCheckDates[$targetIndex]->format('Y');
+        if ($only === $clickedDisplay) {
+            return response()->json([
+                'hasArrears' => false,
+                'arrearsList' => [],
+                'totalAmount' => 50000
+            ]);
+        }
+    }
+
+    return response()->json([
+        'hasArrears' => count($unpaidMonths) > 0 && !(count($unpaidMonths) === 1 && end($unpaidMonths) === $monthParam),
+        'arrearsList' => $unpaidMonths,
+        'totalAmount' => $totalAmount
+    ]);
+}
+
+
+public function payAllArrears(Request $request)
+{
+    $user = Auth::user();
+    $months = $request->months ?? [];
+
+    if (empty($months)) {
+        return response()->json(['error' => 'Tidak ada bulan untuk dibayar'], 400);
+    }
+
+    $totalAmount = count($months) * 50000;
+
+    // 🔠 Buat kode order lebih informatif
+    // Misal: SPP-JUL-AUG-2025-USERID123-1730200000
+    $monthCodes = collect($months)->map(function ($m) {
+        [$monthName, $year] = explode(' ', $m);
+        return strtoupper(substr($monthName, 0, 3)); // Ambil 3 huruf awal
+    })->implode('-');
+
+    $orderId = "SPP-{$monthCodes}-" . strtoupper($user->id) . '-' . time();
+
+    // 🧾 Simpan semua bulan tunggakan ke database (status pending)
+    foreach ($months as $m) {
+        [$monthName, $year] = explode(' ', $m);
+        Payment::create([
+            'user_id'          => $user->id,
+            'payment_for'      => 'spp',
+            'payment_category' => 'lunas',
+            'payment_type'     => 'non-tunai',
+            'amount'           => 50000,
+            'month'            => $monthName,
+            'year'             => $year,
+            'status'           => 'pending',
+            'code'             => $orderId,
+        ]);
+    }
+
+    // ⚙️ Midtrans setup
+    \Midtrans\Config::$serverKey = config('midtrans.server_key');
+    \Midtrans\Config::$isProduction = false;
+    \Midtrans\Config::$isSanitized  = true;
+    \Midtrans\Config::$is3ds        = true;
+
+    // 🔹 Buat token transaksi Midtrans
+    $params = [
+        'transaction_details' => [
+            'order_id'     => $orderId,
+            'gross_amount' => $totalAmount,
+        ],
+        'customer_details' => [
+            'first_name' => $user->name,
+            'email'      => $user->email,
+            'phone'      => $user->phone ?? '08123456789',
+        ],
+        'callbacks' => [
+            'finish' => url('/student/payment/spp'),
+        ],
+    ];
+
+    try {
+        $snapToken = \Midtrans\Snap::getSnapToken($params);
+        return response()->json(['snapToken' => $snapToken]);
+    } catch (\Exception $e) {
+        Log::error('Midtrans Error (payAllArrears): ' . $e->getMessage());
+        return response()->json(['error' => 'Gagal membuat transaksi Midtrans'], 500);
+    }
+}
 
 
     public function installmentPayment()

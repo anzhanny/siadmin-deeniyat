@@ -313,6 +313,9 @@ Route::prefix('installment')->controller(PaymentStudentController::class)->group
 });
 
 // SPP
+Route::get('/student/payment/spp/check-arrears/{month}', [PaymentStudentController::class, 'checkArrears']);
+Route::post('/student/spp/pay-all', [PaymentStudentController::class, 'payAllArrears'])->name('student.spp.payAll');
+
 Route::get('/student/spp', [PaymentStudentController::class, 'sppPayment'])->name('student.payment.spp');
 Route::post('/student/spp/pay/{month}', [PaymentStudentController::class, 'paySpp'])->name('student.spp.pay');
 Route::post('/student/spp/midtrans/callback', [PaymentStudentController::class, 'midtransCallback'])->name('spp.callback');

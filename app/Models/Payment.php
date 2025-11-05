@@ -14,7 +14,7 @@ class Payment extends Model
         'class_id',
         'payment_for',    // register / spp
         'payment_category', // lunas / cicilan
-        'payment_type', // tunai / non-tunai
+        'payment_type', // tunai / non-tunai (kalo spp non-tunai)
         'method', // midtrans
         'code',           // kode pembayaran unik
         'due_date',      // jatuh tempo per cicilan
@@ -23,7 +23,7 @@ class Payment extends Model
         'description',    // keterangan tambahan
         'month',          // bulan (jika SPP)
         'year',           // tahun (jika SPP)
-        'status',         // pending / paid / canceled
+        'status',         //
         'paid_at',        // kapan dibayar
     ];
 
